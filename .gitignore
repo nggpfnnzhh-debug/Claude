@@ -1,0 +1,8 @@
+# Xcode-Projekt wird mit XcodeGen aus project.yml erzeugt
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+.DS_Store
+*.p8

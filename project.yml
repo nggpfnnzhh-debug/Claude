@@ -1,0 +1,69 @@
+name: KleineEntdecker
+options:
+  bundleIdPrefix: de.podolskis
+  deploymentTarget:
+    iOS: "16.0"
+  developmentLanguage: de
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # Eigene Apple-Team-ID hier eintragen (oder in Xcode unter "Signing & Capabilities" wählen)
+    DEVELOPMENT_TEAM: ""
+targets:
+  KleineEntdecker:
+    type: application
+    platform: iOS
+    sources:
+      - path: KleineEntdecker
+        excludes:
+          - "**/*.xcprivacy"
+      - path: KleineEntdecker/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.podolskis.kleineentdecker
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: KleineEntdecker/Info.plist
+      properties:
+        CFBundleDisplayName: Kleine Entdecker
+        CFBundleDevelopmentRegion: de
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.education
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: AccentColor
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+  KleineEntdeckerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KleineEntdeckerTests
+    dependencies:
+      - target: KleineEntdecker
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: de.podolskis.kleineentdecker.tests
+schemes:
+  KleineEntdecker:
+    build:
+      targets:
+        KleineEntdecker: all
+    test:
+      targets:
+        - KleineEntdeckerTests
