@@ -33,11 +33,21 @@ shoot() {
   xcrun simctl bootstatus "$udid" -b
   xcrun simctl status_bar "$udid" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
   xcrun simctl install "$udid" "$APP"
+  # Aufwärmen: Der erste Start eines frischen Simulators dauert lange.
+  xcrun simctl launch "$udid" "$BUNDLE_ID" -screenshot home >/dev/null
+  sleep 40
   local i=1
   for screen in "${SCREENS[@]}"; do
-    xcrun simctl launch --terminate-running-process "$udid" "$BUNDLE_ID" -screenshot "$screen" >/dev/null
-    sleep 8
-    xcrun simctl io "$udid" screenshot "$OUT/${label}_${i}_${screen}.png"
+    local file="$OUT/${label}_${i}_${screen}.png"
+    local attempt
+    for attempt in 1 2 3 4; do
+      xcrun simctl launch --terminate-running-process "$udid" "$BUNDLE_ID" -screenshot "$screen" >/dev/null
+      sleep $((10 * attempt))
+      xcrun simctl io "$udid" screenshot "$file"
+      # Ein leerer Startbildschirm ist eine einfarbige Fläche und als PNG winzig.
+      if [ "$(stat -f%z "$file")" -gt 120000 ]; then break; fi
+      echo "Bild $file sieht leer aus (Versuch $attempt) – wiederhole"
+    done
     i=$((i + 1))
   done
   xcrun simctl shutdown "$udid" || true
@@ -47,5 +57,5 @@ shoot iPhone 'iPhone.*Pro Max'
 shoot iPad 'iPad Pro 13-inch'
 
 for f in "$OUT"/*.png; do
-  echo "$(basename "$f"): $(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixel/ {printf "%s ", $2}')"
+  echo "$(basename "$f"): $(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixel/ {printf "%s ", $2}')$(stat -f%z "$f") Bytes"
 done
