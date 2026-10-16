@@ -2,6 +2,8 @@ Kleine Entdecker -Lernspiele ist eine liebevoll gestaltete Lern-App für Kinder 
 
 Alle Aufgaben werden vorgelesen – Ihr Kind kann ganz allein spielen, auch wenn es noch nicht lesen kann. Fehler werden nie bestraft: Die App erklärt freundlich, was richtig gewesen wäre, und ermutigt zum Weiterprobieren. Nach jeder Runde gibt es einen Stern.
 
+Dein eigener Name: Ihr Kind sucht sich einen Spitznamen aus – „Kleine Biene“, „Kleiner Drache“ – oder Sie tragen seinen echten Namen ein. Die App begrüßt und lobt es dann persönlich: „Super gemacht, kleiner Max!“
+
 SECHS LERNSPIELE
 • Zählen – Mengen bis 5 oder 10 erfassen. Durch Antippen der Bilder zählt Ihr Kind laut mit.
 • Farben – Grund- und Mischfarben erkennen und benennen.

@@ -21,5 +21,8 @@ enum LaunchOptions {
         let demoStars = ["counting": 4, "colors": 3, "shapes": 2, "letters": 3, "patterns": 1, "memory": 2]
         UserDefaults.standard.set(demoStars, forKey: "starsByGame")
         UserDefaults.standard.set(0, forKey: SettingsKey.breakMinutes)
+        UserDefaults.standard.set("Biene", forKey: SettingsKey.childName)
+        UserDefaults.standard.set("Kleine", forKey: SettingsKey.childAdjective)
+        UserDefaults.standard.set("🐝", forKey: SettingsKey.childEmoji)
     }
 }

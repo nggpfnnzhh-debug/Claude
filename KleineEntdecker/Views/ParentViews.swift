@@ -102,6 +102,9 @@ struct ParentSettingsView: View {
     @AppStorage(SettingsKey.speechEnabled) private var speechEnabled = true
     @AppStorage(SettingsKey.countingMax) private var countingMax = 5
     @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = 0
+    @AppStorage(SettingsKey.childName) private var childName = ""
+    @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
+    @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
     @State private var confirmReset = false
 
     private var appVersion: String {
@@ -111,6 +114,37 @@ struct ParentSettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    TextField("Name, z. B. Max", text: $childName)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                    Picker("Anrede", selection: $childAdjective) {
+                        ForEach(ChildProfile.adjectives, id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    HStack {
+                        Text("Anzeige")
+                        Spacer()
+                        Text("\(childEmoji) \(ChildProfile.title(name: childName, adjective: childAdjective))")
+                            .foregroundColor(.secondary)
+                    }
+                    if !childName.isEmpty {
+                        Button("Name entfernen", role: .destructive) {
+                            childName = ""
+                            childEmoji = ChildProfile.defaultEmoji
+                        }
+                    }
+                } header: {
+                    Text("Name des Kindes")
+                } footer: {
+                    Text("Ihr Kind kann sich auch selbst einen Tiernamen aussuchen: auf dem Startbildschirm einfach auf das Tier oben links tippen. Der Name bleibt nur auf diesem Gerät.")
+                }
+                .onChange(of: childName) { newValue in
+                    if newValue.count > ChildProfile.maxNameLength {
+                        childName = String(newValue.prefix(ChildProfile.maxNameLength))
+                    }
+                }
+
                 Section {
                     Toggle("Sprachausgabe", isOn: $speechEnabled)
                     Picker("Zählen bis", selection: $countingMax) {

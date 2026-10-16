@@ -5,6 +5,11 @@ struct HomeView: View {
 
     @EnvironmentObject private var progress: ProgressStore
     @State private var showParents = false
+    @State private var showNicknamePicker = false
+    @AppStorage(SettingsKey.childName) private var childName = ""
+    @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
+    @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
+    @AppStorage(SettingsKey.didAskNickname) private var didAskNickname = false
 
     var body: some View {
         ZStack {
@@ -36,7 +41,14 @@ struct HomeView: View {
             }
         }
         .onAppear {
-            Speaker.shared.say("Was möchtest du spielen?")
+            if !didAskNickname && LaunchOptions.screenshotScreen == nil {
+                didAskNickname = true
+                showNicknamePicker = true
+            } else if let name = ChildProfile.spokenName(name: childName, adjective: childAdjective) {
+                Speaker.shared.say("Hallo \(name)! Was möchtest du spielen?")
+            } else {
+                Speaker.shared.say("Was möchtest du spielen?")
+            }
         }
         .sheet(isPresented: $showParents) {
             ParentArea()
@@ -46,14 +58,24 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            Text("🦉")
-                .font(.system(size: 60))
+            Button {
+                showNicknamePicker = true
+            } label: {
+                Text(childEmoji)
+                    .font(.system(size: 60))
+            }
+            .buttonStyle(BouncyButtonStyle())
+            .accessibilityLabel("Namen aussuchen")
+            .sheet(isPresented: $showNicknamePicker) {
+                NicknamePickerView()
+            }
             VStack(alignment: .leading, spacing: 4) {
-                Text("Kleine Entdecker")
+                Text(ChildProfile.title(name: childName, adjective: childAdjective))
                     .font(.system(size: 32, weight: .heavy, design: .rounded))
                     .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
+                    .onTapGesture { showNicknamePicker = true }
                 HStack(spacing: 6) {
                     Text("⭐️")
                     Text("\(progress.totalStars)")

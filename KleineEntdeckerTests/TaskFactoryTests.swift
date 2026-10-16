@@ -96,3 +96,20 @@ final class ProgressStoreTests: XCTestCase {
         XCTAssertEqual(ProgressStore(defaults: defaults).totalStars, 0)
     }
 }
+
+final class ChildProfileTests: XCTestCase {
+    func testNicknamesAreUniqueAndUseValidAdjectives() {
+        let names = ChildProfile.nicknames.map(\.name)
+        XCTAssertEqual(Set(names).count, names.count)
+        for nickname in ChildProfile.nicknames {
+            XCTAssertTrue(ChildProfile.adjectives.contains(nickname.adjective), nickname.name)
+        }
+    }
+
+    func testTitleAndSpokenName() {
+        XCTAssertEqual(ChildProfile.title(name: "Max", adjective: "Kleiner"), "Kleiner Max")
+        XCTAssertEqual(ChildProfile.title(name: "  ", adjective: "Kleiner"), ChildProfile.defaultTitle)
+        XCTAssertEqual(ChildProfile.spokenName(name: "Biene", adjective: "Kleine"), "kleine Biene")
+        XCTAssertNil(ChildProfile.spokenName(name: "", adjective: "Kleine"))
+    }
+}

@@ -18,6 +18,8 @@ bestraft, sondern freundlich erklärt („Das ist Blau. Wo ist Rot?“). Nach je
 
 ## Für Eltern
 
+- **Eigener Name**: Das Kind wählt per Tippen auf das Tier oben links einen Spitznamen („Kleine Biene“), oder die Eltern tragen den echten Namen ein („Kleiner Max“).
+
 - **Elternbereich** (oben rechts, gesichert durch eine Rechenaufgabe): Sprachausgabe, Zahlenraum, Pausen-Erinnerung, Fortschritt.
 - **Pausen-Erinnerung**: nach 10–30 Minuten erscheint ein freundlicher Pausenbildschirm; Weiterspielen nur über die Elternschranke.
 - **Datenschutz**: keine Werbung, keine In-App-Käufe, keine Links, kein Tracking, keine Netzwerkzugriffe. Der Fortschritt wird nur lokal gespeichert.
