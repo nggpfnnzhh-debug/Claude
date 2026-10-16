@@ -1,0 +1,30 @@
+default_platform(:ios)
+
+platform :ios do
+  # Lädt Store-Texte, Screenshots und optional das IPA hoch; reicht auf Wunsch zur Prüfung ein.
+  # Aufruf: fastlane ios store ipa:build/export/KleineEntdecker.ipa submit:true
+  lane :store do |options|
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH")
+    )
+    submit = options[:submit].to_s == "true"
+
+    deliver(
+      api_key: api_key,
+      app_identifier: "de.podolskis.kleineentdecker",
+      ipa: options[:ipa],
+      skip_binary_upload: options[:ipa].nil?,
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      overwrite_screenshots: true,
+      force: true,
+      submit_for_review: submit,
+      automatic_release: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      submission_information: { add_id_info_uses_idfa: false }
+    )
+  end
+end

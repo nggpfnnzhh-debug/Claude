@@ -2,7 +2,12 @@ import SwiftUI
 
 @main
 struct KleineEntdeckerApp: App {
-    @StateObject private var progress = ProgressStore()
+    @StateObject private var progress: ProgressStore
+
+    init() {
+        LaunchOptions.prepareScreenshotModeIfNeeded()
+        _progress = StateObject(wrappedValue: ProgressStore())
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -15,7 +20,7 @@ struct KleineEntdeckerApp: App {
 
 /// Wechselt zwischen Startbildschirm und Spiel und blendet bei Bedarf die Pausen-Erinnerung ein.
 struct RootView: View {
-    @State private var activeGame: Game?
+    @State private var activeGame: Game? = LaunchOptions.screenshotGame
     @State private var activeSeconds = 0
     @State private var showBreak = false
     @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = 0

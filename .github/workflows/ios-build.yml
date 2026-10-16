@@ -48,3 +48,12 @@ jobs:
         with:
           name: KleineEntdecker-Simulator
           path: KleineEntdecker-Simulator.zip
+
+      - name: Screenshots erzeugen (Vorschau)
+        run: scripts/screenshots.sh build/sim/Build/Products/Debug-iphonesimulator/KleineEntdecker.app screenshots
+
+      - name: Screenshots bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Screenshots-Vorschau
+          path: screenshots

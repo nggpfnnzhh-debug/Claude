@@ -6,3 +6,7 @@ DerivedData/
 build/
 .DS_Store
 *.p8
+fastlane/screenshots/
+fastlane/report.xml
+fastlane/README.md
+screenshots/
