@@ -27,32 +27,47 @@ In `project.yml` ist `de.podolskis.kleineentdecker` eingetragen. Falls Sie eine 
 | Bundle-ID | de.podolskis.kleineentdecker |
 | SKU | kleineentdecker-001 |
 
-## 4. Build hochladen – zwei Wege
+## 4. Ohne Mac: alles über GitHub Actions (empfohlen)
 
-### Weg A: Mit Xcode auf einem Mac (am einfachsten)
-
-```bash
-brew install xcodegen
-xcodegen generate
-open KleineEntdecker.xcodeproj
-```
-
-1. Target *KleineEntdecker* → *Signing & Capabilities* → Team auswählen.
-2. Oben als Ziel **Any iOS Device (arm64)** wählen.
-3. *Product → Archive*, danach im Organizer *Distribute App → App Store Connect → Upload*.
-
-### Weg B: Ohne Mac über GitHub Actions
-
+### 4a. API-Schlüssel anlegen (einmalig)
 1. App Store Connect → *Benutzer und Zugriff* → *Integrationen* → *App Store Connect API* →
-   Schlüssel mit Rolle **Admin** erzeugen, `.p8`-Datei herunterladen.
-2. Im GitHub-Repository unter *Settings → Secrets and variables → Actions* anlegen:
-   `APPLE_TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (Inhalt der .p8-Datei).
-3. *Actions* → **Upload zu TestFlight** → *Run workflow*.
+   *Team-Schlüssel* → **+**. Name z. B. „GitHub“, Zugriff **Admin**.
+2. Die `.p8`-Datei herunterladen (geht nur einmal!), **Key-ID** und **Issuer-ID** notieren.
+3. Die Team-ID steht unter developer.apple.com → *Account* → *Membership details*.
 
-Nach ca. 15–30 Minuten erscheint der Build in App Store Connect unter *TestFlight*. Dort können Sie ihn
-zuerst selbst auf dem iPad Ihres Sohnes testen (TestFlight-App installieren).
+### 4b. Secrets in GitHub hinterlegen
+GitHub-Repository → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*:
 
-## 5. Store-Eintrag ausfüllen
+| Name | Inhalt |
+|---|---|
+| `APPLE_TEAM_ID` | Team-ID (10 Zeichen) |
+| `ASC_KEY_ID` | Key-ID des API-Schlüssels |
+| `ASC_ISSUER_ID` | Issuer-ID (lange ID mit Bindestrichen) |
+| `ASC_KEY_P8` | kompletter Inhalt der .p8-Datei (mit Editor öffnen, alles kopieren) |
+
+Diese Daten **niemals in den Chat oder in Dateien im Repository** kopieren – das Repository ist öffentlich.
+
+### 4c. Datenschutzseite online stellen
+GitHub-Repository → *Settings* → *Pages* → *Source: Deploy from a branch* → Branch **main**, Ordner **/docs** → *Save*.
+Danach erreichbar unter <https://nggpfnnzhh-debug.github.io/Claude/privacy.html>.
+
+### 4d. Workflow starten
+GitHub → *Actions* → **App Store – Hochladen & Einreichen** → *Run workflow*.
+- Ohne Haken bei „einreichen“: App, Texte und Screenshots werden hochgeladen; Sie prüfen alles in App Store Connect.
+- Mit Haken: zusätzlich wird die App direkt zur Prüfung eingereicht (erst, wenn Schritt 5 erledigt ist).
+
+**Alternative mit Mac:** `xcodegen generate`, Projekt in Xcode öffnen, Team wählen, *Product → Archive* → *Distribute App*.
+
+## 5. Was nur im Browser geht (App Store Connect)
+
+Diese Angaben lassen sich nicht automatisch setzen – einmalig in App Store Connect bei der App ausfüllen:
+- **Altersfreigabe**: Fragebogen, alles „Nein/Keine“; bei „Für Kinder gemacht“ → **5 Jahre und jünger**
+- **App-Datenschutz**: „Nein, wir erheben keine Daten“ → *Veröffentlichen*
+- **Preise und Verfügbarkeit**: Preis **0 € (kostenlos)**, alle Länder oder nur Deutschland/Österreich/Schweiz
+- **App-Prüfung → Kontaktinformationen**: Name, Telefon, E-Mail (nur für Apple sichtbar)
+- **Kategorie**: Bildung (wird automatisch gesetzt)
+
+## 6. Referenz: Store-Eintrag (wird automatisch hochgeladen)
 
 ### Kategorie & Altersfreigabe
 - **Primäre Kategorie:** Bildung · **Sekundäre Kategorie:** Kinder (Kids-Kategorie) → Altersgruppe **„5 und jünger“**
@@ -128,7 +143,7 @@ Der Elternbereich (Schloss-Symbol oben rechts) ist durch eine Rechenaufgabe gesc
 Die App nutzt keine Netzwerkverbindungen, keine Werbung, keine Analyse-Dienste und keine In-App-Käufe.
 ```
 
-## 6. Einreichen
+## 7. Einreichen
 
 Build unter *Build* auswählen → *Zur Prüfung hinzufügen* → *Zur Prüfung einreichen*.
 Die Prüfung dauert meist 1–3 Tage. Kinder-Apps werden besonders genau geprüft (Richtlinien 1.3 und 5.1.4) –
