@@ -7,10 +7,18 @@ on:
 
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      # Apple verlangt für den App Store das iOS-26-SDK (Xcode 26 oder neuer).
+      - name: Neuestes Xcode auswählen
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "::error::Kein Xcode 26+ gefunden"; ls /Applications; exit 1; fi
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
 
       - name: XcodeGen installieren und Projekt erzeugen
         run: |
