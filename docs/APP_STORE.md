@@ -22,7 +22,7 @@ In `project.yml` ist `de.podolskis.kleineentdecker` eingetragen. Falls Sie eine 
 | Feld | Wert |
 |---|---|
 | Plattform | iOS |
-| Name | Kleine Entdecker -Lernspiele (in App Store Connect festgelegt) |
+| Name | Kleine Entdecker - Lernspiele (in App Store Connect festgelegt) |
 | Primärsprache | Deutsch |
 | Bundle-ID | de.podolskis.kleineentdecker |
 | SKU | kleineentdecker-001 |
