@@ -122,6 +122,8 @@ struct PromptView: View {
     let prompt: Prompt
     let tint: Color
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         switch prompt {
         case let .objects(emoji, count):
@@ -131,7 +133,7 @@ struct PromptView: View {
                 Speaker.shared.say(letter)
             } label: {
                 Text("\(letter) \(letter.lowercased())")
-                    .font(.system(size: 120, weight: .heavy, design: .rounded))
+                    .font(.system(size: 120 * scale, weight: .heavy, design: .rounded))
                     .foregroundColor(tint)
                     .minimumScaleFactor(0.5)
                     .padding(.horizontal, 40)
@@ -154,6 +156,7 @@ struct CountingObjectsView: View {
     let count: Int
 
     @State private var tapOrder: [Int: Int] = [:]
+    @Environment(\.layoutScale) private var scale
 
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 8), count: min(count, 5))
@@ -166,8 +169,8 @@ struct CountingObjectsView: View {
                     tap(index)
                 } label: {
                     Text(emoji)
-                        .font(.system(size: 54))
-                        .frame(minWidth: 60, minHeight: 64)
+                        .font(.system(size: 54 * scale))
+                        .frame(minWidth: 60 * scale, minHeight: 64 * scale)
                         .scaleEffect(tapOrder[index] == nil ? 1 : 1.12)
                         .overlay(alignment: .topTrailing) {
                             if let number = tapOrder[index] {
@@ -185,7 +188,7 @@ struct CountingObjectsView: View {
             }
         }
         .padding(20)
-        .frame(maxWidth: CGFloat(min(count, 5)) * 90 + 40)
+        .frame(maxWidth: CGFloat(min(count, 5)) * 90 * scale + 40)
         .cardBackground()
     }
 
@@ -207,6 +210,8 @@ struct SequenceView: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
+            row(size: 84)
+            row(size: 70)
             row(size: 56)
             row(size: 44)
             row(size: 34)
@@ -243,8 +248,10 @@ struct ChoiceRow: View {
     let solvedID: UUID?
     let onSelect: (Choice) -> Void
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 16 * scale) {
             ForEach(choices) { choice in
                 Button {
                     onSelect(choice)
@@ -259,7 +266,7 @@ struct ChoiceRow: View {
                 .accessibilityLabel(choice.spokenName)
             }
         }
-        .frame(maxWidth: 680)
+        .frame(maxWidth: 680 * scale)
     }
 }
 
@@ -267,6 +274,8 @@ struct ChoiceCard: View {
     let content: ChoiceContent
     let isWrong: Bool
     let isSolved: Bool
+
+    @Environment(\.layoutScale) private var scale
 
     var body: some View {
         ZStack {
@@ -277,7 +286,7 @@ struct ChoiceCard: View {
                 .padding(16)
         }
         .aspectRatio(1, contentMode: .fit)
-        .frame(maxWidth: 160)
+        .frame(maxWidth: 160 * scale)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(isSolved ? Color.green : Color.clear, lineWidth: 6)
@@ -300,11 +309,13 @@ struct ChoiceCard: View {
 struct ChoiceContentView: View {
     let content: ChoiceContent
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         switch content {
         case let .number(value):
             Text("\(value)")
-                .font(.system(size: 72, weight: .heavy, design: .rounded))
+                .font(.system(size: 72 * scale, weight: .heavy, design: .rounded))
                 .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.3))
                 .minimumScaleFactor(0.4)
         case let .color(color, symbol):
@@ -316,7 +327,7 @@ struct ChoiceContentView: View {
             ShapeView(kind: kind, color: color)
         case let .emoji(emoji):
             Text(emoji)
-                .font(.system(size: 80))
+                .font(.system(size: 80 * scale))
                 .minimumScaleFactor(0.3)
         }
     }

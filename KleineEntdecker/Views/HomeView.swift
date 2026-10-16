@@ -4,6 +4,7 @@ struct HomeView: View {
     let onSelect: (Game) -> Void
 
     @EnvironmentObject private var progress: ProgressStore
+    @Environment(\.layoutScale) private var scale
     @State private var showParents = false
     @State private var showNicknamePicker = false
     @AppStorage(SettingsKey.childName) private var childName = ""
@@ -23,7 +24,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     header
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 260), spacing: 20)], spacing: 20) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150 * scale, maximum: 260 * scale), spacing: 20 * scale)], spacing: 20 * scale) {
                         ForEach(Game.allCases) { game in
                             Button {
                                 onSelect(game)
@@ -36,7 +37,7 @@ struct HomeView: View {
                     }
                 }
                 .padding(24)
-                .frame(maxWidth: 900)
+                .frame(maxWidth: 900 * scale)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -62,7 +63,7 @@ struct HomeView: View {
                 showNicknamePicker = true
             } label: {
                 Text(childEmoji)
-                    .font(.system(size: 60))
+                    .font(.system(size: 60 * scale))
             }
             .buttonStyle(BouncyButtonStyle())
             .accessibilityLabel("Namen aussuchen")
@@ -71,7 +72,7 @@ struct HomeView: View {
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(ChildProfile.title(name: childName, adjective: childAdjective))
-                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .font(.system(size: 32 * scale, weight: .heavy, design: .rounded))
                     .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -79,7 +80,7 @@ struct HomeView: View {
                 HStack(spacing: 6) {
                     Text("⭐️")
                     Text("\(progress.totalStars)")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 24 * scale, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
                 }
                 .accessibilityElement(children: .ignore)
@@ -104,20 +105,22 @@ struct GameTile: View {
     let game: Game
     let stars: Int
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         VStack(spacing: 8) {
             Text(game.icon)
-                .font(.system(size: 64))
+                .font(.system(size: 64 * scale))
             Text(game.title)
-                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                .font(.system(size: 24 * scale, weight: .heavy, design: .rounded))
                 .foregroundColor(.white)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             Text(stars > 0 ? "⭐️ \(stars)" : " ")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 18 * scale, weight: .bold, design: .rounded))
                 .foregroundColor(.white.opacity(0.95))
         }
-        .padding(.vertical, 20)
+        .padding(.vertical, 20 * scale)
         .padding(.horizontal, 12)
         .frame(maxWidth: .infinity)
         .background(

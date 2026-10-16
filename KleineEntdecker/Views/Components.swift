@@ -1,5 +1,27 @@
 import SwiftUI
 
+/// Vergrößerungsfaktor für große Bildschirme (iPad): Kinderfinger brauchen dort große Ziele.
+private struct LayoutScaleKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 1
+}
+
+extension EnvironmentValues {
+    var layoutScale: CGFloat {
+        get { self[LayoutScaleKey.self] }
+        set { self[LayoutScaleKey.self] = newValue }
+    }
+}
+
+/// Setzt `layoutScale` auf 1,5, wenn genug Platz in beide Richtungen ist (iPad, nicht iPhone quer).
+struct AdaptiveLayoutScale: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontal
+    @Environment(\.verticalSizeClass) private var vertical
+
+    func body(content: Content) -> some View {
+        content.environment(\.layoutScale, horizontal == .regular && vertical == .regular ? 1.5 : 1)
+    }
+}
+
 struct BouncyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -14,12 +36,14 @@ struct RoundIconButton: View {
     var size: CGFloat = 60
     let action: () -> Void
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: size * 0.42, weight: .bold))
+                .font(.system(size: size * scale * 0.42, weight: .bold))
                 .foregroundColor(.white)
-                .frame(width: size, height: size)
+                .frame(width: size * scale, height: size * scale)
                 .background(Circle().fill(tint))
                 .shadow(color: .black.opacity(0.15), radius: 4, y: 3)
         }
@@ -35,6 +59,8 @@ struct GameTopBar: View {
     let onExit: () -> Void
     let onRepeat: () -> Void
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         HStack {
             RoundIconButton(systemName: "house.fill", tint: tint, action: onExit)
@@ -44,7 +70,7 @@ struct GameTopBar: View {
                 ForEach(0..<total, id: \.self) { index in
                     Circle()
                         .fill(index < completed ? tint : Color.gray.opacity(0.25))
-                        .frame(width: 16, height: 16)
+                        .frame(width: 16 * scale, height: 16 * scale)
                 }
             }
             .accessibilityElement(children: .ignore)

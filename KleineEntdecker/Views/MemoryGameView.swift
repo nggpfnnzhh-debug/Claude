@@ -21,6 +21,7 @@ struct MemoryGameView: View {
     private static let instruction = "Finde die Paare! Tippe auf zwei Karten."
 
     @EnvironmentObject private var progress: ProgressStore
+    @Environment(\.layoutScale) private var scale
     @State private var cards: [MemoryCard] = []
     @State private var firstIndex: Int?
     @State private var isBusy = false
@@ -53,7 +54,7 @@ struct MemoryGameView: View {
                             .accessibilityLabel(cards[index].isFaceUp ? cards[index].name : "Verdeckte Karte")
                     }
                 }
-                .frame(maxWidth: 560)
+                .frame(maxWidth: 560 * scale)
                 Spacer(minLength: 0)
             }
             .padding()
@@ -123,13 +124,15 @@ struct MemoryCardView: View {
     let card: MemoryCard
     let tint: Color
 
+    @Environment(\.layoutScale) private var scale
+
     var body: some View {
         ZStack {
             if card.isFaceUp || card.isMatched {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color.white)
                 Text(card.emoji)
-                    .font(.system(size: 52))
+                    .font(.system(size: 52 * scale))
                     .minimumScaleFactor(0.4)
                     .padding(6)
                     .transition(.scale)
@@ -137,7 +140,7 @@ struct MemoryCardView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(LinearGradient(colors: [tint.opacity(0.8), tint], startPoint: .topLeading, endPoint: .bottomTrailing))
                 Text("⭐️")
-                    .font(.system(size: 30))
+                    .font(.system(size: 30 * scale))
                     .opacity(0.7)
             }
         }

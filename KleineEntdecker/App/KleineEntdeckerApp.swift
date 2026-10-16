@@ -12,6 +12,7 @@ struct KleineEntdeckerApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .modifier(AdaptiveLayoutScale())
                 .environmentObject(progress)
                 .preferredColorScheme(.light)
         }
