@@ -21,12 +21,22 @@ jobs:
         run: |
           mkdir -p voices out
           TEXT="Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienkäfer siehst du? Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!"
-          for v in de_DE-thorsten-high de_DE-kerstin-low de_DE-ramona-low de_DE-eva_k-x_low; do
-            python3 -m piper.download_voices --download-dir voices "$v"
-            python3 -m piper -m "voices/$v.onnx" -f "out/$v.wav" --length-scale 1.1 --sentence-silence 0.35 -- "$TEXT"
-            ffmpeg -loglevel error -y -i "out/$v.wav" -ac 1 -b:a 96k "out/$v.mp3"
-            rm "out/$v.wav"
-          done
+          python3 -m piper.download_voices --download-dir voices de_DE-kerstin-low de_DE-thorsten_emotional-medium
+          say() { # name, model, extra args...
+            local name="$1" model="$2"; shift 2
+            python3 -m piper -m "voices/$model.onnx" -f "out/$name.wav" --sentence-silence 0.4 "$@" -- "$TEXT"
+          }
+          say 1_Kerstin_langsam de_DE-kerstin-low --length-scale 1.25
+          say 2_Kerstin_lebendig de_DE-kerstin-low --length-scale 1.1 --noise-scale 0.85 --noise-w-scale 1.0
+          say 3_Kerstin_langsam_lebendig de_DE-kerstin-low --length-scale 1.25 --noise-scale 0.85 --noise-w-scale 1.0
+          say 4_Kerstin_hell_tmp de_DE-kerstin-low --length-scale 1.2
+          # Tonhöhe um ca. 7 % anheben, Tempo beibehalten
+          RATE=$(python3 -c "import json;print(json.load(open('voices/de_DE-kerstin-low.onnx.json'))['audio']['sample_rate'])")
+          ffmpeg -loglevel error -y -i out/4_Kerstin_hell_tmp.wav -af "asetrate=${RATE}*1.07,aresample=${RATE},atempo=1/1.07" out/4_Kerstin_hell.wav
+          rm out/4_Kerstin_hell_tmp.wav
+          AMUSED=$(python3 -c "import json;m=json.load(open('voices/de_DE-thorsten_emotional-medium.onnx.json'))['speaker_id_map'];print(m.get('amused', 0))")
+          say 5_Thorsten_froehlich de_DE-thorsten_emotional-medium --length-scale 1.1 -s "$AMUSED"
+          for f in out/*.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 96k "${f%.wav}.mp3" && rm "$f"; done
           ls -la out
 
       - name: In Branch ablegen
