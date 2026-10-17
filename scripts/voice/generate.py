@@ -105,12 +105,15 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         for i, sentence in enumerate(sentences, 1):
             wav_path = Path(tmp) / "s.wav"
+            # Einzelwörter ohne Satzzeichen („acht“, „Hund“) klingen sonst abgehackt.
+            spoken = sentence if sentence[-1] in ".!?" else sentence + "."
             with wave.open(str(wav_path), "wb") as wav:
-                voice.synthesize_wav(sentence, wav, syn_config=config)
+                voice.synthesize_wav(spoken, wav, syn_config=config)
             name = file_name(sentence)
             subprocess.run(
                 ["ffmpeg", "-loglevel", "error", "-y", "-i", str(wav_path),
-                 "-af", "silenceremove=start_periods=1:start_threshold=-50dB",
+                 # Etwas Lautstärke-Reserve gegen Übersteuern, kurzer Ausklang.
+                 "-af", "volume=-3dB,apad=pad_dur=0.08",
                  "-ac", "1", "-c:a", "aac", "-b:a", "64k", str(out_dir / name)],
                 check=True,
             )
