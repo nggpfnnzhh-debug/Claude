@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 
 /// Elternschranke (Apple-Vorgabe für die Kategorie „Kinder"): eine Rechenaufgabe,
@@ -105,7 +106,9 @@ struct ParentSettingsView: View {
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
+    @AppStorage(SettingsKey.voiceIdentifier) private var voiceIdentifier = ""
     @State private var confirmReset = false
+    @State private var voices: [AVSpeechSynthesisVoice] = []
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
@@ -144,6 +147,25 @@ struct ParentSettingsView: View {
                         childName = String(newValue.prefix(ChildProfile.maxNameLength))
                     }
                 }
+
+                Section {
+                    Picker("Stimme", selection: $voiceIdentifier) {
+                        Text("Automatisch (beste)").tag("")
+                        ForEach(voices, id: \.identifier) { voice in
+                            Text("\(voice.name) · \(Speaker.qualityLabel(voice))").tag(voice.identifier)
+                        }
+                    }
+                    Button {
+                        Speaker.shared.preview(voice: voices.first { $0.identifier == voiceIdentifier })
+                    } label: {
+                        Label("Probe hören", systemImage: "speaker.wave.2.fill")
+                    }
+                } header: {
+                    Text("Stimme")
+                } footer: {
+                    Text("Am natürlichsten klingen Stimmen mit dem Zusatz „Premium“ oder „Erweitert“. Sie lassen sich kostenlos laden: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch. Danach hier auswählen.")
+                }
+                .onAppear { voices = Speaker.germanVoices }
 
                 Section {
                     Toggle("Sprachausgabe", isOn: $speechEnabled)

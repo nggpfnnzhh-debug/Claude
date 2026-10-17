@@ -11,4 +11,5 @@ extension SettingsKey {
     static let childAdjective = "childAdjective"
     static let childEmoji = "childEmoji"
     static let didAskNickname = "didAskNickname"
+    static let voiceIdentifier = "voiceIdentifier"
 }
