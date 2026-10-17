@@ -1,0 +1,38 @@
+# Erzeugt Hörproben frei lizenzierter deutscher KI-Stimmen (Piper TTS) und legt sie im Branch "stimmproben" ab.
+name: Stimmproben
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Werkzeuge installieren
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install -q "piper-tts==1.8.0"
+
+      - name: Proben erzeugen
+        run: |
+          mkdir -p voices out
+          TEXT="Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienkäfer siehst du? Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!"
+          for v in de_DE-thorsten-high de_DE-kerstin-low de_DE-ramona-low de_DE-eva_k-x_low; do
+            python3 -m piper.download_voices --download-dir voices "$v"
+            python3 -m piper -m "voices/$v.onnx" -f "out/$v.wav" --length-scale 1.1 --sentence-silence 0.35 -- "$TEXT"
+            ffmpeg -loglevel error -y -i "out/$v.wav" -ac 1 -b:a 96k "out/$v.mp3"
+            rm "out/$v.wav"
+          done
+          ls -la out
+
+      - name: In Branch ablegen
+        run: |
+          cd out
+          git init -q -b stimmproben
+          git add .
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Stimmproben"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimmproben
