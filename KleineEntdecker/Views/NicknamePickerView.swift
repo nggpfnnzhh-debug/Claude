@@ -44,7 +44,7 @@ struct NicknamePickerView: View {
             .frame(maxWidth: 820)
         }
         .onAppear {
-            Speaker.shared.say("Wer bist du? Such dir einen Namen aus!")
+            Speaker.shared.say(Lines.pickerQuestion)
         }
     }
 
@@ -53,7 +53,7 @@ struct NicknamePickerView: View {
         childAdjective = nickname.adjective
         childEmoji = nickname.emoji
         Haptics.success()
-        Speaker.shared.say("Hallo, \(nickname.adjective.lowercased()) \(nickname.name)!")
+        Speaker.shared.say(Lines.hello("\(nickname.adjective.lowercased()) \(nickname.name)"))
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
             dismiss()
         }

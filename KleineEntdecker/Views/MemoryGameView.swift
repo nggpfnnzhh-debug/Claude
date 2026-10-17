@@ -18,7 +18,7 @@ struct MemoryGameView: View {
         ("🦊", "Fuchs"), ("🐻", "Bär"), ("🐼", "Panda"), ("🐸", "Frosch"),
         ("🐵", "Affe"), ("🐷", "Schwein"), ("🐮", "Kuh"), ("🦁", "Löwe"),
     ]
-    private static let instruction = "Finde die Paare! Tippe auf zwei Karten."
+    private static let instruction = Lines.memoryInstruction
 
     @EnvironmentObject private var progress: ProgressStore
     @Environment(\.layoutScale) private var scale
@@ -100,7 +100,7 @@ struct MemoryGameView: View {
                 cards[index].isMatched = true
             }
             Haptics.success()
-            Speaker.shared.say("Ein Paar! Super!", interrupt: false)
+            Speaker.shared.say(Lines.memoryPair, interrupt: false)
             if cards.allSatisfy(\.isMatched) {
                 progress.addStar(for: game)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {

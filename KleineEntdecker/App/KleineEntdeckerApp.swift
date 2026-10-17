@@ -59,7 +59,7 @@ struct RootView: View {
             activeSeconds += 1
             if activeSeconds >= breakMinutes * 60 {
                 withAnimation { showBreak = true }
-                Speaker.shared.say("Zeit für eine Pause! Du hast heute schon toll gespielt.")
+                Speaker.shared.say(Lines.breakTime)
             }
         }
         .onChange(of: breakMinutes) { _ in

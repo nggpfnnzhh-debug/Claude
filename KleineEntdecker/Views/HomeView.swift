@@ -46,9 +46,9 @@ struct HomeView: View {
                 didAskNickname = true
                 showNicknamePicker = true
             } else if let name = ChildProfile.spokenName(name: childName, adjective: childAdjective) {
-                Speaker.shared.say("Hallo \(name)! Was möchtest du spielen?")
+                Speaker.shared.say("\(Lines.hello(name)) \(Lines.homeQuestion)")
             } else {
-                Speaker.shared.say("Was möchtest du spielen?")
+                Speaker.shared.say(Lines.homeQuestion)
             }
         }
         .sheet(isPresented: $showParents) {

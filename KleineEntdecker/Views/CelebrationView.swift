@@ -35,8 +35,8 @@ struct CelebrationView: View {
         }
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.5)) { appear = true }
-            let praise = ChildProfile.currentSpokenName.map { "Super gemacht, \($0)!" } ?? "Super gemacht!"
-            Speaker.shared.say("\(praise) Du hast einen Stern bekommen!", interrupt: false)
+            let praise = ChildProfile.currentSpokenName.map(Lines.celebration) ?? Lines.celebrationPlain
+            Speaker.shared.say("\(praise) \(Lines.celebrationStar)", interrupt: false)
         }
     }
 }

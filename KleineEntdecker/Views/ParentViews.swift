@@ -106,7 +106,7 @@ struct ParentSettingsView: View {
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
-    @AppStorage(SettingsKey.voiceIdentifier) private var voiceIdentifier = ""
+    @AppStorage(SettingsKey.voiceIdentifier) private var voiceIdentifier = Speaker.builtInVoiceID
     @State private var confirmReset = false
     @State private var voices: [AVSpeechSynthesisVoice] = []
 
@@ -150,20 +150,21 @@ struct ParentSettingsView: View {
 
                 Section {
                     Picker("Stimme", selection: $voiceIdentifier) {
-                        Text("Automatisch (beste)").tag("")
+                        Text("Kerstin (in der App)").tag(Speaker.builtInVoiceID)
+                        Text("iPhone-Stimme (automatisch beste)").tag(Speaker.automaticVoiceID)
                         ForEach(voices, id: \.identifier) { voice in
-                            Text("\(voice.name) · \(Speaker.qualityLabel(voice))").tag(voice.identifier)
+                            Text("iPhone: \(voice.name) · \(Speaker.qualityLabel(voice))").tag(voice.identifier)
                         }
                     }
                     Button {
-                        Speaker.shared.preview(voice: voices.first { $0.identifier == voiceIdentifier })
+                        Speaker.shared.preview(voiceID: voiceIdentifier)
                     } label: {
                         Label("Probe hören", systemImage: "speaker.wave.2.fill")
                     }
                 } header: {
                     Text("Stimme")
                 } footer: {
-                    Text("Am natürlichsten klingen Stimmen mit dem Zusatz „Premium“ oder „Erweitert“. Sie lassen sich kostenlos laden: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch. Danach hier auswählen.")
+                    Text("„Kerstin“ ist fest in der App enthalten. Alternativ kann eine iPhone-Stimme sprechen – am natürlichsten klingen Stimmen mit „Premium“ oder „Erweitert“, kostenlos zu laden unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch.")
                 }
                 .onAppear { voices = Speaker.germanVoices }
 
