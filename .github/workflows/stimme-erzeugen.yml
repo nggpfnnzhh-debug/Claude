@@ -23,7 +23,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/Voice"
           curl -sSfL -o "$RUNNER_TEMP/Voice/MODEL_CARD.txt" \
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/kerstin/low/MODEL_CARD"
-          cat "$RUNNER_TEMP/Voice/MODEL_CARD.txt"
+          # Kerstin ist von „Ryan“ (low) abgeleitet – dessen Lizenz ebenfalls ablegen
+          curl -sSfL -o "$RUNNER_TEMP/Voice/MODEL_CARD_base_ryan.txt" \
+            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/low/MODEL_CARD"
+          cat "$RUNNER_TEMP/Voice/MODEL_CARD.txt" "$RUNNER_TEMP/Voice/MODEL_CARD_base_ryan.txt"
 
       - name: Sätze vertonen
         run: python3 scripts/voice/generate.py "$RUNNER_TEMP/voices/de_DE-kerstin-low.onnx" "$RUNNER_TEMP/Voice"
