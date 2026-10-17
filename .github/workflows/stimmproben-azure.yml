@@ -1,0 +1,38 @@
+# Erzeugt Hörproben deutscher Microsoft-Azure-Stimmen und legt sie im Branch "stimmproben-azure" ab.
+# Benötigte Secrets: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
+name: Stimmproben Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      stimmen:
+        description: "Kommagetrennte Azure-Stimmen"
+        default: "de-DE-SeraphinaMultilingualNeural,de-DE-KatjaNeural,de-DE-AmalaNeural,de-DE-LouisaNeural,de-DE-MajaNeural,de-DE-GiselaNeural,de-DE-ConradNeural,de-DE-FlorianMultilingualNeural"
+
+permissions:
+  contents: write
+
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+      AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secrets prüfen
+        run: |
+          for name in AZURE_SPEECH_KEY AZURE_SPEECH_REGION; do
+            if [ -z "${!name}" ]; then echo "::error::Secret $name fehlt"; exit 1; fi
+          done
+      - name: Proben erzeugen
+        run: python3 scripts/voice/generate.py azure-samples "${{ inputs.stimmen }}" "$RUNNER_TEMP/out"
+      - name: In Branch ablegen
+        run: |
+          cd "$RUNNER_TEMP/out"
+          ls -la
+          git init -q -b stimmproben-azure
+          git add .
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Azure-Stimmproben"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimmproben-azure

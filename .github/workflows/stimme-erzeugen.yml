@@ -1,8 +1,16 @@
-# Vertont alle Sätze der App mit der Piper-Stimme „Kerstin“ und legt das Ergebnis im Branch "stimme-kerstin" ab.
+# Vertont alle Sätze der App und legt Aufnahmen + Manifest im Branch "stimme-<anbieter>" ab.
+# Für Azure: Secrets AZURE_SPEECH_KEY und AZURE_SPEECH_REGION.
 name: Stimme erzeugen
 
 on:
   workflow_dispatch:
+    inputs:
+      anbieter:
+        description: "piper oder azure"
+        default: "azure"
+      stimme:
+        description: "Azure-Stimmenname (nur bei azure)"
+        default: "de-DE-SeraphinaMultilingualNeural"
 
 permissions:
   contents: write
@@ -29,13 +37,23 @@ jobs:
           cat "$RUNNER_TEMP/Voice/MODEL_CARD.txt" "$RUNNER_TEMP/Voice/MODEL_CARD_base_ryan.txt"
 
       - name: Sätze vertonen
-        run: python3 scripts/voice/generate.py "$RUNNER_TEMP/voices/de_DE-kerstin-low.onnx" "$RUNNER_TEMP/Voice"
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+        run: |
+          if [ "${{ inputs.anbieter }}" = "azure" ]; then
+            rm -f "$RUNNER_TEMP/Voice/"MODEL_CARD*.txt
+            echo "Stimme: ${{ inputs.stimme }} (Microsoft Azure)" > "$RUNNER_TEMP/Voice/STIMME.txt"
+            python3 scripts/voice/generate.py azure "${{ inputs.stimme }}" "$RUNNER_TEMP/Voice"
+          else
+            python3 scripts/voice/generate.py piper "$RUNNER_TEMP/voices/de_DE-kerstin-low.onnx" "$RUNNER_TEMP/Voice"
+          fi
 
       - name: In Branch ablegen
         run: |
           cd "$RUNNER_TEMP/Voice"
           du -sh .
-          git init -q -b stimme-kerstin
+          git init -q -b "stimme-${{ inputs.anbieter }}"
           git add .
-          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Kerstin-Aufnahmen für ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimme-kerstin
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Aufnahmen (${{ inputs.anbieter }}) für ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "stimme-${{ inputs.anbieter }}"

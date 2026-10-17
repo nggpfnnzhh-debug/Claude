@@ -5,15 +5,23 @@ Die Satzlisten spiegeln die Daten aus KleineEntdecker/Games/TaskFactory.swift,
 Core/Lines.swift, Core/ChildProfile.swift und Views/MemoryGameView.swift.
 Ein Unit-Test (VoiceCoverageTests) prüft, dass jeder Satz der App eine Aufnahme hat.
 
-Aufruf: generate.py <modell.onnx> <ausgabeordner>
+Aufruf:
+  generate.py piper <modell.onnx> <ausgabeordner>
+  generate.py azure <stimmenname> <ausgabeordner>   (Umgebung: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION)
+  generate.py azure-samples <stimme1,stimme2,...> <ausgabeordner>
 """
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
+import urllib.request
 import wave
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 # Kerstin „lebendig“
 LENGTH_SCALE = 1.1
@@ -93,30 +101,79 @@ def file_name(sentence: str) -> str:
     return "v_" + hashlib.sha1(sentence.encode("utf-8")).hexdigest()[:12] + ".m4a"
 
 
-def main():
-    model, out_dir = sys.argv[1], Path(sys.argv[2])
-    from piper import PiperVoice, SynthesisConfig
+AZURE_RATE = "-8%"  # etwas ruhiger für Kinder
+SAMPLE_TEXT = ("Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienkäfer siehst du? "
+               "Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!")
 
-    voice = PiperVoice.load(model)
-    config = SynthesisConfig(length_scale=LENGTH_SCALE, noise_scale=NOISE_SCALE, noise_w_scale=NOISE_W_SCALE)
+
+def azure_tts(text: str, voice: str) -> bytes:
+    region = os.environ["AZURE_SPEECH_REGION"].strip()
+    ssml = (f"<speak version='1.0' xml:lang='de-DE'><voice name='{voice}'>"
+            f"<prosody rate='{AZURE_RATE}'>{escape(text)}</prosody></voice></speak>")
+    request = urllib.request.Request(
+        f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1",
+        data=ssml.encode("utf-8"),
+        headers={
+            "Ocp-Apim-Subscription-Key": os.environ["AZURE_SPEECH_KEY"].strip(),
+            "Content-Type": "application/ssml+xml",
+            "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
+            "User-Agent": "kleine-entdecker-voice",
+        },
+    )
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            if error.code == 429 and attempt < 4:  # Gratis-Tarif: Anfragen drosseln
+                time.sleep(3 * (attempt + 1))
+                continue
+            raise
+
+
+def encode(source: Path, target: Path, extra_filters: str = ""):
+    filters = "apad=pad_dur=0.08" + extra_filters
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(source), "-af", filters,
+                    "-ac", "1", "-c:a", "aac", "-b:a", "64k", str(target)], check=True)
+
+
+def main():
+    mode, arg, out_dir = sys.argv[1], sys.argv[2], Path(sys.argv[3])
     out_dir.mkdir(parents=True, exist_ok=True)
-    manifest = {}
+
+    if mode == "azure-samples":
+        for voice in arg.split(","):
+            try:
+                (out_dir / f"{voice}.mp3").write_bytes(azure_tts(SAMPLE_TEXT, voice))
+                print("ok", voice)
+            except Exception as error:  # unbekannte Stimme o. Ä. – die anderen trotzdem erzeugen
+                print("FEHLER", voice, error)
+        return
+
     sentences = all_sentences()
+    manifest = {}
     with tempfile.TemporaryDirectory() as tmp:
+        if mode == "piper":
+            from piper import PiperVoice, SynthesisConfig
+            voice = PiperVoice.load(arg)
+            config = SynthesisConfig(length_scale=LENGTH_SCALE, noise_scale=NOISE_SCALE,
+                                     noise_w_scale=NOISE_W_SCALE)
         for i, sentence in enumerate(sentences, 1):
-            wav_path = Path(tmp) / "s.wav"
-            # Einzelwörter ohne Satzzeichen („acht“, „Hund“) klingen sonst abgehackt.
-            spoken = sentence if sentence[-1] in ".!?" else sentence + "."
-            with wave.open(str(wav_path), "wb") as wav:
-                voice.synthesize_wav(spoken, wav, syn_config=config)
             name = file_name(sentence)
-            subprocess.run(
-                ["ffmpeg", "-loglevel", "error", "-y", "-i", str(wav_path),
-                 # Etwas Lautstärke-Reserve gegen Übersteuern, kurzer Ausklang.
-                 "-af", "volume=-3dB,apad=pad_dur=0.08",
-                 "-ac", "1", "-c:a", "aac", "-b:a", "64k", str(out_dir / name)],
-                check=True,
-            )
+            if mode == "piper":
+                # Einzelwörter ohne Satzzeichen („acht“, „Hund“) klingen sonst abgehackt.
+                spoken = sentence if sentence[-1] in ".!?" else sentence + "."
+                raw = Path(tmp) / "s.wav"
+                with wave.open(str(raw), "wb") as wav:
+                    voice.synthesize_wav(spoken, wav, syn_config=config)
+                # Etwas Lautstärke-Reserve gegen Übersteuern.
+                encode(raw, out_dir / name, ",volume=-3dB")
+            elif mode == "azure":
+                raw = Path(tmp) / "s.mp3"
+                raw.write_bytes(azure_tts(sentence, arg))
+                encode(raw, out_dir / name)
+            else:
+                sys.exit(f"Unbekannter Modus: {mode}")
             manifest[sentence] = name
             print(f"{i:3}/{len(sentences)} {sentence}")
     (out_dir / "voice_manifest.json").write_text(

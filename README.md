@@ -54,6 +54,6 @@ GitHub Actions baut die App bei jedem Push und führt die Tests im iOS-Simulator
 ## Stimme
 
 Die gesprochenen Sätze sind als Audioaufnahmen in `KleineEntdecker/Resources/Voice/` enthalten
-(frei lizenzierte Piper-Stimme „Kerstin“). Neue oder geänderte Sätze in `scripts/voice/generate.py`
-eintragen und den Workflow **„Stimme erzeugen“** starten; das Ergebnis liegt dann im Branch `stimme-kerstin`.
+(siehe `STIMME.txt` bzw. Lizenzangaben im Erzeugungs-Branch). Neue oder geänderte Sätze in `scripts/voice/generate.py`
+eintragen und den Workflow **„Stimme erzeugen“** starten; das Ergebnis liegt dann im Branch `stimme-<anbieter>`.
 Der Test `VoiceCoverageTests` prüft, dass jeder gesprochene Satz eine Aufnahme hat.
