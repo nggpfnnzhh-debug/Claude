@@ -1,3 +1,5 @@
+import SwiftUI
+import UIKit
 import XCTest
 @testable import KleineEntdecker
 
@@ -111,5 +113,24 @@ final class ChildProfileTests: XCTestCase {
         XCTAssertEqual(ChildProfile.title(name: "  ", adjective: "Kleiner"), ChildProfile.defaultTitle)
         XCTAssertEqual(ChildProfile.spokenName(name: "Biene", adjective: "Kleine"), "kleine Biene")
         XCTAssertNil(ChildProfile.spokenName(name: "", adjective: "Kleine"))
+    }
+}
+
+final class PaletteTests: XCTestCase {
+    /// Kinder müssen alle Farben sicher auseinanderhalten können (z. B. Rosa ≠ Rot).
+    func testPaletteColorsAreClearlyDistinct() {
+        let components = TaskFactory.palette.map { named -> (String, [CGFloat]) in
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            UIColor(named.color).getRed(&r, green: &g, blue: &b, alpha: &a)
+            return (named.name, [r, g, b])
+        }
+        for i in components.indices {
+            for j in components.indices where j > i {
+                let (nameA, a) = components[i]
+                let (nameB, b) = components[j]
+                let distance = sqrt(zip(a, b).map { ($0 - $1) * ($0 - $1) }.reduce(0, +)) * 255
+                XCTAssertGreaterThan(distance, 70, "\(nameA) und \(nameB) sind zu ähnlich")
+            }
+        }
     }
 }

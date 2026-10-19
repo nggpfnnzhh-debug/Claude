@@ -66,16 +66,21 @@ enum TaskFactory {
 
     // MARK: - Farben
 
+    /// Eindeutige, kindgerechte Farbtöne. Bewusst keine Systemfarben: `.pink` ist z. B. kaum von Rot zu unterscheiden.
     static let palette: [NamedColor] = [
-        NamedColor(name: "Rot", color: .red),
-        NamedColor(name: "Blau", color: .blue),
-        NamedColor(name: "Gelb", color: .yellow),
-        NamedColor(name: "Grün", color: .green),
-        NamedColor(name: "Orange", color: .orange),
-        NamedColor(name: "Lila", color: .purple),
-        NamedColor(name: "Rosa", color: .pink),
-        NamedColor(name: "Braun", color: .brown),
+        NamedColor(name: "Rot", color: rgb(229, 57, 53)),
+        NamedColor(name: "Blau", color: rgb(30, 102, 245)),
+        NamedColor(name: "Gelb", color: rgb(255, 221, 0)),
+        NamedColor(name: "Grün", color: rgb(46, 158, 68)),
+        NamedColor(name: "Orange", color: rgb(255, 140, 0)),
+        NamedColor(name: "Lila", color: rgb(142, 68, 173)),
+        NamedColor(name: "Rosa", color: rgb(255, 158, 199)),
+        NamedColor(name: "Braun", color: rgb(139, 90, 43)),
     ]
+
+    static func rgb(_ red: Double, _ green: Double, _ blue: Double) -> Color {
+        Color(.sRGB, red: red / 255, green: green / 255, blue: blue / 255, opacity: 1)
+    }
 
     static let colorSymbols = ["circle.fill", "star.fill", "heart.fill", "car.fill", "drop.fill", "leaf.fill", "cloud.fill"]
 

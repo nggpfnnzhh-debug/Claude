@@ -55,6 +55,8 @@ Kostenlos, ohne Kaufangebote, ohne Datenübertragung.
 
 ## 4. Bereits fertig, noch nicht im App Store
 
+- Eindeutige Farben im Farbspiel (Rosa war kaum von Rot zu unterscheiden)
+
 - Vergrößerte iPad-Oberfläche
 - Eigener Name / Spitzname für das Kind
 - Natürlichere iPhone-Stimme (beste installierte Stimme, Auswahl im Elternbereich)
