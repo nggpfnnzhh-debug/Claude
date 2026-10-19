@@ -26,6 +26,10 @@ Umzustellen:
 - [ ] `fastlane/metadata/de-DE/` (Untertitel, Schlüsselwörter, Beschreibung)
 - [ ] `docs/privacy.html`, `docs/index.html`, `README.md`, `docs/APP_STORE.md`
 - [ ] Screenshots neu erzeugen
+- [ ] Neue Adresse für Datenschutz- und Hilfeseite (ohne „Claude“), z. B. `huhu-eule.podolskis.de`
+      oder eigenes öffentliches Mini-Repository; danach URLs in App Store Connect und
+      `fastlane/metadata/de-DE/privacy_url.txt` / `support_url.txt` anpassen
+- [ ] Optional: dieses Repository danach auf privat stellen (erst nachdem die neue Datenschutz-Adresse in App Store Connect eingetragen ist)
 
 ## 2. Neue Stimme: Microsoft Azure
 
