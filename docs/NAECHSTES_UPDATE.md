@@ -37,12 +37,28 @@ Umzustellen:
 - [ ] Stimmenauswahl im Elternbereich umbenennen („Kerstin (in der App)“ → neuer Stimmenname)
 - [ ] Datenschutzerklärung prüfen (Aufnahmen sind in der App enthalten, keine Datenübertragung)
 
-## 3. Bereits fertig, noch nicht im App Store
+## 3. Fördertipps im Elternbereich (entschieden: ja)
+
+Kostenlos, ohne Kaufangebote, ohne Datenübertragung.
+
+- [ ] Pro Spiel nur auf dem Gerät merken, wie oft das Kind beim **ersten Versuch** richtig liegt
+      (gleitend über die letzten ~5 Runden; wird mit „Fortschritt zurücksetzen“ gelöscht)
+- [ ] Elternbereich: Abschnitt „Ideen zum gemeinsamen Üben“ – je Spiel 3–5 Alltagsideen
+      (z. B. Zählen: Treppenstufen zählen; Farben: „Ich sehe was, was du nicht siehst“;
+      Anlaute: Anlaut-Spiel beim Einkaufen; Muster: Perlen auffädeln; Memory: Tisch-Memory mit Alltagsgegenständen)
+- [ ] Spiele, bei denen es noch hakt, zuerst zeigen – freundlich formuliert
+      („Hier macht gemeinsames Üben besonders Spaß“), **keine** Defizit-Sprache, keine Noten
+- [ ] Ideen immer für alle Spiele erreichbar, nicht nur bei „Schwächen“
+- [ ] Hinweis: kurze Spielrunden sind keine Diagnose; normale Entwicklung verläuft unterschiedlich schnell
+- [ ] Datenschutzerklärung ergänzen: Spielergebnisse werden nur lokal gespeichert
+- [ ] Unit-Tests für die Auswertung
+
+## 4. Bereits fertig, noch nicht im App Store
 
 - Vergrößerte iPad-Oberfläche
 - Eigener Name / Spitzname für das Kind
 - Natürlichere iPhone-Stimme (beste installierte Stimme, Auswahl im Elternbereich)
 
-## 4. Optional
+## 5. Optional
 
 - Hinweis im Elternbereich, ob eine Premium-iPhone-Stimme installiert ist
