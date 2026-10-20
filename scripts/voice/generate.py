@@ -106,10 +106,28 @@ SAMPLE_TEXT = ("Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienk
                "Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!")
 
 
-def azure_tts(text: str, voice: str) -> bytes:
+def parse_voice_spec(spec: str) -> dict:
+    """„Stimme;style=cheerful;pitch=+5%;rate=-8%;degree=1.3;name=Datei“ → Einstellungen."""
+    parts = spec.strip().split(";")
+    settings = {"voice": parts[0], "rate": AZURE_RATE}
+    for part in parts[1:]:
+        key, _, value = part.partition("=")
+        settings[key.strip()] = value.strip()
+    return settings
+
+
+def azure_tts(text: str, spec: str) -> bytes:
+    settings = parse_voice_spec(spec)
     region = os.environ["AZURE_SPEECH_REGION"].strip()
-    ssml = (f"<speak version='1.0' xml:lang='de-DE'><voice name='{voice}'>"
-            f"<prosody rate='{AZURE_RATE}'>{escape(text)}</prosody></voice></speak>")
+    prosody = f"rate='{settings['rate']}'"
+    if settings.get("pitch"):
+        prosody += f" pitch='{settings['pitch']}'"
+    body = f"<prosody {prosody}>{escape(text)}</prosody>"
+    if settings.get("style"):
+        degree = f" styledegree='{settings['degree']}'" if settings.get("degree") else ""
+        body = f"<mstts:express-as style='{settings['style']}'{degree}>{body}</mstts:express-as>"
+    ssml = ("<speak version='1.0' xml:lang='de-DE' xmlns:mstts='https://www.w3.org/2001/mstts'>"
+            f"<voice name='{settings['voice']}'>{body}</voice></speak>")
     request = urllib.request.Request(
         f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1",
         data=ssml.encode("utf-8"),
@@ -142,12 +160,15 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if mode == "azure-samples":
-        for voice in arg.split(","):
+        # Mehrere Stimmen-Angaben durch „|“ getrennt (Komma geht für einfache Namenslisten auch).
+        specs = arg.split("|") if "|" in arg else arg.split(",")
+        for spec in specs:
+            label = parse_voice_spec(spec).get("name") or parse_voice_spec(spec)["voice"]
             try:
-                (out_dir / f"{voice}.mp3").write_bytes(azure_tts(SAMPLE_TEXT, voice))
-                print("ok", voice)
+                (out_dir / f"{label}.mp3").write_bytes(azure_tts(SAMPLE_TEXT, spec))
+                print("ok", label)
             except Exception as error:  # unbekannte Stimme o. Ä. – die anderen trotzdem erzeugen
-                print("FEHLER", voice, error)
+                print("FEHLER", label, error)
         return
 
     sentences = all_sentences()

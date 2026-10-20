@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       stimmen:
-        description: "Kommagetrennte Azure-Stimmen"
+        description: "Azure-Stimmen, getrennt durch Komma oder | (z. B. Stimme;style=cheerful;pitch=+5%;name=Datei)"
         default: "de-DE-SeraphinaMultilingualNeural,de-DE-KatjaNeural,de-DE-AmalaNeural,de-DE-LouisaNeural,de-DE-MajaNeural,de-DE-GiselaNeural,de-DE-ConradNeural,de-DE-FlorianMultilingualNeural"
 
 permissions:
