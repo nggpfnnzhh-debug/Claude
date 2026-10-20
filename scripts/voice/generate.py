@@ -214,8 +214,14 @@ def file_name(sentence: str) -> str:
     return "v_" + hashlib.sha1(sentence.encode("utf-8")).hexdigest()[:12] + ".m4a"
 
 
+# Azure hängt bis zu 1,6 s Stille an – vorne und hinten abschneiden, kurze natürliche Pause anhängen.
+TRIM_FILTER = ("silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.03,"
+               "areverse,silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05,areverse,"
+               "apad=pad_dur=0.1")
+
+
 def encode(source: Path, target: Path):
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(source), "-af", "apad=pad_dur=0.08",
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(source), "-af", TRIM_FILTER,
                     "-ac", "1", "-c:a", "aac", "-b:a", "64k", str(target)], check=True)
 
 
