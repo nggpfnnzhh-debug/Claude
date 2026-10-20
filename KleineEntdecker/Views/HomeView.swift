@@ -7,6 +7,7 @@ struct HomeView: View {
     @Environment(\.layoutScale) private var scale
     @State private var showParents = false
     @State private var showNicknamePicker = false
+    @State private var isFirstLaunch = false
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
@@ -44,11 +45,12 @@ struct HomeView: View {
         .onAppear {
             if !didAskNickname && LaunchOptions.screenshotScreen == nil {
                 didAskNickname = true
+                isFirstLaunch = true
                 showNicknamePicker = true
             } else if let name = ChildProfile.spokenName(name: childName, adjective: childAdjective) {
                 Speaker.shared.say("\(Lines.hello(name)) \(Lines.homeQuestion)")
             } else {
-                Speaker.shared.say(Lines.homeQuestion)
+                Speaker.shared.say(Lines.homeGreeting)
             }
         }
         .sheet(isPresented: $showParents) {
@@ -67,8 +69,8 @@ struct HomeView: View {
             }
             .buttonStyle(BouncyButtonStyle())
             .accessibilityLabel("Namen aussuchen")
-            .sheet(isPresented: $showNicknamePicker) {
-                NicknamePickerView()
+            .sheet(isPresented: $showNicknamePicker, onDismiss: { isFirstLaunch = false }) {
+                NicknamePickerView(introduceOwl: isFirstLaunch)
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(ChildProfile.title(name: childName, adjective: childAdjective))

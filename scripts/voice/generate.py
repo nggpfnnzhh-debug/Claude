@@ -62,13 +62,15 @@ NICKNAMES = [("Biene", "Kleine"), ("Bär", "Kleiner"), ("Fuchs", "Kleiner"), ("M
 MEMORY_ANIMALS = ["Hund", "Katze", "Maus", "Hase", "Fuchs", "Bär", "Panda", "Frosch",
                   "Affe", "Schwein", "Kuh", "Löwe"]
 FIXED = [
-    "Was möchtest du spielen?",
+    # Huhu, die Eule (Lines.swift)
+    "Huhu!", "Ich bin Huhu, die Eule.",
+    "Was möchtest du heute mit mir spielen?",
     "Wer bist du?", "Such dir einen Namen aus!",
-    "Super gemacht!", "Du hast einen Stern bekommen!",
+    "Super gemacht!", "Huhu freut sich!", "Du hast einen Stern bekommen!",
     "Finde die Paare!", "Tippe auf zwei Karten.",
     "Ein Paar!",
-    "Zeit für eine Pause!", "Du hast heute schon toll gespielt.",
-    "Hallo!", "Wie viele Äpfel siehst du?",
+    "Zeit für eine Pause!", "Huhu macht jetzt ein Nickerchen.", "Bis später!",
+    "Wie viele Äpfel siehst du?",
     # Zählen
     "Zähl noch einmal mit mir.", "Tippe auf jedes Bild!",
     # Muster
@@ -91,7 +93,7 @@ def all_sentences():
         s += [f"{w} fängt mit {l} an!", f"{w} fängt mit {l} an."]
     for name, adjective in NICKNAMES:
         spoken = f"{adjective.lower()} {name}"
-        s += [f"Hallo, {spoken}!", f"Super gemacht, {spoken}!"]
+        s += [f"Huhu, {spoken}!", f"Super gemacht, {spoken}!"]
     s += MEMORY_ANIMALS
     # Reihenfolge erhalten, Dubletten entfernen
     return list(dict.fromkeys(s))
@@ -103,7 +105,7 @@ def file_name(sentence: str) -> str:
 
 AZURE_RATE = "-8%"  # etwas ruhiger für Kinder
 AZURE_PAUSE = 3.2  # Sekunden zwischen zwei Anfragen
-SAMPLE_TEXT = ("Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienkäfer siehst du? "
+SAMPLE_TEXT = ("Huhu, kleine Biene! Was möchtest du heute mit mir spielen? Wie viele Marienkäfer siehst du? "
                "Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!")
 
 
