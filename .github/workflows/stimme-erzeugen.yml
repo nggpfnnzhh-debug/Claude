@@ -10,7 +10,7 @@ on:
         default: "azure"
       stimme:
         description: "Azure-Stimmenname (nur bei azure)"
-        default: "de-DE-SeraphinaMultilingualNeural"
+        default: "de-DE-KatjaNeural"
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ permissions:
 jobs:
   voice:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 

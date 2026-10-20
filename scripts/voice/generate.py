@@ -102,6 +102,7 @@ def file_name(sentence: str) -> str:
 
 
 AZURE_RATE = "-8%"  # etwas ruhiger für Kinder
+AZURE_PAUSE = 3.2  # Sekunden zwischen zwei Anfragen
 SAMPLE_TEXT = ("Hallo, kleine Biene! Was möchtest du spielen? Wie viele Marienkäfer siehst du? "
                "Super! Drei! Was fängt mit M an? Toll gemacht! Du hast einen Stern bekommen!")
 
@@ -138,13 +139,13 @@ def azure_tts(text: str, spec: str) -> bytes:
             "User-Agent": "kleine-entdecker-voice",
         },
     )
-    for attempt in range(5):
+    for attempt in range(8):
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
                 return response.read()
         except urllib.error.HTTPError as error:
-            if error.code == 429 and attempt < 4:  # Gratis-Tarif: Anfragen drosseln
-                time.sleep(3 * (attempt + 1))
+            if error.code == 429 and attempt < 7:  # Gratis-Tarif: Anfragen drosseln
+                time.sleep(10 * (attempt + 1))
                 continue
             raise
 
@@ -192,6 +193,7 @@ def main():
             elif mode == "azure":
                 raw = Path(tmp) / "s.mp3"
                 raw.write_bytes(azure_tts(sentence, arg))
+                time.sleep(AZURE_PAUSE)  # Gratis-Tarif F0: ca. 20 Anfragen pro Minute
                 encode(raw, out_dir / name)
             else:
                 sys.exit(f"Unbekannter Modus: {mode}")
