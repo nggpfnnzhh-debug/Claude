@@ -12,8 +12,8 @@ struct Nickname: Identifiable {
 }
 
 enum ChildProfile {
-    static let defaultTitle = "Kleine Entdecker"
-    static let defaultEmoji = "🦉"
+    static let defaultTitle = "Huhu Eule"
+    static let defaultEmoji = "🧒"
     static let adjectives = ["Kleiner", "Kleine", "Kleines"]
     static let maxNameLength = 15
 
@@ -25,7 +25,7 @@ enum ChildProfile {
         Nickname(name: "Drache", emoji: "🐲", adjective: "Kleiner"),
         Nickname(name: "Einhorn", emoji: "🦄", adjective: "Kleines"),
         Nickname(name: "Pinguin", emoji: "🐧", adjective: "Kleiner"),
-        Nickname(name: "Eule", emoji: "🦉", adjective: "Kleine"),
+        Nickname(name: "Igel", emoji: "🦔", adjective: "Kleiner"),
         Nickname(name: "Tiger", emoji: "🐯", adjective: "Kleiner"),
         Nickname(name: "Katze", emoji: "🐱", adjective: "Kleine"),
         Nickname(name: "Frosch", emoji: "🐸", adjective: "Kleiner"),
@@ -47,9 +47,17 @@ enum ChildProfile {
         return trimmed.isEmpty ? nil : "\(adjective.lowercased()) \(trimmed)"
     }
 
-    static var currentSpokenName: String? {
+    /// Nur die 15 Spitznamen sind als Aufnahme vorhanden. Einen eingetippten echten Namen
+    /// zeigt die App an, spricht ihn aber nicht aus (kein Wechsel zu einer Computerstimme).
+    static func recordedSpokenName(name: String, adjective: String) -> String? {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard nicknames.contains(where: { $0.name == trimmed && $0.adjective == adjective }) else { return nil }
+        return spokenName(name: trimmed, adjective: adjective)
+    }
+
+    static var currentRecordedSpokenName: String? {
         let defaults = UserDefaults.standard
-        return spokenName(
+        return recordedSpokenName(
             name: defaults.string(forKey: SettingsKey.childName) ?? "",
             adjective: defaults.string(forKey: SettingsKey.childAdjective) ?? "Kleine"
         )

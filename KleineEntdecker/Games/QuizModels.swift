@@ -3,6 +3,9 @@ import SwiftUI
 enum ShapeKind: String, CaseIterable {
     case circle, square, triangle, rectangle, star, heart, oval
 
+    /// Für Einsteiger: gut unterscheidbare Formen.
+    static let basic: [ShapeKind] = [.circle, .square, .triangle, .star, .heart]
+
     var name: String {
         switch self {
         case .circle: return "Kreis"
@@ -33,6 +36,12 @@ enum ChoiceContent: Hashable {
     case color(Color, symbol: String)
     case shape(ShapeKind, Color)
     case emoji(String)
+    /// Eine Gruppe gleicher Bilder (Mehr oder weniger?).
+    case group(String, count: Int)
+    /// Anzahl Klatscher (Silben klatschen).
+    case claps(Int)
+    /// Analoge Uhr (Uhr lesen).
+    case clock(hour: Int, minute: Int)
 }
 
 struct Choice: Identifiable, Hashable {
@@ -49,6 +58,8 @@ enum Prompt: Hashable {
     case objects(emoji: String, count: Int)
     case letter(String)
     case sequence([String])
+    /// Ein Bild, das beim Antippen in Silben vorgelesen wird.
+    case word(emoji: String, syllables: String)
     case empty
 }
 
@@ -57,5 +68,6 @@ struct QuizTask: Identifiable {
     let prompt: Prompt
     let instruction: String
     let choices: [Choice]
+    /// Wird nach dem Lob gesprochen (das Lob wählt die App je nach Verlauf).
     let correctFeedback: String
 }

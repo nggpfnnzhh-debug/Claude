@@ -1,15 +1,12 @@
-# Vertont alle Sätze der App und legt Aufnahmen + Manifest im Branch "stimme-<anbieter>" ab.
-# Für Azure: Secrets AZURE_SPEECH_KEY und AZURE_SPEECH_REGION.
+# Vertont alle Sätze der App mit einer Microsoft-Azure-Stimme und legt Aufnahmen + Manifest
+# im Branch "stimme-azure" ab. Benötigte Secrets: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION.
 name: Stimme erzeugen
 
 on:
   workflow_dispatch:
     inputs:
-      anbieter:
-        description: "piper oder azure"
-        default: "azure"
       stimme:
-        description: "Azure-Stimmenname (nur bei azure)"
+        description: "Azure-Stimme (optional mit Einstellungen, z. B. de-DE-KatjaNeural;rate=-8%)"
         default: "de-DE-KatjaNeural"
 
 permissions:
@@ -18,42 +15,31 @@ permissions:
 jobs:
   voice:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+      AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Werkzeuge installieren
+      - name: Voraussetzungen prüfen
         run: |
+          for name in AZURE_SPEECH_KEY AZURE_SPEECH_REGION; do
+            if [ -z "${!name}" ]; then echo "::error::Secret $name fehlt"; exit 1; fi
+          done
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
-          pip install -q "piper-tts==1.8.0"
-          python3 -m piper.download_voices --download-dir "$RUNNER_TEMP/voices" de_DE-kerstin-low
-          # Lizenzangaben der Stimme mit ablegen
-          mkdir -p "$RUNNER_TEMP/Voice"
-          curl -sSfL -o "$RUNNER_TEMP/Voice/MODEL_CARD.txt" \
-            "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/kerstin/low/MODEL_CARD"
-          # Kerstin ist von „Ryan“ (low) abgeleitet – dessen Lizenz ebenfalls ablegen
-          curl -sSfL -o "$RUNNER_TEMP/Voice/MODEL_CARD_base_ryan.txt" \
-            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/low/MODEL_CARD"
-          cat "$RUNNER_TEMP/Voice/MODEL_CARD.txt" "$RUNNER_TEMP/Voice/MODEL_CARD_base_ryan.txt"
 
       - name: Sätze vertonen
-        env:
-          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
         run: |
-          if [ "${{ inputs.anbieter }}" = "azure" ]; then
-            rm -f "$RUNNER_TEMP/Voice/"MODEL_CARD*.txt
-            echo "Stimme: ${{ inputs.stimme }} (Microsoft Azure)" > "$RUNNER_TEMP/Voice/STIMME.txt"
-            python3 scripts/voice/generate.py azure "${{ inputs.stimme }}" "$RUNNER_TEMP/Voice"
-          else
-            python3 scripts/voice/generate.py piper "$RUNNER_TEMP/voices/de_DE-kerstin-low.onnx" "$RUNNER_TEMP/Voice"
-          fi
+          mkdir -p "$RUNNER_TEMP/Voice"
+          echo "Stimme: ${{ inputs.stimme }} (Microsoft Azure Sprachsynthese)" > "$RUNNER_TEMP/Voice/STIMME.txt"
+          python3 scripts/voice/generate.py azure "${{ inputs.stimme }}" "$RUNNER_TEMP/Voice"
 
       - name: In Branch ablegen
         run: |
           cd "$RUNNER_TEMP/Voice"
           du -sh .
-          git init -q -b "stimme-${{ inputs.anbieter }}"
+          git init -q -b stimme-azure
           git add .
-          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Aufnahmen (${{ inputs.anbieter }}) für ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "stimme-${{ inputs.anbieter }}"
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Aufnahmen für ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimme-azure

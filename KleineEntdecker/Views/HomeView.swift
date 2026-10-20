@@ -6,6 +6,7 @@ struct HomeView: View {
     @EnvironmentObject private var progress: ProgressStore
     @Environment(\.layoutScale) private var scale
     @State private var showParents = false
+    @State private var showStarSky = false
     @State private var showNicknamePicker = false
     @State private var isFirstLaunch = false
     @AppStorage(SettingsKey.childName) private var childName = ""
@@ -23,19 +24,15 @@ struct HomeView: View {
             .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 20 * scale) {
                     header
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150 * scale, maximum: 260 * scale), spacing: 20 * scale)], spacing: 20 * scale) {
-                        ForEach(Game.allCases) { game in
-                            Button {
-                                onSelect(game)
-                            } label: {
-                                GameTile(game: game, stars: progress.stars(for: game))
-                            }
-                            .buttonStyle(BouncyButtonStyle())
-                            .accessibilityLabel(game.title)
-                        }
-                    }
+                    gameGrid(Game.basics)
+                    Label("Vorschule", systemImage: "graduationcap.fill")
+                        .font(.system(size: 22 * scale, weight: .heavy, design: .rounded))
+                        .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
+                        .padding(.top, 8 * scale)
+                        .accessibilityAddTraits(.isHeader)
+                    gameGrid(Game.preschool)
                 }
                 .padding(24)
                 .frame(maxWidth: 900 * scale)
@@ -47,15 +44,35 @@ struct HomeView: View {
                 didAskNickname = true
                 isFirstLaunch = true
                 showNicknamePicker = true
-            } else if let name = ChildProfile.spokenName(name: childName, adjective: childAdjective) {
-                Speaker.shared.say("\(Lines.hello(name)) \(Lines.homeQuestion)")
             } else {
-                Speaker.shared.say(Lines.homeGreeting)
+                greet()
             }
         }
         .sheet(isPresented: $showParents) {
             ParentArea()
                 .environmentObject(progress)
+        }
+    }
+
+    private func greet() {
+        if let name = ChildProfile.recordedSpokenName(name: childName, adjective: childAdjective) {
+            Speaker.shared.say("\(Lines.hello(name)) \(Lines.homeQuestion)")
+        } else {
+            Speaker.shared.say(Lines.homeGreeting)
+        }
+    }
+
+    private func gameGrid(_ games: [Game]) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150 * scale, maximum: 260 * scale), spacing: 20 * scale)], spacing: 20 * scale) {
+            ForEach(games) { game in
+                Button {
+                    onSelect(game)
+                } label: {
+                    GameTile(game: game)
+                }
+                .buttonStyle(BouncyButtonStyle())
+                .accessibilityLabel(game.title)
+            }
         }
     }
 
@@ -79,16 +96,30 @@ struct HomeView: View {
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .onTapGesture { showNicknamePicker = true }
-                HStack(spacing: 6) {
-                    Text("⭐️")
-                    Text("\(progress.totalStars)")
-                        .font(.system(size: 24 * scale, weight: .bold, design: .rounded))
-                        .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
+                Button {
+                    showStarSky = true
+                } label: {
+                    Label("Sternenhimmel", systemImage: "sparkles")
+                        .font(.system(size: 15 * scale, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color(red: 0.2, green: 0.22, blue: 0.45)))
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(progress.totalStars) Sterne gesammelt")
+                .buttonStyle(BouncyButtonStyle())
+                .accessibilityLabel("Huhus Sternenhimmel, \(progress.totalStars) Sterne")
+                .sheet(isPresented: $showStarSky) {
+                    StarSkyView(starCount: progress.totalStars)
+                }
             }
             Spacer()
+            // Huhu, die Eule – tippt das Kind sie an, begrüßt sie es noch einmal.
+            Button(action: greet) {
+                Text("🦉")
+                    .font(.system(size: 48 * scale))
+            }
+            .buttonStyle(BouncyButtonStyle())
+            .accessibilityLabel("Huhu, die Eule")
             Button {
                 showParents = true
             } label: {
@@ -105,7 +136,6 @@ struct HomeView: View {
 
 struct GameTile: View {
     let game: Game
-    let stars: Int
 
     @Environment(\.layoutScale) private var scale
 
@@ -114,15 +144,14 @@ struct GameTile: View {
             Text(game.icon)
                 .font(.system(size: 64 * scale))
             Text(game.title)
-                .font(.system(size: 24 * scale, weight: .heavy, design: .rounded))
+                .font(.system(size: 22 * scale, weight: .heavy, design: .rounded))
                 .foregroundColor(.white)
+                .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.7)
-                .lineLimit(1)
-            Text(stars > 0 ? "⭐️ \(stars)" : " ")
-                .font(.system(size: 18 * scale, weight: .bold, design: .rounded))
-                .foregroundColor(.white.opacity(0.95))
+                .lineLimit(2)
+                .frame(minHeight: 56 * scale)
         }
-        .padding(.vertical, 20 * scale)
+        .padding(.vertical, 18 * scale)
         .padding(.horizontal, 12)
         .frame(maxWidth: .infinity)
         .background(

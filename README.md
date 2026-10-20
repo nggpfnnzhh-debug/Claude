@@ -1,59 +1,47 @@
-# Kleine Entdecker 🦉
+# Huhu Eule 🦉
 
-Eine pädagogische Lern-App für Kinder von etwa 4 bis 6 Jahren (iPhone & iPad, Deutsch).
+Pädagogische Lern-App für Kinder von etwa 4 bis 6 Jahren (iPhone & iPad, Deutsch).
 
-Alle Anweisungen werden **vorgelesen** – das Kind muss nicht lesen können. Falsche Antworten werden nicht
-bestraft, sondern freundlich erklärt („Das ist Blau. Wo ist Rot?“). Nach jeder Runde gibt es einen Stern.
+Huhu, die Eule, spricht alle Anweisungen vor – das Kind muss nicht lesen können. Falsche Antworten werden
+nicht bestraft, sondern freundlich erklärt; nach zwei Fehlversuchen hilft Huhu. Für jede geschaffte Runde
+leuchtet ein Stern in Huhus Sternenhimmel. Die Schwierigkeit passt sich automatisch an.
 
 ## Spiele
 
 | Spiel | Was wird gelernt? |
 |---|---|
-| 🐞 **Zählen** | Mengen bis 5 (oder 10) erfassen; durch Antippen der Bilder wird laut mitgezählt |
+| 🐞 **Zählen** | Mengen bis 5, 10 oder 20; durch Antippen wird laut mitgezählt |
 | 🎨 **Farben** | Grund- und Mischfarben benennen |
-| 🔺 **Formen** | Kreis, Quadrat, Dreieck, Rechteck, Oval, Stern, Herz – unabhängig von der Farbe |
-| 🔤 **Buchstaben** | Anlaute hören („Was fängt mit M an?“) – Vorläuferfähigkeit fürs Lesen |
-| 🧩 **Muster** | Folgen fortsetzen (AB, AAB, ABB, ABC) – logisches Denken |
-| 🃏 **Memory** | Konzentration und Gedächtnis, Tiernamen |
+| 🔺 **Formen** | Geometrische Grundformen – unabhängig von der Farbe |
+| 🔤 **Buchstaben** | Anlaute hören (als Laut gesprochen: „mmm“ statt „Em“) |
+| 🧩 **Muster** | Folgen fortsetzen (AB, AAB, ABB, ABC, AABB) |
+| 🃏 **Memory** | Konzentration und Gedächtnis |
+| ⚖️ **Mehr oder weniger?** *(Vorschule)* | Mengen vergleichen |
+| 👏 **Silben klatschen** *(Vorschule)* | Wörter in Silben zerlegen |
+| 🕒 **Uhr lesen** *(Vorschule)* | Volle und halbe Stunden |
 
 ## Für Eltern
 
-- **Eigener Name**: Das Kind wählt per Tippen auf das Tier oben links einen Spitznamen („Kleine Biene“), oder die Eltern tragen den echten Namen ein („Kleiner Max“).
-
-- **Elternbereich** (oben rechts, gesichert durch eine Rechenaufgabe): Sprachausgabe, Zahlenraum, Pausen-Erinnerung, Fortschritt.
-- **Pausen-Erinnerung**: nach 10–30 Minuten erscheint ein freundlicher Pausenbildschirm; Weiterspielen nur über die Elternschranke.
-- **Datenschutz**: keine Werbung, keine In-App-Käufe, keine Links, kein Tracking, keine Netzwerkzugriffe. Der Fortschritt wird nur lokal gespeichert.
+- **Elternbereich** (gesichert durch eine Rechenaufgabe): Name des Kindes, Fördertipps je Spiel, Pausen-Erinnerung, Fortschritt.
+- **Fördertipps**: Die App merkt sich nur lokal, wie oft beim ersten Versuch richtig geantwortet wird, und zeigt Spiele mit Übungsbedarf zuerst.
+- **Datenschutz**: keine Werbung, keine In-App-Käufe, keine Links, kein Tracking, keine Netzwerkzugriffe.
 
 ## Entwicklung
 
-Voraussetzungen: Mac mit Xcode 16 oder neuer, [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+Voraussetzungen: Mac mit Xcode 26 oder neuer, [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
 brew install xcodegen
-xcodegen generate          # erzeugt KleineEntdecker.xcodeproj aus project.yml
+xcodegen generate
 open KleineEntdecker.xcodeproj
 ```
 
-In Xcode unter *Signing & Capabilities* das eigene Team wählen und auf einem Simulator oder dem eigenen iPad starten.
-
-```
-KleineEntdecker/
-  App/        App-Einstieg, Pausen-Logik
-  Core/       Spiele-Definition, Sprachausgabe, Fortschritt, Einstellungen
-  Games/      Aufgaben-Generatoren für die Lernspiele
-  Views/      Oberfläche (Start, Quiz, Memory, Belohnung, Elternbereich)
-  Resources/  App-Icon, Farben, Privacy Manifest
-KleineEntdeckerTests/   Unit-Tests der Aufgaben-Generatoren
-```
-
-GitHub Actions baut die App bei jedem Push und führt die Tests im iOS-Simulator aus
-(`.github/workflows/ios-build.yml`). Der Upload zu TestFlight läuft über `.github/workflows/testflight.yml`.
-
-**Veröffentlichung im App Store:** siehe [docs/APP_STORE.md](docs/APP_STORE.md).
+GitHub Actions baut die App und führt die Tests aus (`ios-build.yml`); Upload und Einreichung:
+`app-store.yml` bzw. `testflight.yml`. Veröffentlichung: siehe [docs/APP_STORE.md](docs/APP_STORE.md).
 
 ## Stimme
 
-Die gesprochenen Sätze sind als Audioaufnahmen in `KleineEntdecker/Resources/Voice/` enthalten
-(siehe `STIMME.txt` bzw. Lizenzangaben im Erzeugungs-Branch). Neue oder geänderte Sätze in `scripts/voice/generate.py`
-eintragen und den Workflow **„Stimme erzeugen“** starten; das Ergebnis liegt dann im Branch `stimme-<anbieter>`.
+Alle gesprochenen Sätze liegen als Audioaufnahmen in `KleineEntdecker/Resources/Voice/`
+(Microsoft-Azure-Sprachsynthese, Stimme „Katja“). Neue oder geänderte Sätze in `scripts/voice/generate.py`
+eintragen und den Workflow **„Stimme erzeugen“** starten; das Ergebnis liegt im Branch `stimme-azure`.
 Der Test `VoiceCoverageTests` prüft, dass jeder gesprochene Satz eine Aufnahme hat.

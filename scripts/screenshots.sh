@@ -6,7 +6,7 @@ set -euo pipefail
 APP="$1"
 OUT="$2"
 BUNDLE_ID="de.podolskis.kleineentdecker"
-SCREENS=(home counting letters shapes patterns)
+SCREENS=(home counting syllables clock letters)
 mkdir -p "$OUT"
 
 find_device() {

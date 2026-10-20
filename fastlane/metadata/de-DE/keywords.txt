@@ -1,1 +1,1 @@
-lernen,kinder,vorschule,kindergarten,zählen,zahlen,farben,formen,buchstaben,abc,memory,lernspiel
+kinder,vorschule,kita,kindergarten,zahlen,buchstaben,anlaute,memory,muster,logik,lernen,spiel,mathe
