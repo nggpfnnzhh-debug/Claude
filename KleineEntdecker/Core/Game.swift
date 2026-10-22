@@ -62,6 +62,19 @@ enum Game: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Wird bei der ersten Aufgabe einer Runde an die Anweisung angehängt, damit das Kind weiß, wo es tippen soll.
+    var tapHint: String? {
+        switch self {
+        case .counting: return "Tippe unten auf die richtige Zahl!"
+        case .colors, .memory: return nil
+        case .shapes: return "Tippe auf die richtige Form!"
+        case .letters, .patterns: return "Tippe unten auf das richtige Bild!"
+        case .moreLess: return "Tippe auf das richtige Bild!"
+        case .syllables: return "Tippe unten, wie oft du klatschst!"
+        case .clock: return "Tippe auf die richtige Uhr!"
+        }
+    }
+
     /// Erklärung für Eltern, was das Spiel fördert.
     var parentInfo: String {
         switch self {

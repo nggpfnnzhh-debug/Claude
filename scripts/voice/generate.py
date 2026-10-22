@@ -106,6 +106,9 @@ FIXED = [
     "Finde die Paare!", "Tippe auf zwei Karten.", "Ein Paar!",
     "Zeit für eine Pause!", "Huhu macht jetzt ein Nickerchen.", "Bis später!",
     "Huhu hilft dir.", "Schau mal hier!", "Wir zählen zusammen!",
+    # Hinweise bei der ersten Aufgabe einer Runde (Game.tapHint)
+    "Tippe unten auf die richtige Zahl!", "Tippe auf die richtige Form!", "Tippe unten auf das richtige Bild!",
+    "Tippe auf das richtige Bild!", "Tippe unten, wie oft du klatschst!", "Tippe auf die richtige Uhr!",
     # Zählen
     "Zähl noch einmal mit mir.", "Tippe auf jedes Bild!",
     # Muster

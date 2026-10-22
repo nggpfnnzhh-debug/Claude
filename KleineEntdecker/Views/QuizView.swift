@@ -21,6 +21,8 @@ struct QuizView: View {
     @State private var firstTryCount = 0
     @State private var hintActive = false
     @State private var finished = false
+    /// Zeigt in der ersten Aufgabe einer Runde mit einem Finger, wo getippt wird.
+    @State private var showTapPointer = true
 
     private var currentTask: QuizTask? {
         tasks.indices.contains(index) ? tasks[index] : nil
@@ -44,6 +46,9 @@ struct QuizView: View {
                     PromptView(prompt: task.prompt, tint: game.tint, countAlong: hintActive)
                         .id(task.id)
                     Spacer(minLength: 0)
+                    if index == 0 && showTapPointer {
+                        TapPointer()
+                    }
                     ChoiceRow(
                         choices: task.choices,
                         wrongIDs: wrongIDs,
@@ -81,9 +86,8 @@ struct QuizView: View {
         firstTryCount = 0
         resetTaskState()
         withAnimation { finished = false }
-        if let first = tasks.first {
-            Speaker.shared.say(first.instruction)
-        }
+        showTapPointer = true
+        Speaker.shared.say(instruction(for: 0))
     }
 
     private func resetTaskState() {
@@ -94,13 +98,23 @@ struct QuizView: View {
     }
 
     private func repeatInstruction() {
-        if let task = currentTask {
-            Speaker.shared.say(task.instruction)
+        guard currentTask != nil else { return }
+        Speaker.shared.say(instruction(for: index))
+    }
+
+    /// Bei der ersten Aufgabe einer Runde mit Hinweis, wo getippt wird; danach nur die kurze Frage.
+    private func instruction(for taskIndex: Int) -> String {
+        guard tasks.indices.contains(taskIndex) else { return "" }
+        let base = tasks[taskIndex].instruction
+        if taskIndex == 0, let hint = game.tapHint {
+            return "\(base) \(hint)"
         }
+        return base
     }
 
     private func select(_ choice: Choice, in task: QuizTask) {
         guard solvedID == nil, !wrongIDs.contains(choice.id) else { return }
+        withAnimation { showTapPointer = false }
         if choice.isCorrect {
             if mistakesInTask == 0 { firstTryCount += 1 }
             withAnimation(.spring(response: 0.35, dampingFraction: 0.5)) {
@@ -141,6 +155,22 @@ struct QuizView: View {
             progress.completeRound(for: game, result: RoundResult(firstTry: firstTryCount, total: tasks.count))
             withAnimation(.spring()) { finished = true }
         }
+    }
+}
+
+/// Hüpfender Finger über den Antworten: „Hier tippen!“
+private struct TapPointer: View {
+    @Environment(\.layoutScale) private var scale
+    @State private var bounce = false
+
+    var body: some View {
+        Text("👇")
+            .font(.system(size: 40 * scale))
+            .offset(y: bounce ? 6 : -6)
+            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: bounce)
+            .onAppear { bounce = true }
+            .accessibilityHidden(true)
+            .transition(.opacity)
     }
 }
 

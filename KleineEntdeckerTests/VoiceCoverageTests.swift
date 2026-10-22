@@ -31,6 +31,7 @@ final class VoiceCoverageTests: XCTestCase {
         }
         texts += Phrases.firstTryPraise + Phrases.persistencePraise + Phrases.numberWords.dropFirst()
         texts += Lines.fixed
+        texts += Game.allCases.compactMap(\.tapHint)
         for nickname in ChildProfile.nicknames {
             let spoken = ChildProfile.spokenName(name: nickname.name, adjective: nickname.adjective) ?? ""
             texts.append(Lines.hello(spoken))
