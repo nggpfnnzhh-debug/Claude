@@ -69,8 +69,11 @@ struct HomeView: View {
         }
     }
 
+    /// iPhone: zwei Spalten. iPad: Grundspiele in drei, Vorschulspiele in vier Spalten –
+    /// so gehen beide Bereiche ohne einzelne Kachel in der letzten Reihe auf.
     private func gameGrid(_ games: [Game]) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150 * scale, maximum: 260 * scale), spacing: 20 * scale)], spacing: 20 * scale) {
+        let count = scale > 1 ? (games.count % 4 == 0 ? 4 : 3) : 2
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 20 * scale), count: count), spacing: 20 * scale) {
             ForEach(games) { game in
                 Button {
                     onSelect(game)
@@ -111,11 +114,11 @@ struct HomeView: View {
                     showParents = true
                 } label: {
                     Label("Eltern", systemImage: "lock.fill")
-                        .font(.footnote.weight(.semibold))
+                        .font(.system(size: 13 * scale, weight: .semibold))
                         .foregroundColor(.secondary)
                         .fixedSize()
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12 * scale)
+                        .padding(.vertical, 8 * scale)
                         .background(Capsule().fill(Color.white.opacity(0.7)))
                 }
             }

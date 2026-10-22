@@ -352,24 +352,40 @@ struct ChoiceRow: View {
 
     @Environment(\.layoutScale) private var scale
 
+    /// Vier Karten passen auf dem iPhone nur sehr klein nebeneinander (z. B. Uhren) – dann 2 × 2.
+    private var usesTwoRows: Bool { choices.count == 4 && scale <= 1 }
+
     var body: some View {
-        HStack(spacing: 16 * scale) {
-            ForEach(choices) { choice in
-                Button {
-                    onSelect(choice)
-                } label: {
-                    ChoiceCard(
-                        content: choice.content,
-                        isWrong: wrongIDs.contains(choice.id),
-                        isSolved: solvedID == choice.id,
-                        isHinted: hintedID == choice.id
-                    )
+        Group {
+            if usesTwoRows {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16) {
+                    cards
                 }
-                .buttonStyle(BouncyButtonStyle())
-                .accessibilityLabel(choice.spokenName)
+                .frame(maxWidth: 340)
+            } else {
+                HStack(spacing: 16 * scale) {
+                    cards
+                }
             }
         }
         .frame(maxWidth: 720 * scale)
+    }
+
+    private var cards: some View {
+        ForEach(choices) { choice in
+            Button {
+                onSelect(choice)
+            } label: {
+                ChoiceCard(
+                    content: choice.content,
+                    isWrong: wrongIDs.contains(choice.id),
+                    isSolved: solvedID == choice.id,
+                    isHinted: hintedID == choice.id
+                )
+            }
+            .buttonStyle(BouncyButtonStyle())
+            .accessibilityLabel(choice.spokenName)
+        }
     }
 }
 
