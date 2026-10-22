@@ -49,7 +49,7 @@ Diese Daten **niemals in den Chat oder in Dateien im Repository** kopieren – d
 
 ### 4c. Datenschutzseite online stellen
 GitHub-Repository → *Settings* → *Pages* → *Source: Deploy from a branch* → Branch **main**, Ordner **/docs** → *Save*.
-Danach erreichbar unter <https://nggpfnnzhh-debug.github.io/Claude/privacy.html>.
+Danach erreichbar unter <https://nggpfnnzhh-debug.github.io/huhu-eule/privacy.html>.
 
 ### 4d. Workflow starten
 GitHub → *Actions* → **App Store – Hochladen & Einreichen** → *Run workflow*.
