@@ -5,6 +5,9 @@ name: Stimmproben Azure
 on:
   workflow_dispatch:
     inputs:
+      textdatei:
+        description: "Optional: Datei mit SSML-Proben (dann wird nur die erste Stimme verwendet)"
+        default: ""
       stimmen:
         description: "Azure-Stimmen, getrennt durch Komma oder | (z. B. Stimme;style=cheerful;pitch=+5%;name=Datei)"
         default: "de-DE-SeraphinaMultilingualNeural,de-DE-KatjaNeural,de-DE-AmalaNeural,de-DE-LouisaNeural,de-DE-MajaNeural,de-DE-GiselaNeural,de-DE-ConradNeural,de-DE-FlorianMultilingualNeural"
@@ -27,7 +30,13 @@ jobs:
             if [ -z "${!name}" ]; then echo "::error::Secret $name fehlt"; exit 1; fi
           done
       - name: Proben erzeugen
-        run: python3 scripts/voice/generate.py azure-samples "${{ inputs.stimmen }}" "$RUNNER_TEMP/out"
+        run: |
+          if [ -n "${{ inputs.textdatei }}" ]; then
+            VOICE=$(echo "${{ inputs.stimmen }}" | cut -d'|' -f1 | cut -d',' -f1)
+            python3 scripts/voice/generate.py azure-ssml "$VOICE" "$RUNNER_TEMP/out" "${{ inputs.textdatei }}"
+          else
+            python3 scripts/voice/generate.py azure-samples "${{ inputs.stimmen }}" "$RUNNER_TEMP/out"
+          fi
       - name: In Branch ablegen
         run: |
           cd "$RUNNER_TEMP/out"

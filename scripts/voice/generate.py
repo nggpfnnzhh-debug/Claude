@@ -13,6 +13,7 @@ Aufruf (Umgebung: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION):
   generate.py list                                   – alle Sätze ausgeben
   generate.py azure <stimme> <ausgabeordner>         – alle Sätze vertonen
   generate.py azure-samples <spec|spec|…> <ordner>   – Hörproben
+  generate.py azure-ssml <stimme> <ordner> <datei>   – Hörproben aus einer Datei „name|SSML-Text“ je Zeile
 Eine Stimmen-Angabe kann Einstellungen enthalten: „de-DE-KatjaNeural;style=cheerful;pitch=+5%;rate=-8%;name=Datei“.
 """
 import hashlib
@@ -177,13 +178,13 @@ def parse_voice_spec(spec: str) -> dict:
     return settings
 
 
-def azure_tts(text: str, spec: str) -> bytes:
+def azure_tts(text: str, spec: str, raw_ssml: bool = False) -> bytes:
     settings = parse_voice_spec(spec)
     region = os.environ["AZURE_SPEECH_REGION"].strip()
     prosody = f"rate='{settings['rate']}'"
     if settings.get("pitch"):
         prosody += f" pitch='{settings['pitch']}'"
-    body = f"<prosody {prosody}>{ssml_body(text)}</prosody>"
+    body = f"<prosody {prosody}>{text if raw_ssml else ssml_body(text)}</prosody>"
     if settings.get("style"):
         degree = f" styledegree='{settings['degree']}'" if settings.get("degree") else ""
         body = f"<mstts:express-as style='{settings['style']}'{degree}>{body}</mstts:express-as>"
@@ -234,6 +235,16 @@ def main():
 
     arg, out_dir = sys.argv[2], Path(sys.argv[3])
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if mode == "azure-ssml":
+        for line in Path(sys.argv[4]).read_text(encoding="utf-8").splitlines():
+            if not line.strip() or line.startswith("#"):
+                continue
+            label, _, fragment = line.partition("|")
+            (out_dir / f"{label.strip()}.mp3").write_bytes(azure_tts(fragment.strip(), arg, raw_ssml=True))
+            print("ok", label.strip())
+            time.sleep(AZURE_PAUSE)
+        return
 
     if mode == "azure-samples":
         specs = arg.split("|") if "|" in arg else arg.split(",")
