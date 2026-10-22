@@ -19,7 +19,7 @@ enum LaunchOptions {
     static func prepareScreenshotModeIfNeeded() {
         guard screenshotScreen != nil else { return }
         let demoStars = ["counting": 4, "colors": 3, "shapes": 2, "letters": 3, "patterns": 1, "memory": 2,
-                         "moreLess": 1, "syllables": 2, "clock": 1]
+                         "moreLess": 1, "syllables": 2, "rhymes": 1, "clock": 1]
         UserDefaults.standard.set(demoStars, forKey: "starsByGame")
         // Etwas fortgeschrittenere Aufgaben wirken auf Screenshots anschaulicher.
         UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1], forKey: "levelsByGame")

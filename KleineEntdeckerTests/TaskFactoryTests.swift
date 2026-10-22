@@ -136,6 +136,26 @@ final class TaskFactoryTests: XCTestCase {
         }
     }
 
+    func testRhymeAnswerIsPartner() {
+        let partners = Dictionary(uniqueKeysWithValues: TaskFactory.rhymePairs.map { ($0.0.word, $0.1.word) })
+        let allWords = TaskFactory.rhymePairs.flatMap { [$0.0.word, $0.1.word] }
+        XCTAssertEqual(Set(allWords).count, allWords.count, "jedes Wort nur einmal")
+        for level in 0...Game.rhymes.maxLevel {
+            for _ in 0..<60 {
+                for task in TaskFactory.tasks(for: .rhymes, level: level) {
+                    guard case let .word(_, spoken) = task.prompt else { return XCTFail("Falscher Prompt") }
+                    let target = String(spoken.dropLast())
+                    let correct = task.choices.first(where: \.isCorrect)?.spokenName
+                    XCTAssertEqual(correct, partners[target], target)
+                    // Alle Bilder werden in der Anweisung benannt.
+                    for choice in task.choices {
+                        XCTAssertTrue(task.instruction.contains(choice.spokenName + "."), choice.spokenName)
+                    }
+                }
+            }
+        }
+    }
+
     func testClockTimeTexts() {
         XCTAssertEqual(TaskFactory.timeText(hour: 1, minute: 0), "ein Uhr")
         XCTAssertEqual(TaskFactory.timeText(hour: 3, minute: 0), "drei Uhr")

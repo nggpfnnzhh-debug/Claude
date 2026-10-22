@@ -18,6 +18,7 @@ enum TaskFactory {
         case .patterns: return patternTasks(level: level)
         case .moreLess: return moreLessTasks(level: level)
         case .syllables: return syllableTasks(level: level)
+        case .rhymes: return rhymeTasks(level: level)
         case .clock: return clockTasks(level: level)
         case .memory: return []
         }
@@ -406,6 +407,59 @@ enum TaskFactory {
                 instruction: "Wie oft klatschst du bei \(word.word)?",
                 choices: choices,
                 correctFeedback: "\(word.spokenSyllables) \(syllableCountTexts[count - 1])"
+            )
+        }
+    }
+
+    // MARK: - Reime finden (Vorschule)
+
+    struct RhymeWord: Equatable {
+        let word: String
+        let emoji: String
+    }
+
+    /// Klare Reimpaare mit eindeutigen Bildern. Das erste Wort ist die Frage, das zweite die Antwort.
+    /// Keine zwei Paare reimen sich untereinander – so ist immer genau eine Antwort richtig.
+    static let rhymePairs: [(RhymeWord, RhymeWord)] = [
+        (RhymeWord(word: "Maus", emoji: "🐭"), RhymeWord(word: "Haus", emoji: "🏠")),
+        (RhymeWord(word: "Kuh", emoji: "🐮"), RhymeWord(word: "Schuh", emoji: "👟")),
+        (RhymeWord(word: "Katze", emoji: "🐱"), RhymeWord(word: "Tatze", emoji: "🐾")),
+        (RhymeWord(word: "Hose", emoji: "👖"), RhymeWord(word: "Rose", emoji: "🌹")),
+        (RhymeWord(word: "Hase", emoji: "🐰"), RhymeWord(word: "Nase", emoji: "👃")),
+        (RhymeWord(word: "Brot", emoji: "🍞"), RhymeWord(word: "Boot", emoji: "⛵️")),
+        (RhymeWord(word: "Zahn", emoji: "🦷"), RhymeWord(word: "Hahn", emoji: "🐓")),
+        (RhymeWord(word: "Schwein", emoji: "🐷"), RhymeWord(word: "Bein", emoji: "🦵")),
+        (RhymeWord(word: "Ziege", emoji: "🐐"), RhymeWord(word: "Fliege", emoji: "🪰")),
+        (RhymeWord(word: "Wal", emoji: "🐋"), RhymeWord(word: "Schal", emoji: "🧣")),
+        (RhymeWord(word: "Igel", emoji: "🦔"), RhymeWord(word: "Spiegel", emoji: "🪞")),
+        (RhymeWord(word: "Rakete", emoji: "🚀"), RhymeWord(word: "Trompete", emoji: "🎺")),
+        (RhymeWord(word: "Socke", emoji: "🧦"), RhymeWord(word: "Glocke", emoji: "🔔")),
+        (RhymeWord(word: "Tanne", emoji: "🌲"), RhymeWord(word: "Kanne", emoji: "🫖")),
+        (RhymeWord(word: "Hund", emoji: "🐶"), RhymeWord(word: "Mund", emoji: "👄")),
+    ]
+
+    static func rhymeTasks(level: Int) -> [QuizTask] {
+        let optionCount = level == 2 ? 4 : 3
+        let pairs = Array(rhymePairs.shuffled().prefix(tasksPerRound))
+        return pairs.map { target, rhyme in
+            // Falsche Antworten: Wörter aus anderen Paaren (sie reimen sich garantiert nicht).
+            let others = rhymePairs.filter { $0.0 != target }.flatMap { [$0.0, $0.1] }.shuffled()
+            let options = ([rhyme] + others.prefix(optionCount - 1)).shuffled()
+            let choices = options.map { option in
+                Choice(
+                    content: .emoji(option.emoji),
+                    isCorrect: option == rhyme,
+                    spokenName: option.word,
+                    wrongFeedback: "\(option.word). Das reimt sich nicht auf \(target.word)."
+                )
+            }
+            // Huhu nennt alle Bilder beim Namen – Reime kann man nur hören, nicht sehen.
+            let names = options.map { "\($0.word)." }.joined(separator: " ")
+            return QuizTask(
+                prompt: .word(emoji: target.emoji, syllables: "\(target.word)."),
+                instruction: "Was reimt sich auf \(target.word)? \(names)",
+                choices: choices,
+                correctFeedback: "\(target.word) – \(rhyme.word), das reimt sich!"
             )
         }
     }

@@ -89,6 +89,9 @@ SYLLABLE_WORDS = [
     ("Regenbogen", ["Re", "gen", "bo", "gen"]), ("Avocado", ["A", "vo", "ca", "do"]),
     ("Schokolade", ["Scho", "ko", "la", "de"]), ("Krankenwagen", ["Kran", "ken", "wa", "gen"]),
 ]
+RHYME_PAIRS = [("Maus", "Haus"), ("Kuh", "Schuh"), ("Katze", "Tatze"), ("Hose", "Rose"), ("Hase", "Nase"),
+               ("Brot", "Boot"), ("Zahn", "Hahn"), ("Schwein", "Bein"), ("Ziege", "Fliege"), ("Wal", "Schal"),
+               ("Igel", "Spiegel"), ("Rakete", "Trompete"), ("Socke", "Glocke"), ("Tanne", "Kanne"), ("Hund", "Mund")]
 SYLLABLE_COUNT_TEXTS = ["Eine Silbe!", "Zwei Silben!", "Drei Silben!", "Vier Silben!"]
 NICKNAMES = [("Biene", "Kleine"), ("Bär", "Kleiner"), ("Fuchs", "Kleiner"), ("Maus", "Kleine"),
              ("Drache", "Kleiner"), ("Einhorn", "Kleines"), ("Pinguin", "Kleiner"), ("Igel", "Kleiner"),
@@ -109,6 +112,7 @@ FIXED = [
     # Hinweise bei der ersten Aufgabe einer Runde (Game.tapHint)
     "Tippe unten auf die richtige Zahl!", "Tippe auf die richtige Form!", "Tippe unten auf das richtige Bild!",
     "Tippe auf das richtige Bild!", "Tippe unten, wie oft du klatschst!", "Tippe auf die richtige Uhr!",
+    "Tippe auf das Bild, das sich reimt!",
     # Zählen
     "Zähl noch einmal mit mir.", "Tippe auf jedes Bild!",
     # Muster
@@ -148,6 +152,11 @@ def all_sentences():
     for word, syllables in SYLLABLE_WORDS:
         s += [f"Wie oft klatschst du bei {word}?", "-".join(syllables) + "."]
     s += SYLLABLE_COUNT_TEXTS
+    # Reime
+    for target, rhyme in RHYME_PAIRS:
+        s += [f"Was reimt sich auf {target}?", f"{target} – {rhyme}, das reimt sich!",
+              f"Das reimt sich nicht auf {target}."]
+    s += [f"{w}." for pair in RHYME_PAIRS for w in pair]
     # Uhr
     for hour in range(1, 13):
         for minute in (0, 30):

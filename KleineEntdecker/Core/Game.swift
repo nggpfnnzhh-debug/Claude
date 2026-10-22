@@ -2,7 +2,7 @@ import SwiftUI
 
 enum Game: String, CaseIterable, Identifiable {
     case counting, colors, shapes, letters, patterns, memory
-    case moreLess, syllables, clock
+    case moreLess, syllables, rhymes, clock
 
     var id: String { rawValue }
 
@@ -12,7 +12,7 @@ enum Game: String, CaseIterable, Identifiable {
     /// Vorschulspiele (ca. 5–6 Jahre) stehen auf dem Startbildschirm in einem eigenen Bereich.
     var isPreschool: Bool {
         switch self {
-        case .moreLess, .syllables, .clock: return true
+        case .moreLess, .syllables, .rhymes, .clock: return true
         default: return false
         }
     }
@@ -30,6 +30,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .memory: return "Memory"
         case .moreLess: return "Mehr oder weniger?"
         case .syllables: return "Silben klatschen"
+        case .rhymes: return "Reime finden"
         case .clock: return "Uhr lesen"
         }
     }
@@ -44,6 +45,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .memory: return "🃏"
         case .moreLess: return "⚖️"
         case .syllables: return "👏"
+        case .rhymes: return "🎵"
         case .clock: return "🕒"
         }
     }
@@ -58,6 +60,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .memory: return Color(red: 0.12, green: 0.70, blue: 0.75)
         case .moreLess: return Color(red: 0.90, green: 0.45, blue: 0.65)
         case .syllables: return Color(red: 0.95, green: 0.55, blue: 0.30)
+        case .rhymes: return Color(red: 0.20, green: 0.65, blue: 0.55)
         case .clock: return Color(red: 0.35, green: 0.45, blue: 0.80)
         }
     }
@@ -71,6 +74,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .letters, .patterns: return "Tippe unten auf das richtige Bild!"
         case .moreLess: return "Tippe auf das richtige Bild!"
         case .syllables: return "Tippe unten, wie oft du klatschst!"
+        case .rhymes: return "Tippe auf das Bild, das sich reimt!"
         case .clock: return "Tippe auf die richtige Uhr!"
         }
     }
@@ -94,6 +98,8 @@ enum Game: String, CaseIterable, Identifiable {
             return "Mengen vergleichen, ohne genau zählen zu müssen – ein wichtiger Schritt zum Zahlverständnis."
         case .syllables:
             return "Wörter in Silben zerlegen. Silbenklatschen ist eine bewährte Vorübung für das Lesen- und Schreibenlernen."
+        case .rhymes:
+            return "Reime erkennen. Zusammen mit Silben und Anlauten bildet das die phonologische Bewusstheit – die wichtigste Vorläuferfähigkeit für das Lesen- und Schreibenlernen."
         case .clock:
             return "Die analoge Uhr kennenlernen: erst volle, dann halbe Stunden."
         }
@@ -149,6 +155,12 @@ enum Game: String, CaseIterable, Identifiable {
                 "Namen klatschen: Ma-ma, Pa-pa und der eigene Name.",
                 "Beim Spazierengehen zu jeder Silbe einen Schritt machen: Ba-na-ne = drei Schritte.",
                 "Silben-Roboter spielen: Wörter wie ein Roboter abgehackt sprechen.",
+            ]
+        case .rhymes:
+            return [
+                "Reime-Ping-Pong: Sie sagen ein Wort, Ihr Kind findet einen Reim – auch Quatschwörter zählen!",
+                "Kinderreime und Abzählverse gemeinsam sprechen und das letzte Wort weglassen.",
+                "Beim Vorlesen innehalten: „Die Maus wohnt in einem …?“",
             ]
         case .clock:
             return [
