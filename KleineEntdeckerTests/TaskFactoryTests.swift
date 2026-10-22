@@ -59,11 +59,21 @@ final class TaskFactoryTests: XCTestCase {
         }
     }
 
+    func testAnchorWordsStartWithLetterAndAreNeverAnswers() {
+        let letters = Set(TaskFactory.letterWords.map(\.letter))
+        XCTAssertEqual(Set(TaskFactory.anchorWords.keys), letters, "jeder Buchstabe braucht ein Ankerwort")
+        let answers = Set(TaskFactory.letterWords.map(\.word))
+        for (letter, anchor) in TaskFactory.anchorWords {
+            XCTAssertTrue(anchor.uppercased().hasPrefix(letter), anchor)
+            XCTAssertFalse(answers.contains(anchor), "\(anchor) würde die Lösung verraten")
+        }
+    }
+
     func testLetterTasksCorrectChoiceMatchesLetter() {
         for level in 0...Game.letters.maxLevel {
             for _ in 0..<60 {
                 for task in TaskFactory.tasks(for: .letters, level: level) {
-                    guard case let .letter(letter) = task.prompt else { return XCTFail("Falscher Prompt") }
+                    guard case let .letter(letter, _) = task.prompt else { return XCTFail("Falscher Prompt") }
                     let correct = task.choices.first(where: \.isCorrect)
                     XCTAssertTrue(correct?.spokenName.uppercased().hasPrefix(letter) ?? false)
                     for wrong in task.choices where !wrong.isCorrect {

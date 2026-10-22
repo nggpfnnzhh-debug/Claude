@@ -11,7 +11,7 @@ Besonderheiten der Aussprache:
 
 Aufruf (Umgebung: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION):
   generate.py list                                   – alle Sätze ausgeben
-  generate.py azure <stimme> <ausgabeordner>         – alle Sätze vertonen
+  generate.py azure <stimme> <ausgabeordner> [ordner] – alle Sätze vertonen (optional: vorhandene wiederverwenden)
   generate.py azure-samples <spec|spec|…> <ordner>   – Hörproben
   generate.py azure-ssml <stimme> <ordner> <datei>   – Hörproben aus einer Datei „name|SSML-Text“ je Zeile
 Eine Stimmen-Angabe kann Einstellungen enthalten: „de-DE-KatjaNeural;style=cheerful;pitch=+5%;rate=-8%;name=Datei“.
@@ -67,10 +67,16 @@ LETTER_WORDS = [
     ("U", "Uhr"), ("U", "Ufo"),
     ("Z", "Zebra"), ("Z", "Zug"), ("Z", "Zitrone"),
 ]
-# Laut statt Buchstabenname (IPA) – so lernen Kinder Anlaute in Kita und Schule.
+# Laut statt Buchstabenname (IPA), gesprochen im Muster „M, M, Mama“ (wie in TaskFactory.soundPattern).
+# Haltbare Laute lang wie „mmm“, kurze Laute mit Mini-Vokal wie „te“ – so klingen sie in der Sprachsynthese deutlich.
 LETTER_SOUNDS = {
-    "A": "aː", "B": "bə", "E": "eː", "F": "fː", "H": "hə", "K": "kə", "L": "lː", "M": "mː", "N": "nː",
-    "O": "oː", "P": "pə", "R": "ʁː", "S": "zː", "T": "tə", "U": "uː", "Z": "tsə",
+    "A": "aː", "E": "eː", "O": "oː", "U": "uː",
+    "M": "mː", "N": "nː", "L": "lː", "F": "fː", "S": "sː",
+    "T": "tə", "K": "kə", "P": "pə", "B": "bɐ", "H": "hə", "R": "ʁə", "Z": "tsə",
+}
+ANCHOR_WORDS = {
+    "A": "Ameise", "B": "Ball", "E": "Esel", "F": "Fuß", "H": "Hut", "K": "Kind", "L": "Lampe", "M": "Mama",
+    "N": "Nudel", "O": "Opa", "P": "Papa", "R": "Rose", "S": "Sofa", "T": "Tasse", "U": "Uhu", "Z": "Zahn",
 }
 SYLLABLE_WORDS = [
     ("Hund", ["Hund"]), ("Baum", ["Baum"]), ("Haus", ["Haus"]), ("Mond", ["Mond"]), ("Fisch", ["Fisch"]),
@@ -125,10 +131,12 @@ def all_sentences():
         s += [f"Tippe auf {c}!", f"Das ist {c}.", f"Wo ist {c}?"]
     for name, article in SHAPES:
         s += [f"Wo ist {article} {name}?", f"Das ist {article} {name}.", f"Das ist ein {name}."]
+    s.append("Was fängt auch so an?")
     for letter in sorted({l for l, _ in LETTER_WORDS}):
-        s += [letter, f"Was fängt mit {letter} an?", f"Wir suchen {letter}."]
+        anchor = f"{letter}, {letter}, {ANCHOR_WORDS[letter]}"
+        s += [f"Hör mal: {anchor}.", f"Wir suchen: {anchor}."]
     for letter, word in LETTER_WORDS:
-        s += [f"{word} fängt mit {letter} an!", f"{word} fängt mit {letter} an."]
+        s += [f"{letter}, {letter}, {word}!", f"{letter}, {letter}, {word}."]
     # Mehr oder weniger? (Mengen 2–10)
     for plural in COUNT_PLURALS:
         s += [f"Wo sind mehr {plural}?", f"Wo sind weniger {plural}?"]
@@ -260,17 +268,29 @@ def main():
     if mode != "azure":
         sys.exit(f"Unbekannter Modus: {mode}")
 
+    # Optional: vorhandene Aufnahmen (gleiche Stimme!) wiederverwenden und nur neue Sätze vertonen.
+    reuse_dir = Path(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] else None
+    existing = {}
+    if reuse_dir and (reuse_dir / "voice_manifest.json").exists():
+        existing = json.loads((reuse_dir / "voice_manifest.json").read_text(encoding="utf-8"))
+
     sentences = all_sentences()
     manifest = {}
+    new_count = 0
     with tempfile.TemporaryDirectory() as tmp:
         raw = Path(tmp) / "s.mp3"
         for i, sentence in enumerate(sentences, 1):
-            raw.write_bytes(azure_tts(sentence, arg))
             name = file_name(sentence)
-            encode(raw, out_dir / name)
+            if sentence in existing and (reuse_dir / existing[sentence]).exists():
+                (out_dir / name).write_bytes((reuse_dir / existing[sentence]).read_bytes())
+            else:
+                raw.write_bytes(azure_tts(sentence, arg))
+                encode(raw, out_dir / name)
+                new_count += 1
+                print(f"{i:3}/{len(sentences)} NEU {sentence}")
+                time.sleep(AZURE_PAUSE)
             manifest[sentence] = name
-            print(f"{i:3}/{len(sentences)} {sentence}")
-            time.sleep(AZURE_PAUSE)
+    print(f"{len(sentences)} Sätze, davon {new_count} neu vertont")
     (out_dir / "voice_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
     )

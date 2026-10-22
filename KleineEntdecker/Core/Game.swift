@@ -72,7 +72,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .shapes:
             return "Geometrische Grundformen unterscheiden – unabhängig von ihrer Farbe."
         case .letters:
-            return "Anlaute hören und erste Buchstaben kennenlernen. Die Buchstaben werden – wie in Kita und Schule – als Laut gesprochen („mmm“ statt „Em“)."
+            return "Anlaute hören und erste Buchstaben kennenlernen. Die Buchstaben werden – wie in Kita und Schule – als Laut mit einem Ankerwort gesprochen: „M, M, Mama“ statt „Em“."
         case .patterns:
             return "Regelmäßigkeiten erkennen und fortsetzen – eine Grundlage für mathematisches und logisches Denken."
         case .memory:

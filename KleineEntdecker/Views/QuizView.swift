@@ -158,9 +158,9 @@ struct PromptView: View {
         switch prompt {
         case let .objects(emoji, count):
             CountingObjectsView(emoji: emoji, count: count, countAlong: countAlong)
-        case let .letter(letter):
+        case let .letter(letter, sound):
             Button {
-                Speaker.shared.say(letter)
+                Speaker.shared.say(sound)
             } label: {
                 Text("\(letter) \(letter.lowercased())")
                     .font(.system(size: 120 * scale, weight: .heavy, design: .rounded))

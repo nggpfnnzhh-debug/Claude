@@ -8,6 +8,10 @@ on:
       stimme:
         description: "Azure-Stimme (optional mit Einstellungen, z. B. de-DE-KatjaNeural;rate=-8%)"
         default: "de-DE-KatjaNeural"
+      wiederverwenden:
+        description: "Vorhandene Aufnahmen der App wiederverwenden, nur neue Sätze vertonen (nur bei gleicher Stimme!)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -33,7 +37,9 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/Voice"
           echo "Stimme: ${{ inputs.stimme }} (Microsoft Azure Sprachsynthese)" > "$RUNNER_TEMP/Voice/STIMME.txt"
-          python3 scripts/voice/generate.py azure "${{ inputs.stimme }}" "$RUNNER_TEMP/Voice"
+          REUSE=""
+          if [ "${{ inputs.wiederverwenden }}" = "true" ]; then REUSE="KleineEntdecker/Resources/Voice"; fi
+          python3 scripts/voice/generate.py azure "${{ inputs.stimme }}" "$RUNNER_TEMP/Voice" "$REUSE"
 
       - name: In Branch ablegen
         run: |

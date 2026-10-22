@@ -211,6 +211,19 @@ enum TaskFactory {
         LetterWord(letter: "Z", word: "Zitrone", emoji: "🍋"),
     ]
 
+    /// Ankerwort je Laut – wie in der Anlauttabelle von Kita und Grundschule.
+    /// Der Laut wird im Muster „M, M, Mama“ gesprochen: einzeln ist er für Sprachsynthese zu undeutlich.
+    /// Ankerwörter kommen nie als Antwortbild vor, damit sie die Lösung nicht verraten.
+    static let anchorWords: [String: String] = [
+        "A": "Ameise", "B": "Ball", "E": "Esel", "F": "Fuß", "H": "Hut", "K": "Kind", "L": "Lampe", "M": "Mama",
+        "N": "Nudel", "O": "Opa", "P": "Papa", "R": "Rose", "S": "Sofa", "T": "Tasse", "U": "Uhu", "Z": "Zahn",
+    ]
+
+    /// „M, M, Maus“ – Laut zweimal, dann das Wort.
+    static func soundPattern(_ letter: String, _ word: String) -> String {
+        "\(letter), \(letter), \(word)"
+    }
+
     static func letterTasks(level: Int) -> [QuizTask] {
         let distractorCount = level == 2 ? 3 : 2
         let letters = Array(Set(letterWords.map(\.letter))).shuffled().prefix(tasksPerRound)
@@ -226,19 +239,20 @@ enum TaskFactory {
                 if distractors.count == distractorCount { break }
             }
 
+            let anchorSound = soundPattern(letter, anchorWords[letter] ?? correct.word)
             let choices = ([correct] + distractors).shuffled().map { word in
                 Choice(
                     content: .emoji(word.emoji),
                     isCorrect: word.letter == letter,
                     spokenName: word.word,
-                    wrongFeedback: "\(word.word) fängt mit \(word.letter) an. Wir suchen \(letter)."
+                    wrongFeedback: "\(soundPattern(word.letter, word.word)). Wir suchen: \(anchorSound)."
                 )
             }
             return QuizTask(
-                prompt: .letter(letter),
-                instruction: "Was fängt mit \(letter) an?",
+                prompt: .letter(letter, sound: "Hör mal: \(anchorSound)."),
+                instruction: "Hör mal: \(anchorSound). Was fängt auch so an?",
                 choices: choices,
-                correctFeedback: "\(correct.word) fängt mit \(letter) an!"
+                correctFeedback: "\(soundPattern(letter, correct.word))!"
             )
         }
     }

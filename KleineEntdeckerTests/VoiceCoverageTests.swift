@@ -14,7 +14,7 @@ final class VoiceCoverageTests: XCTestCase {
                         texts.append(task.correctFeedback)
                         texts += task.choices.map(\.wrongFeedback)
                         switch task.prompt {
-                        case let .letter(letter): texts.append(letter)
+                        case let .letter(_, sound): texts.append(sound)
                         case let .word(_, syllables): texts.append(syllables)
                         default: break
                         }

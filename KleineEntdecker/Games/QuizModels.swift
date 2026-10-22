@@ -56,7 +56,8 @@ struct Choice: Identifiable, Hashable {
 
 enum Prompt: Hashable {
     case objects(emoji: String, count: Int)
-    case letter(String)
+    /// Großer Buchstabe; beim Antippen wird `sound` vorgelesen (z. B. „Hör mal: M, M, Mama.“).
+    case letter(String, sound: String)
     case sequence([String])
     /// Ein Bild, das beim Antippen in Silben vorgelesen wird.
     case word(emoji: String, syllables: String)
