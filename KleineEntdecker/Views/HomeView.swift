@@ -76,35 +76,56 @@ struct HomeView: View {
         }
     }
 
+    /// Kopfzeile in zwei Reihen, damit auch auf kleinen iPhones nichts gequetscht wird:
+    /// oben Kind + Elternbereich, darunter Huhu und das Sternenhimmel-Banner.
     private var header: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Button {
-                showNicknamePicker = true
-            } label: {
-                Text(childEmoji)
-                    .font(.system(size: 60 * scale))
+        VStack(spacing: 14 * scale) {
+            HStack(alignment: .center, spacing: 12) {
+                Button {
+                    showNicknamePicker = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Text(childEmoji)
+                            .font(.system(size: 52 * scale))
+                        Text(ChildProfile.title(name: childName, adjective: childAdjective))
+                            .font(.system(size: 30 * scale, weight: .heavy, design: .rounded))
+                            .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                    }
+                }
+                .buttonStyle(BouncyButtonStyle())
+                .accessibilityLabel("Namen aussuchen")
+                .sheet(isPresented: $showNicknamePicker, onDismiss: { isFirstLaunch = false }) {
+                    NicknamePickerView(introduceOwl: isFirstLaunch)
+                }
+                Spacer(minLength: 8)
+                Button {
+                    showParents = true
+                } label: {
+                    Label("Eltern", systemImage: "lock.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(.secondary)
+                        .fixedSize()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Color.white.opacity(0.7)))
+                }
             }
-            .buttonStyle(BouncyButtonStyle())
-            .accessibilityLabel("Namen aussuchen")
-            .sheet(isPresented: $showNicknamePicker, onDismiss: { isFirstLaunch = false }) {
-                NicknamePickerView(introduceOwl: isFirstLaunch)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(ChildProfile.title(name: childName, adjective: childAdjective))
-                    .font(.system(size: 32 * scale, weight: .heavy, design: .rounded))
-                    .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                    .onTapGesture { showNicknamePicker = true }
+
+            HStack(spacing: 12 * scale) {
+                // Huhu, die Eule – tippt das Kind sie an, begrüßt sie es noch einmal.
+                Button(action: greet) {
+                    Text("🦉")
+                        .font(.system(size: 50 * scale))
+                }
+                .buttonStyle(BouncyButtonStyle())
+                .accessibilityLabel("Huhu, die Eule")
+
                 Button {
                     showStarSky = true
                 } label: {
-                    Label("Sternenhimmel", systemImage: "sparkles")
-                        .font(.system(size: 15 * scale, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color(red: 0.2, green: 0.22, blue: 0.45)))
+                    StarSkyBanner(starCount: progress.totalStars)
                 }
                 .buttonStyle(BouncyButtonStyle())
                 .accessibilityLabel("Huhus Sternenhimmel, \(progress.totalStars) Sterne")
@@ -112,25 +133,43 @@ struct HomeView: View {
                     StarSkyView(starCount: progress.totalStars)
                 }
             }
-            Spacer()
-            // Huhu, die Eule – tippt das Kind sie an, begrüßt sie es noch einmal.
-            Button(action: greet) {
-                Text("🦉")
-                    .font(.system(size: 48 * scale))
-            }
-            .buttonStyle(BouncyButtonStyle())
-            .accessibilityLabel("Huhu, die Eule")
-            Button {
-                showParents = true
-            } label: {
-                Label("Eltern", systemImage: "lock.fill")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(Color.white.opacity(0.7)))
-            }
         }
+    }
+}
+
+/// Breites Banner zum Sternenhimmel – ein kleiner Nachthimmel mit Sternen.
+private struct StarSkyBanner: View {
+    let starCount: Int
+
+    @Environment(\.layoutScale) private var scale
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("✨")
+                .font(.system(size: 26 * scale))
+            Text("Sternenhimmel")
+                .font(.system(size: 20 * scale, weight: .heavy, design: .rounded))
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Spacer(minLength: 4)
+            Text("⭐️ \(starCount)")
+                .font(.system(size: 17 * scale, weight: .bold, design: .rounded))
+                .foregroundColor(.white.opacity(0.9))
+                .fixedSize()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12 * scale)
+        .frame(maxWidth: .infinity, minHeight: 56 * scale)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(red: 0.12, green: 0.14, blue: 0.38), Color(red: 0.32, green: 0.24, blue: 0.58)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ))
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
+        )
     }
 }
 
