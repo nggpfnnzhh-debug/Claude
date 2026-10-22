@@ -7,6 +7,8 @@ enum Lines {
     static let owlIntro = "Huhu! Ich bin Huhu, die Eule."
     static let homeQuestion = "Was möchtest du heute mit mir spielen?"
     static let homeGreeting = "Huhu! \(homeQuestion)"
+    /// Zurück aus einem Spiel – keine erneute Begrüßung.
+    static let homeNext = "Was möchtest du als Nächstes spielen?"
     static let pickerQuestion = "Wer bist du? Such dir einen Namen aus!"
     static let celebrationPlain = "Super gemacht!"
     static let celebrationStar = "Huhu freut sich! Ein neuer Stern für deinen Sternenhimmel!"
@@ -22,7 +24,7 @@ enum Lines {
     static func celebration(_ spokenName: String) -> String { "Super gemacht, \(spokenName)!" }
 
     static let fixed = [
-        owlIntro, homeQuestion, homeGreeting, pickerQuestion, celebrationPlain, celebrationStar,
+        owlIntro, homeQuestion, homeGreeting, homeNext, pickerQuestion, celebrationPlain, celebrationStar,
         starSky, memoryInstruction, memoryPair, breakTime, hint, countingHint,
     ]
 }

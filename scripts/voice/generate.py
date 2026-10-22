@@ -99,7 +99,7 @@ MEMORY_ANIMALS = ["Hund", "Katze", "Maus", "Hase", "Fuchs", "Bär", "Panda", "Fr
 FIXED = [
     # Huhu, die Eule (Lines.swift)
     "Huhu!", "Ich bin Huhu, die Eule.",
-    "Was möchtest du heute mit mir spielen?",
+    "Was möchtest du heute mit mir spielen?", "Was möchtest du als Nächstes spielen?",
     "Wer bist du?", "Such dir einen Namen aus!",
     "Super gemacht!", "Huhu freut sich!", "Ein neuer Stern für deinen Sternenhimmel!",
     "Schau mal, so viele Sterne leuchten schon für dich!",

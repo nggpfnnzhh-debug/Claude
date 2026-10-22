@@ -3,6 +3,9 @@ import SwiftUI
 struct HomeView: View {
     let onSelect: (Game) -> Void
 
+    /// Begrüßt wird nur beim ersten Erscheinen nach dem App-Start.
+    private static var didGreetThisSession = false
+
     @EnvironmentObject private var progress: ProgressStore
     @Environment(\.layoutScale) private var scale
     @State private var showParents = false
@@ -44,9 +47,13 @@ struct HomeView: View {
                 didAskNickname = true
                 isFirstLaunch = true
                 showNicknamePicker = true
+            } else if Self.didGreetThisSession {
+                // Zurück aus einem Spiel: nicht noch einmal begrüßen.
+                Speaker.shared.say(Lines.homeNext)
             } else {
                 greet()
             }
+            Self.didGreetThisSession = true
         }
         .sheet(isPresented: $showParents) {
             ParentArea()
