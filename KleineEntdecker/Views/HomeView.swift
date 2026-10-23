@@ -151,7 +151,11 @@ struct HomeView: View {
 private struct StarSkyBanner: View {
     let starCount: Int
 
+    /// Zuletzt angezeigte Sternzahl – ist seitdem ein Stern dazugekommen, leuchtet das Banner kurz auf.
+    private static var lastShownCount: Int?
+
     @Environment(\.layoutScale) private var scale
+    @State private var glow = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -167,6 +171,7 @@ private struct StarSkyBanner: View {
                 .font(.system(size: 17 * scale, weight: .bold, design: .rounded))
                 .foregroundColor(.white.opacity(0.9))
                 .fixedSize()
+                .scaleEffect(glow ? 1.35 : 1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12 * scale)
@@ -178,8 +183,14 @@ private struct StarSkyBanner: View {
                     startPoint: .leading,
                     endPoint: .trailing
                 ))
-                .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
+                .shadow(color: glow ? Color.yellow.opacity(0.8) : .black.opacity(0.15), radius: glow ? 16 : 6, y: 3)
         )
+        .onAppear {
+            defer { Self.lastShownCount = starCount }
+            guard let last = Self.lastShownCount, starCount > last else { return }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.4).delay(0.3)) { glow = true }
+            withAnimation(.easeOut(duration: 0.6).delay(1.3)) { glow = false }
+        }
     }
 }
 
