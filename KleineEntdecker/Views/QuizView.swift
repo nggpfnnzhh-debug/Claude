@@ -21,8 +21,8 @@ struct QuizView: View {
     @State private var firstTryCount = 0
     @State private var hintActive = false
     @State private var finished = false
-    /// Zeigt in der ersten Aufgabe einer Runde mit einem Finger, wo getippt wird.
-    @State private var showTapPointer = true
+    /// Zeigt in der ersten Aufgabe einer Runde mit einem pulsierenden Rahmen, wo getippt wird.
+    @State private var showTapArea = true
 
     private var currentTask: QuizTask? {
         tasks.indices.contains(index) ? tasks[index] : nil
@@ -46,9 +46,6 @@ struct QuizView: View {
                     PromptView(prompt: task.prompt, tint: game.tint, countAlong: hintActive)
                         .id(task.id)
                     Spacer(minLength: 0)
-                    if index == 0 && showTapPointer {
-                        TapPointer()
-                    }
                     ChoiceRow(
                         choices: task.choices,
                         wrongIDs: wrongIDs,
@@ -57,6 +54,7 @@ struct QuizView: View {
                     ) { choice in
                         select(choice, in: task)
                     }
+                    .tapArea(active: index == 0 && showTapArea, tint: game.tint)
                     .id("choices-\(task.id)")
                     Spacer(minLength: 0)
                 }
@@ -86,7 +84,7 @@ struct QuizView: View {
         firstTryCount = 0
         resetTaskState()
         withAnimation { finished = false }
-        showTapPointer = true
+        showTapArea = true
         Speaker.shared.say(instruction(for: 0))
     }
 
@@ -114,7 +112,7 @@ struct QuizView: View {
 
     private func select(_ choice: Choice, in task: QuizTask) {
         guard solvedID == nil, !wrongIDs.contains(choice.id) else { return }
-        withAnimation { showTapPointer = false }
+        withAnimation { showTapArea = false }
         if choice.isCorrect {
             if mistakesInTask == 0 { firstTryCount += 1 }
             withAnimation(.spring(response: 0.35, dampingFraction: 0.5)) {
@@ -158,19 +156,36 @@ struct QuizView: View {
     }
 }
 
-/// Hüpfender Finger über den Antworten: „Hier tippen!“
-private struct TapPointer: View {
-    @Environment(\.layoutScale) private var scale
-    @State private var bounce = false
+/// Pulsierender Rahmen um alle Antworten: „Hier unten wird getippt!“
+/// Ein Rahmen statt eines Zeigers, damit keine einzelne Antwort hervorgehoben wirkt.
+private struct TapArea: ViewModifier {
+    let active: Bool
+    let tint: Color
 
-    var body: some View {
-        Text("👇")
-            .font(.system(size: 40 * scale))
-            .offset(y: bounce ? 6 : -6)
-            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: bounce)
-            .onAppear { bounce = true }
-            .accessibilityHidden(true)
-            .transition(.opacity)
+    @Environment(\.layoutScale) private var scale
+    @State private var pulse = false
+
+    func body(content: Content) -> some View {
+        content
+            .padding(14 * scale)
+            .overlay {
+                if active {
+                    RoundedRectangle(cornerRadius: 32 * scale, style: .continuous)
+                        .stroke(tint, style: StrokeStyle(lineWidth: 5 * scale, dash: [14 * scale, 10 * scale]))
+                        .opacity(pulse ? 1 : 0.35)
+                        .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: pulse)
+                        .onAppear { pulse = true }
+                        .onDisappear { pulse = false }
+                        .transition(.opacity)
+                        .accessibilityHidden(true)
+                }
+            }
+    }
+}
+
+private extension View {
+    func tapArea(active: Bool, tint: Color) -> some View {
+        modifier(TapArea(active: active, tint: tint))
     }
 }
 
