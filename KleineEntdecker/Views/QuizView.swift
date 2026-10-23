@@ -69,10 +69,14 @@ struct QuizView: View {
         .onAppear {
             if tasks.isEmpty { start() }
         }
-        // Verzögertes Weiterschalten nach richtiger Antwort; wird beim Verlassen automatisch abgebrochen.
+        // Nach richtiger Antwort erst weiter, wenn Huhu fertig gelobt hat – sonst spricht sie
+        // noch über die alte Aufgabe, während schon die neue zu sehen ist.
+        // Wird beim Verlassen automatisch abgebrochen.
         .task(id: solvedID) {
             guard solvedID != nil else { return }
-            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            await Speaker.shared.waitUntilQuiet()
+            try? await Task.sleep(nanoseconds: 300_000_000)
             guard !Task.isCancelled else { return }
             advance()
         }
@@ -148,7 +152,7 @@ struct QuizView: View {
                 index += 1
                 resetTaskState()
             }
-            Speaker.shared.say(tasks[index].instruction, interrupt: false)
+            Speaker.shared.say(tasks[index].instruction)
         } else {
             progress.completeRound(for: game, result: RoundResult(firstTry: firstTryCount, total: tasks.count))
             withAnimation(.spring()) { finished = true }

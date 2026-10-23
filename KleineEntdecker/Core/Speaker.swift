@@ -50,6 +50,19 @@ final class Speaker: NSObject {
         isBusy = false
     }
 
+    /// Ob Huhu gerade spricht (auch während der kurzen Pause zwischen zwei Sätzen).
+    var isSpeaking: Bool { isBusy }
+
+    /// Wartet, bis Huhu zu Ende gesprochen hat – höchstens `timeout` Sekunden,
+    /// damit ein Spiel nie hängen bleibt (z. B. wenn ein Anruf die Wiedergabe unterbricht).
+    @MainActor
+    func waitUntilQuiet(timeout: TimeInterval = 10) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while isBusy, Date() < deadline, !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
+
     /// Ob für diesen Satz eine Aufnahme existiert (für Tests).
     func hasClip(for sentence: String) -> Bool {
         url(for: sentence) != nil
