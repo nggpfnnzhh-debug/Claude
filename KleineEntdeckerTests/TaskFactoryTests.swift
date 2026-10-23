@@ -266,7 +266,12 @@ final class PaletteTests: XCTestCase {
             for j in components.indices where j > i {
                 let (nameA, a) = components[i]
                 let (nameB, b) = components[j]
-                let distance = sqrt(zip(a, b).map { ($0 - $1) * ($0 - $1) }.reduce(0, +)) * 255
+                var sum: CGFloat = 0
+                for (x, y) in zip(a, b) {
+                    let d: CGFloat = x - y
+                    sum += d * d
+                }
+                let distance: CGFloat = sqrt(sum) * 255
                 XCTAssertGreaterThan(distance, 70, "\(nameA) und \(nameB) sind zu ähnlich")
             }
         }
