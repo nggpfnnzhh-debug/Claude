@@ -1,4 +1,3 @@
-import AVFoundation
 import SwiftUI
 
 /// Elternschranke (Apple-Vorgabe für die Kategorie „Kinder"): eine Rechenaufgabe,
@@ -101,14 +100,11 @@ struct ParentSettingsView: View {
     @EnvironmentObject private var progress: ProgressStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage(SettingsKey.speechEnabled) private var speechEnabled = true
-    @AppStorage(SettingsKey.countingMax) private var countingMax = 5
-    @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = 0
+    @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = SettingsDefault.breakMinutes
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
-    @AppStorage(SettingsKey.voiceIdentifier) private var voiceIdentifier = Speaker.builtInVoiceID
     @State private var confirmReset = false
-    @State private var voices: [AVSpeechSynthesisVoice] = []
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
@@ -140,7 +136,7 @@ struct ParentSettingsView: View {
                 } header: {
                     Text("Name des Kindes")
                 } footer: {
-                    Text("Ihr Kind kann sich auch selbst einen Tiernamen aussuchen: auf dem Startbildschirm einfach auf das Tier oben links tippen. Der Name bleibt nur auf diesem Gerät.")
+                    Text("Ihr Kind kann sich auch selbst einen Tiernamen aussuchen: auf dem Startbildschirm oben links tippen. Tiernamen spricht Huhu laut aus; ein hier eingetippter Name wird nur angezeigt. Der Name bleibt auf diesem Gerät.")
                 }
                 .onChange(of: childName) { newValue in
                     if newValue.count > ChildProfile.maxNameLength {
@@ -149,31 +145,17 @@ struct ParentSettingsView: View {
                 }
 
                 Section {
-                    Picker("Stimme", selection: $voiceIdentifier) {
-                        Text("Kerstin (in der App)").tag(Speaker.builtInVoiceID)
-                        Text("iPhone-Stimme (automatisch beste)").tag(Speaker.automaticVoiceID)
-                        ForEach(voices, id: \.identifier) { voice in
-                            Text("iPhone: \(voice.name) · \(Speaker.qualityLabel(voice))").tag(voice.identifier)
-                        }
-                    }
-                    Button {
-                        Speaker.shared.preview(voiceID: voiceIdentifier)
-                    } label: {
-                        Label("Probe hören", systemImage: "speaker.wave.2.fill")
+                    ForEach(progress.gamesForTips()) { game in
+                        TipsRow(game: game, needsPractice: progress.needsPractice(game))
                     }
                 } header: {
-                    Text("Stimme")
+                    Text("Ideen zum gemeinsamen Üben")
                 } footer: {
-                    Text("„Kerstin“ ist fest in der App enthalten. Alternativ kann eine iPhone-Stimme sprechen – am natürlichsten klingen Stimmen mit „Premium“ oder „Erweitert“, kostenlos zu laden unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch.")
+                    Text("Die App merkt sich nur auf diesem Gerät, wie oft Ihr Kind beim ersten Versuch richtig liegt, und passt die Schwierigkeit daran an. Kurze Spielrunden sind keine Diagnose – jedes Kind entwickelt sich in seinem eigenen Tempo.")
                 }
-                .onAppear { voices = Speaker.germanVoices }
 
                 Section {
                     Toggle("Sprachausgabe", isOn: $speechEnabled)
-                    Picker("Zählen bis", selection: $countingMax) {
-                        Text("5").tag(5)
-                        Text("10").tag(10)
-                    }
                     Picker("Pausen-Erinnerung", selection: $breakMinutes) {
                         Text("Aus").tag(0)
                         ForEach([10, 15, 20, 30], id: \.self) { minutes in
@@ -183,21 +165,7 @@ struct ParentSettingsView: View {
                 } header: {
                     Text("Einstellungen")
                 } footer: {
-                    Text("Die Pausen-Erinnerung unterbricht das Spiel freundlich. Weiterspielen ist nur über die Elternschranke möglich.")
-                }
-
-                Section("Gesammelte Sterne") {
-                    ForEach(Game.allCases) { game in
-                        HStack {
-                            Text("\(game.icon)  \(game.title)")
-                            Spacer()
-                            Text("\(progress.stars(for: game)) ⭐️")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    Button("Fortschritt zurücksetzen", role: .destructive) {
-                        confirmReset = true
-                    }
+                    Text("Die Pausen-Erinnerung unterbricht das Spiel freundlich. Weiterspielen ist nur über die Elternschranke möglich. Kurze Einheiten von 10–15 Minuten sind in diesem Alter ideal.")
                 }
 
                 Section("Was lernt mein Kind?") {
@@ -212,17 +180,29 @@ struct ParentSettingsView: View {
                     }
                 }
 
-                Section("Tipps") {
-                    Text("Spielen Sie anfangs gemeinsam und sprechen Sie über die Aufgaben: „Wie viele Äpfel siehst du? Lass uns zusammen zählen!“ Kurze Einheiten von 10–15 Minuten sind in diesem Alter ideal.")
-                        .font(.subheadline)
+                Section {
+                    HStack {
+                        Text("Gesammelte Sterne")
+                        Spacer()
+                        Text("\(progress.totalStars) ⭐️").foregroundColor(.secondary)
+                    }
+                    Button("Fortschritt zurücksetzen", role: .destructive) {
+                        confirmReset = true
+                    }
+                } header: {
+                    Text("Fortschritt")
+                } footer: {
+                    Text("Für jede geschaffte Runde leuchtet ein Stern in Huhus Sternenhimmel – unabhängig davon, wie viele Versuche Ihr Kind gebraucht hat.")
                 }
 
                 Section("Datenschutz") {
-                    Text("Keine Werbung, keine In-App-Käufe, keine Links nach außen, kein Tracking. Es werden keine Daten erhoben oder übertragen – der Fortschritt bleibt auf diesem Gerät.")
+                    Text("Keine Werbung, keine In-App-Käufe, keine Links nach außen, kein Tracking. Es werden keine Daten erhoben oder übertragen – Fortschritt und Name bleiben auf diesem Gerät.")
                         .font(.subheadline)
                 }
 
-                Section {
+                Section("Über die App") {
+                    Text("Die Stimme von Huhu ist eine künstliche Stimme, erzeugt mit der Sprachsynthese von Microsoft Azure. Alle Sätze sind fest in der App enthalten – es wird nichts übers Internet geladen.")
+                        .font(.subheadline)
                     HStack {
                         Text("Version")
                         Spacer()
@@ -236,8 +216,37 @@ struct ParentSettingsView: View {
                     Button("Fertig") { dismiss() }
                 }
             }
-            .confirmationDialog("Alle Sterne löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
+            .confirmationDialog("Fortschritt löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
                 Button("Zurücksetzen", role: .destructive) { progress.reset() }
+            } message: {
+                Text("Sterne, Schwierigkeitsstufen und Übungsergebnisse werden gelöscht.")
+            }
+        }
+    }
+}
+
+/// Fördertipps für ein Spiel. Spiele mit Übungsbedarf stehen oben und sind freundlich markiert.
+private struct TipsRow: View {
+    let game: Game
+    let needsPractice: Bool
+
+    var body: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(game.tips, id: \.self) { tip in
+                    Label(tip, systemImage: "lightbulb")
+                        .font(.subheadline)
+                }
+            }
+            .padding(.vertical, 4)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(game.icon)  \(game.title)")
+                if needsPractice {
+                    Text("Hier macht gemeinsames Üben gerade besonders Spaß")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
             }
         }
     }

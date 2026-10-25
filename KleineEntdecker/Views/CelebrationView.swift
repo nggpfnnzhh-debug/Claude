@@ -6,6 +6,7 @@ struct CelebrationView: View {
     let onHome: () -> Void
 
     @State private var appear = false
+    @State private var flyAway = false
 
     var body: some View {
         ZStack {
@@ -14,10 +15,17 @@ struct CelebrationView: View {
                 .allowsHitTesting(false)
 
             VStack(spacing: 20) {
-                Text("⭐️")
-                    .font(.system(size: 130))
-                    .scaleEffect(appear ? 1 : 0.2)
-                    .rotationEffect(.degrees(appear ? 0 : -180))
+                // Kinder tippen gern auf den Stern: Er fliegt dann zum Sternenhimmel auf dem Startbildschirm.
+                Button(action: flyToStarSky) {
+                    Text("⭐️")
+                        .font(.system(size: 130))
+                }
+                .buttonStyle(BouncyButtonStyle())
+                .scaleEffect(flyAway ? 0.25 : (appear ? 1 : 0.2))
+                .rotationEffect(.degrees(appear ? (flyAway ? 360 : 0) : -180))
+                .offset(y: flyAway ? -700 : 0)
+                .opacity(flyAway ? 0 : 1)
+                .accessibilityLabel("Stern zum Sternenhimmel bringen und zurück zum Start")
                 Text("Super gemacht!")
                     .font(.system(size: 36, weight: .heavy, design: .rounded))
                     .foregroundColor(Color(red: 0.25, green: 0.2, blue: 0.4))
@@ -35,9 +43,16 @@ struct CelebrationView: View {
         }
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.5)) { appear = true }
-            let praise = ChildProfile.currentSpokenName.map(Lines.celebration) ?? Lines.celebrationPlain
+            let praise = ChildProfile.currentRecordedSpokenName.map(Lines.celebration) ?? Lines.celebrationPlain
             Speaker.shared.say("\(praise) \(Lines.celebrationStar)", interrupt: false)
         }
+    }
+
+    private func flyToStarSky() {
+        guard !flyAway else { return }
+        Haptics.success()
+        withAnimation(.easeIn(duration: 0.6)) { flyAway = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: onHome)
     }
 }
 

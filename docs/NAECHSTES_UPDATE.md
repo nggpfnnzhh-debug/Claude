@@ -68,3 +68,24 @@ Kostenlos, ohne Kaufangebote, ohne Datenübertragung.
 ## 5. Optional
 
 - Hinweis im Elternbereich, ob eine Premium-iPhone-Stimme installiert ist
+
+---
+
+# Vorgemerkt für Version 2.1: „Vorschul-Paket 2“ (entschieden, Umsetzung nach Start der 2.0)
+
+Auswahl nach Nutzen für die kognitive Entwicklung (Vorläuferfähigkeiten für die Schule):
+
+1. **Welche Zahl fehlt?** – Zahlenstrahl/Zahlenreihe mit Lücke (z. B. 1, 2, _, 4).
+   Zahlreihenfolge und -größe auf einer Linie; gut belegter Prädiktor für späteren Matheerfolg.
+   Stufen: bis 5 → bis 10 → bis 20, später auch rückwärts.
+2. **Oben, unten, neben, hinter** – Raum-Lage-Begriffe („Wo ist die Katze? Unter dem Tisch!“).
+   Räumliches Denken + räumliche Sprache; Thema bei Einschulungsuntersuchungen.
+3. **Bildergeschichten ordnen** – 3 (später 4) Bilder in die richtige Reihenfolge bringen
+   (z. B. Samen → Pflänzchen → Blume). Ursache/Folge, zeitliche Abfolge, Erzählen.
+
+Dazu passend: Fördertipps im Elternbereich für jedes neue Spiel (Übertrag in den Alltag).
+Vertonung erst nach Freigabe der Texte.
+
+Weitere Ideen (nicht vorgemerkt): Laute zusammenziehen, Würfelbilder als Zähl-Stufe, Mach 5!,
+Was passt nicht dazu?, Gegenteile, Schatten zuordnen, Gefühle erkennen, Sternbilder im
+Sternenhimmel, Huhus Tagesrunde, mehrere Kinderprofile, englische Version, Feedback im Elternbereich.

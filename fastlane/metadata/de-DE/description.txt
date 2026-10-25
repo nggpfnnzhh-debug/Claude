@@ -1,26 +1,33 @@
-Kleine Entdecker - Lernspiele ist eine liebevoll gestaltete Lern-App für Kinder im Vorschulalter (ca. 4–6 Jahre).
+Huhu, die kleine Eule, begleitet Ihr Kind durch zehn liebevoll gestaltete Lernspiele für das Vorschulalter (ca. 4–6 Jahre).
 
-Alle Aufgaben werden vorgelesen – Ihr Kind kann ganz allein spielen, auch wenn es noch nicht lesen kann. Fehler werden nie bestraft: Die App erklärt freundlich, was richtig gewesen wäre, und ermutigt zum Weiterprobieren. Nach jeder Runde gibt es einen Stern.
+Huhu spricht alle Aufgaben vor – Ihr Kind kann ganz allein spielen, auch wenn es noch nicht lesen kann. Fehler werden nie bestraft: Huhu erklärt freundlich, was richtig gewesen wäre, und hilft nach zwei Versuchen mit einem Tipp. Gelobt wird nicht nur das Ergebnis, sondern auch genaues Hinschauen und Durchhalten. Für jede geschaffte Runde leuchtet ein Stern in Huhus Sternenhimmel.
 
-Dein eigener Name: Ihr Kind sucht sich einen Spitznamen aus – „Kleine Biene“, „Kleiner Drache“ – oder Sie tragen seinen echten Namen ein. Die App begrüßt und lobt es dann persönlich: „Super gemacht, kleiner Max!“
-
-SECHS LERNSPIELE
-• Zählen – Mengen bis 5 oder 10 erfassen. Durch Antippen der Bilder zählt Ihr Kind laut mit.
+SECHS GRUNDSPIELE
+• Zählen – Mengen bis 5, 10 oder 20. Durch Antippen der Bilder zählt Ihr Kind laut mit.
 • Farben – Grund- und Mischfarben erkennen und benennen.
 • Formen – Kreis, Dreieck, Quadrat & Co. unterscheiden.
-• Buchstaben – Anlaute hören: „Was fängt mit M an?“ – eine wichtige Grundlage fürs Lesenlernen.
+• Buchstaben – Anlaute hören: „Was fängt mit mmm an?“ – gesprochen als Laut, wie in Kita und Schule.
 • Muster – Reihen fortsetzen und logisch denken.
 • Memory – Gedächtnis und Konzentration trainieren.
 
+VIER VORSCHULSPIELE
+• Mehr oder weniger? – Mengen vergleichen.
+• Silben klatschen – „Ba-na-ne“: Wie oft klatschst du?
+• Reime finden – Was reimt sich auf Maus?
+• Uhr lesen – volle und halbe Stunden.
+
+PASST SICH AN
+Die Aufgaben werden automatisch leichter oder schwerer – je nachdem, wie gut es gerade klappt. So bleibt es spannend, ohne zu frustrieren.
+
 FÜR ELTERN
+• Ideen zum gemeinsamen Üben im Alltag – passend zu jedem Spiel
+• Ihr Kind sucht sich einen Spitznamen aus („Kleine Biene“, „Kleiner Drache“) – oder Sie tragen seinen Namen ein
+• Pausen-Erinnerung (standardmäßig nach 15 Minuten)
 • Elternbereich mit Schutzabfrage
-• Zahlenraum (bis 5 oder bis 10) einstellbar
-• Pausen-Erinnerung nach 10 bis 30 Minuten
-• Übersicht, was jedes Spiel fördert
 
 SICHER & DATENSPARSAM
 • Keine Werbung
-• Keine In-App-Käufe
+• Keine In-App-Käufe, kein Abo
 • Keine Links nach außen
 • Keine Datenerhebung, kein Tracking
 • Funktioniert komplett offline

@@ -1,0 +1,14 @@
+# Hörproben für die Anlaute: je Buchstabe drei Varianten (SSML-Fragmente, IPA-Lautschrift).
+# V1: Laut + „wie“ + Ankerwort · V2: Ankerwort mit gedehntem Anlaut · V3: Laut wiederholt + Ankerwort
+M_1_wie|<phoneme alphabet='ipa' ph='mː'>M</phoneme> wie Mama. Was fängt auch so an?
+M_2_gedehnt|Hör mal: <phoneme alphabet='ipa' ph='ˈmːːːama'>Mama</phoneme>. Was fängt auch so an?
+M_3_wiederholt|Hör mal: <phoneme alphabet='ipa' ph='mː'>M</phoneme>, <phoneme alphabet='ipa' ph='mː'>M</phoneme>, Mama. Was fängt auch so an?
+S_1_wie|<phoneme alphabet='ipa' ph='zː'>S</phoneme> wie Sofa. Was fängt auch so an?
+S_2_gedehnt|Hör mal: <phoneme alphabet='ipa' ph='ˈzːːːoːfa'>Sofa</phoneme>. Was fängt auch so an?
+S_3_wiederholt|Hör mal: <phoneme alphabet='ipa' ph='zː'>S</phoneme>, <phoneme alphabet='ipa' ph='zː'>S</phoneme>, Sofa. Was fängt auch so an?
+B_1_wie|<phoneme alphabet='ipa' ph='bə'>B</phoneme> wie Ball. Was fängt auch so an?
+B_2_betont|Hör mal: <emphasis level='strong'>B</emphasis>all. Was fängt auch so an?
+B_3_wiederholt|Hör mal: <phoneme alphabet='ipa' ph='bə'>B</phoneme>, <phoneme alphabet='ipa' ph='bə'>B</phoneme>, Ball. Was fängt auch so an?
+T_1_wie|<phoneme alphabet='ipa' ph='tə'>T</phoneme> wie Tasse. Was fängt auch so an?
+T_2_betont|Hör mal: <emphasis level='strong'>T</emphasis>asse. Was fängt auch so an?
+T_3_wiederholt|Hör mal: <phoneme alphabet='ipa' ph='tə'>T</phoneme>, <phoneme alphabet='ipa' ph='tə'>T</phoneme>, Tasse. Was fängt auch so an?

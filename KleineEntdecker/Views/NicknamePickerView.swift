@@ -2,6 +2,9 @@ import SwiftUI
 
 /// „Wer bist du?“ – das Kind tippt auf ein Tier und bekommt so seinen Namen in der App.
 struct NicknamePickerView: View {
+    /// Beim allerersten Start stellt sich Huhu, die Eule, vor.
+    var introduceOwl = false
+
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
@@ -44,7 +47,7 @@ struct NicknamePickerView: View {
             .frame(maxWidth: 820)
         }
         .onAppear {
-            Speaker.shared.say(Lines.pickerQuestion)
+            Speaker.shared.say(introduceOwl ? "\(Lines.owlIntro) \(Lines.pickerQuestion)" : Lines.pickerQuestion)
         }
     }
 

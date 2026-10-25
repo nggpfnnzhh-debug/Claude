@@ -24,7 +24,7 @@ struct RootView: View {
     @State private var activeGame: Game? = LaunchOptions.screenshotGame
     @State private var activeSeconds = 0
     @State private var showBreak = false
-    @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = 0
+    @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = SettingsDefault.breakMinutes
     @Environment(\.scenePhase) private var scenePhase
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()

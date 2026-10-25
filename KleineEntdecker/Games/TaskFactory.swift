@@ -1,23 +1,43 @@
 import SwiftUI
 
 /// Erzeugt die Aufgaben für eine Runde. Jede Runde hat `tasksPerRound` Aufgaben.
+/// `level` (0 = leicht … 2 = schwer) wird vom `ProgressStore` automatisch angepasst.
+///
+/// Alle gesprochenen Sätze sind als Aufnahmen hinterlegt – Änderungen an Texten oder
+/// Daten hier auch in `scripts/voice/generate.py` nachziehen (VoiceCoverageTests prüft das).
 enum TaskFactory {
     static let tasksPerRound = 5
 
-    static func tasks(for game: Game, countingUpTo countingMax: Int) -> [QuizTask] {
+    static func tasks(for game: Game, level: Int) -> [QuizTask] {
+        let level = min(max(level, 0), game.maxLevel)
         switch game {
-        case .counting: return countingTasks(upTo: countingMax)
-        case .colors: return colorTasks()
-        case .shapes: return shapeTasks()
-        case .letters: return letterTasks()
-        case .patterns: return patternTasks()
+        case .counting: return countingTasks(level: level)
+        case .colors: return colorTasks(level: level)
+        case .shapes: return shapeTasks(level: level)
+        case .letters: return letterTasks(level: level)
+        case .patterns: return patternTasks(level: level)
+        case .moreLess: return moreLessTasks(level: level)
+        case .syllables: return syllableTasks(level: level)
+        case .rhymes: return rhymeTasks(level: level)
+        case .clock: return clockTasks(level: level)
         case .memory: return []
         }
     }
 
+    /// Wählt `count` Elemente, wiederholt bei kleinem Vorrat, aber nie zweimal direkt hintereinander.
+    static func varied<T: Equatable>(_ pool: [T], count: Int) -> [T] {
+        var result: [T] = []
+        while result.count < count {
+            for item in pool.shuffled() where result.count < count && result.last != item {
+                result.append(item)
+            }
+        }
+        return result
+    }
+
     // MARK: - Zählen
 
-    struct CountItem {
+    struct CountItem: Equatable {
         let emoji: String
         let plural: String
     }
@@ -35,17 +55,19 @@ enum TaskFactory {
         CountItem(emoji: "🐶", plural: "Hunde"),
     ]
 
-    static func countingTasks(upTo countingMax: Int) -> [QuizTask] {
-        let upper = min(max(countingMax, tasksPerRound), 10)
-        let numbers = Array(1...upper).shuffled()
-        let items = countItems.shuffled()
+    static let countingLimits = [5, 10, 20]
 
-        return (0..<tasksPerRound).map { i in
-            let n = numbers[i % numbers.count]
-            let item = items[i % items.count]
+    static func countingTasks(level: Int) -> [QuizTask] {
+        let upper = countingLimits[level]
+        let numbers = Array(Array(1...upper).shuffled().prefix(tasksPerRound))
+        let items = varied(countItems, count: tasksPerRound)
+
+        return zip(numbers, items).map { n, item in
+            // Ab Stufe 1 liegen die falschen Antworten nah an der richtigen – so lohnt sich genaues Zählen.
+            let range = level == 0 ? 1...upper : max(1, n - 3)...min(upper, n + 3)
             var options: Set<Int> = [n]
             while options.count < 3 {
-                options.insert(Int.random(in: 1...upper))
+                options.insert(Int.random(in: range))
             }
             let choices = options.shuffled().map { value in
                 Choice(
@@ -59,7 +81,7 @@ enum TaskFactory {
                 prompt: .objects(emoji: item.emoji, count: n),
                 instruction: "Wie viele \(item.plural) siehst du?",
                 choices: choices,
-                correctFeedback: "\(Phrases.randomPraise) \(Phrases.numberWords[n].capitalized)!"
+                correctFeedback: "\(Phrases.numberWords[n].capitalized)!"
             )
         }
     }
@@ -84,9 +106,12 @@ enum TaskFactory {
 
     static let colorSymbols = ["circle.fill", "star.fill", "heart.fill", "car.fill", "drop.fill", "leaf.fill", "cloud.fill"]
 
-    static func colorTasks() -> [QuizTask] {
-        palette.shuffled().prefix(tasksPerRound).map { target in
-            let others = palette.filter { $0 != target }.shuffled().prefix(3)
+    static func colorTasks(level: Int) -> [QuizTask] {
+        // Stufe 0: nur die vier Grundfarben, 3 Antworten; Stufe 2: alle Farben, 4 Antworten.
+        let pool = level == 0 ? Array(palette.prefix(4)) : palette
+        let optionCount = level == 2 ? 4 : 3
+        return varied(pool, count: tasksPerRound).map { target in
+            let others = pool.filter { $0 != target }.shuffled().prefix(optionCount - 1)
             let symbol = colorSymbols.randomElement() ?? "circle.fill"
             let choices = ([target] + others).shuffled().map { option in
                 Choice(
@@ -100,16 +125,18 @@ enum TaskFactory {
                 prompt: .empty,
                 instruction: "Tippe auf \(target.name)!",
                 choices: choices,
-                correctFeedback: "\(Phrases.randomPraise) Das ist \(target.name)."
+                correctFeedback: "Das ist \(target.name)."
             )
         }
     }
 
     // MARK: - Formen
 
-    static func shapeTasks() -> [QuizTask] {
-        ShapeKind.allCases.shuffled().prefix(tasksPerRound).map { target in
-            let others = ShapeKind.allCases.filter { $0 != target }.shuffled().prefix(2)
+    static func shapeTasks(level: Int) -> [QuizTask] {
+        let pool = level == 0 ? ShapeKind.basic : ShapeKind.allCases
+        let optionCount = level == 2 ? 4 : 3
+        return varied(pool, count: tasksPerRound).map { target in
+            let others = pool.filter { $0 != target }.shuffled().prefix(optionCount - 1)
             // Jede Form in einer anderen Farbe: Das Kind soll die Form, nicht die Farbe erkennen.
             let colors = palette.shuffled()
             let choices = ([target] + others).shuffled().enumerated().map { index, kind in
@@ -124,7 +151,7 @@ enum TaskFactory {
                 prompt: .empty,
                 instruction: "Wo ist \(target.article) \(target.name)?",
                 choices: choices,
-                correctFeedback: "\(Phrases.randomPraise) Das ist \(target.article) \(target.name)."
+                correctFeedback: "Das ist \(target.article) \(target.name)."
             )
         }
     }
@@ -137,7 +164,8 @@ enum TaskFactory {
         let emoji: String
     }
 
-    /// Nur Wörter mit klar hörbarem Anlaut (keine "Sch"-, "Ei"- oder "Ch"-Wörter).
+    /// Nur Wörter mit klar hörbarem Einzel-Anlaut (keine „Sch“-, „Ei“-, „Pf“- oder „Ch“-Wörter).
+    /// Die Buchstaben werden in den Aufnahmen als Laut gesprochen („mmm“ statt „Em“).
     static let letterWords: [LetterWord] = [
         LetterWord(letter: "A", word: "Affe", emoji: "🐒"),
         LetterWord(letter: "A", word: "Apfel", emoji: "🍎"),
@@ -166,7 +194,7 @@ enum TaskFactory {
         LetterWord(letter: "N", word: "Nashorn", emoji: "🦏"),
         LetterWord(letter: "O", word: "Ohr", emoji: "👂"),
         LetterWord(letter: "O", word: "Oktopus", emoji: "🐙"),
-        LetterWord(letter: "P", word: "Pferd", emoji: "🐴"),
+        LetterWord(letter: "P", word: "Pizza", emoji: "🍕"),
         LetterWord(letter: "P", word: "Pinguin", emoji: "🐧"),
         LetterWord(letter: "P", word: "Pilz", emoji: "🍄"),
         LetterWord(letter: "R", word: "Rakete", emoji: "🚀"),
@@ -184,7 +212,21 @@ enum TaskFactory {
         LetterWord(letter: "Z", word: "Zitrone", emoji: "🍋"),
     ]
 
-    static func letterTasks() -> [QuizTask] {
+    /// Ankerwort je Laut – wie in der Anlauttabelle von Kita und Grundschule.
+    /// Der Laut wird im Muster „M, M, Mama“ gesprochen: einzeln ist er für Sprachsynthese zu undeutlich.
+    /// Ankerwörter kommen nie als Antwortbild vor, damit sie die Lösung nicht verraten.
+    static let anchorWords: [String: String] = [
+        "A": "Ameise", "B": "Ball", "E": "Esel", "F": "Fuß", "H": "Hut", "K": "Kind", "L": "Lampe", "M": "Mama",
+        "N": "Nudel", "O": "Opa", "P": "Papa", "R": "Rose", "S": "Sofa", "T": "Tasse", "U": "Uhu", "Z": "Zahn",
+    ]
+
+    /// „M, M, Maus“ – Laut zweimal, dann das Wort.
+    static func soundPattern(_ letter: String, _ word: String) -> String {
+        "\(letter), \(letter), \(word)"
+    }
+
+    static func letterTasks(level: Int) -> [QuizTask] {
+        let distractorCount = level == 2 ? 3 : 2
         let letters = Array(Set(letterWords.map(\.letter))).shuffled().prefix(tasksPerRound)
         return letters.map { letter in
             let candidates = letterWords.filter { $0.letter == letter }
@@ -195,22 +237,23 @@ enum TaskFactory {
             for word in letterWords.shuffled() where !usedLetters.contains(word.letter) {
                 distractors.append(word)
                 usedLetters.insert(word.letter)
-                if distractors.count == 2 { break }
+                if distractors.count == distractorCount { break }
             }
 
+            let anchorSound = soundPattern(letter, anchorWords[letter] ?? correct.word)
             let choices = ([correct] + distractors).shuffled().map { word in
                 Choice(
                     content: .emoji(word.emoji),
                     isCorrect: word.letter == letter,
                     spokenName: word.word,
-                    wrongFeedback: "\(word.word) fängt mit \(word.letter) an. Wir suchen \(letter)."
+                    wrongFeedback: "\(soundPattern(word.letter, word.word)). Wir suchen: \(anchorSound)."
                 )
             }
             return QuizTask(
-                prompt: .letter(letter),
-                instruction: "Was fängt mit \(letter) an?",
+                prompt: .letter(letter, sound: "Hör mal: \(anchorSound)."),
+                instruction: "Hör mal: \(anchorSound). Was fängt auch so an?",
                 choices: choices,
-                correctFeedback: "\(Phrases.randomPraise) \(correct.word) fängt mit \(letter) an!"
+                correctFeedback: "\(soundPattern(letter, correct.word))!"
             )
         }
     }
@@ -225,13 +268,16 @@ enum TaskFactory {
         ["🚗", "🚂", "✈️", "🚲"],
     ]
 
-    /// Steigende Schwierigkeit: AB, AB, AAB, ABB, ABC.
-    static let patternUnits: [[Int]] = [[0, 1], [0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 2]]
+    /// Je Stufe steigende Schwierigkeit: AB → AAB/ABB → ABC/AABB.
+    static let patternUnits: [[[Int]]] = [
+        [[0, 1], [0, 1], [0, 1], [0, 0, 1], [0, 0, 1]],
+        [[0, 1], [0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 2]],
+        [[0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 2], [0, 0, 1, 1]],
+    ]
 
-    static func patternTasks() -> [QuizTask] {
-        (0..<tasksPerRound).map { i in
+    static func patternTasks(level: Int) -> [QuizTask] {
+        patternUnits[level].map { unit in
             let theme = (patternThemes.randomElement() ?? patternThemes[0]).shuffled()
-            let unit = patternUnits[i % patternUnits.count]
             let shownLength = unit.count == 2 ? 5 : 6
             let sequence = (0...shownLength).map { theme[unit[$0 % unit.count]] }
             let shown = Array(sequence.prefix(shownLength))
@@ -258,7 +304,207 @@ enum TaskFactory {
                 prompt: .sequence(shown),
                 instruction: "Was kommt als Nächstes?",
                 choices: choices,
-                correctFeedback: "\(Phrases.randomPraise) Das Muster geht weiter!"
+                correctFeedback: "Das Muster geht weiter!"
+            )
+        }
+    }
+
+    // MARK: - Mehr oder weniger? (Vorschule)
+
+    /// Je Stufe: Mengenbereich und Mindestabstand. Ab 2, damit „Hier sind es …“ immer stimmt.
+    static let moreLessRanges: [(range: ClosedRange<Int>, minimumDifference: Int)] = [
+        (2...5, 2), (2...8, 2), (2...10, 1),
+    ]
+
+    static func moreLessTasks(level: Int) -> [QuizTask] {
+        let (range, minimumDifference) = moreLessRanges[level]
+        return varied(countItems, count: tasksPerRound).map { item in
+            var a = 0, b = 0
+            repeat {
+                a = Int.random(in: range)
+                b = Int.random(in: range)
+            } while abs(a - b) < minimumDifference
+            // Stufe 0 fragt nur nach „mehr“ – das ist für Kinder leichter als „weniger“.
+            let askMore = level == 0 || Bool.random()
+            let answer = askMore ? max(a, b) : min(a, b)
+            let other = askMore ? min(a, b) : max(a, b)
+
+            let choices = [a, b].map { count in
+                Choice(
+                    content: .group(item.emoji, count: count),
+                    isCorrect: count == answer,
+                    spokenName: "\(count) \(item.plural)",
+                    wrongFeedback: "Zähl mal nach! Hier sind es \(Phrases.numberWords[other])."
+                )
+            }
+            return QuizTask(
+                prompt: .empty,
+                instruction: "Wo sind \(askMore ? "mehr" : "weniger") \(item.plural)?",
+                choices: choices,
+                correctFeedback: "Hier sind es \(Phrases.numberWords[answer]). \(askMore ? "Das sind mehr!" : "Das sind weniger!")"
+            )
+        }
+    }
+
+    // MARK: - Silben klatschen (Vorschule)
+
+    struct SyllableWord: Equatable {
+        let word: String
+        let emoji: String
+        let syllables: [String]
+
+        /// So wird das Wort in Silben vorgelesen, z. B. „Ba-na-ne.“
+        var spokenSyllables: String { syllables.joined(separator: "-") + "." }
+    }
+
+    static let syllableWords: [SyllableWord] = [
+        SyllableWord(word: "Hund", emoji: "🐶", syllables: ["Hund"]),
+        SyllableWord(word: "Baum", emoji: "🌳", syllables: ["Baum"]),
+        SyllableWord(word: "Haus", emoji: "🏠", syllables: ["Haus"]),
+        SyllableWord(word: "Mond", emoji: "🌙", syllables: ["Mond"]),
+        SyllableWord(word: "Fisch", emoji: "🐟", syllables: ["Fisch"]),
+        SyllableWord(word: "Kuh", emoji: "🐮", syllables: ["Kuh"]),
+        SyllableWord(word: "Ball", emoji: "⚽️", syllables: ["Ball"]),
+        SyllableWord(word: "Ente", emoji: "🦆", syllables: ["En", "te"]),
+        SyllableWord(word: "Katze", emoji: "🐱", syllables: ["Kat", "ze"]),
+        SyllableWord(word: "Sonne", emoji: "☀️", syllables: ["Son", "ne"]),
+        SyllableWord(word: "Apfel", emoji: "🍎", syllables: ["Ap", "fel"]),
+        SyllableWord(word: "Tiger", emoji: "🐯", syllables: ["Ti", "ger"]),
+        SyllableWord(word: "Zebra", emoji: "🦓", syllables: ["Ze", "bra"]),
+        SyllableWord(word: "Auto", emoji: "🚗", syllables: ["Au", "to"]),
+        SyllableWord(word: "Banane", emoji: "🍌", syllables: ["Ba", "na", "ne"]),
+        SyllableWord(word: "Tomate", emoji: "🍅", syllables: ["To", "ma", "te"]),
+        SyllableWord(word: "Rakete", emoji: "🚀", syllables: ["Ra", "ke", "te"]),
+        SyllableWord(word: "Giraffe", emoji: "🦒", syllables: ["Gi", "raf", "fe"]),
+        SyllableWord(word: "Elefant", emoji: "🐘", syllables: ["E", "le", "fant"]),
+        SyllableWord(word: "Ananas", emoji: "🍍", syllables: ["A", "na", "nas"]),
+        SyllableWord(word: "Krokodil", emoji: "🐊", syllables: ["Kro", "ko", "dil"]),
+        SyllableWord(word: "Regenbogen", emoji: "🌈", syllables: ["Re", "gen", "bo", "gen"]),
+        SyllableWord(word: "Avocado", emoji: "🥑", syllables: ["A", "vo", "ca", "do"]),
+        SyllableWord(word: "Schokolade", emoji: "🍫", syllables: ["Scho", "ko", "la", "de"]),
+        SyllableWord(word: "Krankenwagen", emoji: "🚑", syllables: ["Kran", "ken", "wa", "gen"]),
+    ]
+
+    static let syllableCountTexts = ["Eine Silbe!", "Zwei Silben!", "Drei Silben!", "Vier Silben!"]
+    /// Je Stufe: höchste Silbenzahl der Wörter und der Antwortmöglichkeiten.
+    static let syllableLimits = [(words: 2, choices: 3), (words: 3, choices: 3), (words: 4, choices: 4)]
+
+    static func syllableTasks(level: Int) -> [QuizTask] {
+        let limits = syllableLimits[level]
+        let pool = syllableWords.filter { $0.syllables.count <= limits.words }
+        return Array(pool.shuffled().prefix(tasksPerRound)).map { word in
+            let count = word.syllables.count
+            let choices = (1...limits.choices).map { claps in
+                Choice(
+                    content: .claps(claps),
+                    isCorrect: claps == count,
+                    spokenName: "\(claps)-mal klatschen",
+                    wrongFeedback: "Hör nochmal genau hin. \(word.spokenSyllables)"
+                )
+            }
+            return QuizTask(
+                prompt: .word(emoji: word.emoji, syllables: word.spokenSyllables),
+                instruction: "Wie oft klatschst du bei \(word.word)?",
+                choices: choices,
+                correctFeedback: "\(word.spokenSyllables) \(syllableCountTexts[count - 1])"
+            )
+        }
+    }
+
+    // MARK: - Reime finden (Vorschule)
+
+    struct RhymeWord: Equatable {
+        let word: String
+        let emoji: String
+    }
+
+    /// Klare Reimpaare mit eindeutigen Bildern. Das erste Wort ist die Frage, das zweite die Antwort.
+    /// Keine zwei Paare reimen sich untereinander – so ist immer genau eine Antwort richtig.
+    static let rhymePairs: [(RhymeWord, RhymeWord)] = [
+        (RhymeWord(word: "Maus", emoji: "🐭"), RhymeWord(word: "Haus", emoji: "🏠")),
+        (RhymeWord(word: "Kuh", emoji: "🐮"), RhymeWord(word: "Schuh", emoji: "👟")),
+        (RhymeWord(word: "Katze", emoji: "🐱"), RhymeWord(word: "Tatze", emoji: "🐾")),
+        (RhymeWord(word: "Hose", emoji: "👖"), RhymeWord(word: "Rose", emoji: "🌹")),
+        (RhymeWord(word: "Hase", emoji: "🐰"), RhymeWord(word: "Nase", emoji: "👃")),
+        (RhymeWord(word: "Brot", emoji: "🍞"), RhymeWord(word: "Boot", emoji: "⛵️")),
+        (RhymeWord(word: "Zahn", emoji: "🦷"), RhymeWord(word: "Hahn", emoji: "🐓")),
+        (RhymeWord(word: "Schwein", emoji: "🐷"), RhymeWord(word: "Bein", emoji: "🦵")),
+        (RhymeWord(word: "Ziege", emoji: "🐐"), RhymeWord(word: "Fliege", emoji: "🪰")),
+        (RhymeWord(word: "Wal", emoji: "🐋"), RhymeWord(word: "Schal", emoji: "🧣")),
+        (RhymeWord(word: "Igel", emoji: "🦔"), RhymeWord(word: "Spiegel", emoji: "🪞")),
+        (RhymeWord(word: "Rakete", emoji: "🚀"), RhymeWord(word: "Trompete", emoji: "🎺")),
+        (RhymeWord(word: "Socke", emoji: "🧦"), RhymeWord(word: "Glocke", emoji: "🔔")),
+        (RhymeWord(word: "Tanne", emoji: "🌲"), RhymeWord(word: "Kanne", emoji: "🫖")),
+        (RhymeWord(word: "Hund", emoji: "🐶"), RhymeWord(word: "Mund", emoji: "👄")),
+    ]
+
+    static func rhymeTasks(level: Int) -> [QuizTask] {
+        let optionCount = level == 2 ? 4 : 3
+        let pairs = Array(rhymePairs.shuffled().prefix(tasksPerRound))
+        return pairs.map { target, rhyme in
+            // Falsche Antworten: Wörter aus anderen Paaren (sie reimen sich garantiert nicht).
+            let others = rhymePairs.filter { $0.0 != target }.flatMap { [$0.0, $0.1] }.shuffled()
+            let options = ([rhyme] + others.prefix(optionCount - 1)).shuffled()
+            let choices = options.map { option in
+                Choice(
+                    content: .emoji(option.emoji),
+                    isCorrect: option == rhyme,
+                    spokenName: option.word,
+                    wrongFeedback: "\(option.word). Das reimt sich nicht auf \(target.word)."
+                )
+            }
+            // Huhu nennt alle Bilder beim Namen – Reime kann man nur hören, nicht sehen.
+            let names = options.map { "\($0.word)." }.joined(separator: " ")
+            return QuizTask(
+                prompt: .word(emoji: target.emoji, syllables: "\(target.word)."),
+                instruction: "Was reimt sich auf \(target.word)? \(names)",
+                choices: choices,
+                correctFeedback: "\(target.word) – \(rhyme.word), das reimt sich!"
+            )
+        }
+    }
+
+    // MARK: - Uhr lesen (Vorschule)
+
+    /// „drei Uhr“, „halb vier“ – so, wie Kinder die Uhrzeit hören.
+    static func timeText(hour: Int, minute: Int) -> String {
+        if minute == 0 {
+            return hour == 1 ? "ein Uhr" : "\(Phrases.numberWords[hour]) Uhr"
+        }
+        return "halb \(Phrases.numberWords[hour % 12 + 1])"
+    }
+
+    static func clockTasks(level: Int) -> [QuizTask] {
+        let optionCount = level == 1 ? 4 : 3
+        let targets: [(hour: Int, minute: Int)] = Array(1...12).shuffled().prefix(tasksPerRound).map { hour in
+            (hour: hour, minute: level == 2 && Bool.random() ? 30 : 0)
+        }
+        return targets.map { target in
+            var options: [(hour: Int, minute: Int)] = [target]
+            if level == 2 {
+                // Typische Verwechslung: dieselbe Stunde, andere Hälfte.
+                options.append((hour: target.hour, minute: target.minute == 0 ? 30 : 0))
+            }
+            for hour in Array(1...12).shuffled() where options.count < optionCount {
+                let candidate = (hour: hour, minute: level == 2 && Bool.random() ? 30 : 0)
+                if !options.contains(where: { $0.hour == candidate.hour && $0.minute == candidate.minute }) {
+                    options.append(candidate)
+                }
+            }
+            let targetText = timeText(hour: target.hour, minute: target.minute)
+            let choices = options.shuffled().map { option in
+                Choice(
+                    content: .clock(hour: option.hour, minute: option.minute),
+                    isCorrect: option.hour == target.hour && option.minute == target.minute,
+                    spokenName: timeText(hour: option.hour, minute: option.minute),
+                    wrongFeedback: "Hier ist es \(timeText(hour: option.hour, minute: option.minute)). Wo ist es \(targetText)?"
+                )
+            }
+            return QuizTask(
+                prompt: .empty,
+                instruction: "Wo ist es \(targetText)?",
+                choices: choices,
+                correctFeedback: "Es ist \(targetText)."
             )
         }
     }

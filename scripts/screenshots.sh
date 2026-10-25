@@ -6,7 +6,7 @@ set -euo pipefail
 APP="$1"
 OUT="$2"
 BUNDLE_ID="de.podolskis.kleineentdecker"
-SCREENS=(home counting letters shapes patterns)
+SCREENS=(home counting syllables clock letters)
 mkdir -p "$OUT"
 
 find_device() {
@@ -55,6 +55,10 @@ shoot() {
 
 shoot iPhone 'iPhone.*Pro Max'
 shoot iPad 'iPad Pro 13-inch'
+# Nur für die Vorschau: normales 6,1"-iPhone (Größe wie iPhone 13–17), nicht für den App Store.
+if [ "${PREVIEW_SMALL_IPHONE:-}" = "1" ]; then
+  shoot iPhoneKlein '^iPhone 1[3-9]$'
+fi
 
 for f in "$OUT"/*.png; do
   echo "$(basename "$f"): $(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixel/ {printf "%s ", $2}')$(stat -f%z "$f") Bytes"

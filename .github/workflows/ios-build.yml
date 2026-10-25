@@ -4,12 +4,23 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Mac-Image (Standard macos-26; Ausweichen z. B. auf macos-15)
+        required: false
+        default: macos-26
+
+# Ältere Läufe desselben Branches abbrechen, wenn neue Änderungen kommen (spart Mac-Rechenzeit).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     permissions:
       contents: write
-    runs-on: macos-26
+    # Bei Engpässen kann manuell ein anderes Mac-Image gewählt werden (es muss Xcode 26+ enthalten).
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +71,8 @@ jobs:
           path: KleineEntdecker-Simulator.zip
 
       - name: Screenshots erzeugen (Vorschau)
+        env:
+          PREVIEW_SMALL_IPHONE: "1"
         run: scripts/screenshots.sh build/sim/Build/Products/Debug-iphonesimulator/KleineEntdecker.app screenshots
 
       - name: Screenshots bereitstellen
@@ -68,16 +81,15 @@ jobs:
           name: Screenshots-Vorschau
           path: screenshots
 
-      # Vorschau zum Ansehen ohne Download: verkleinerte Bilder im Branch "screenshot-vorschau"
+      # Vorschau zum Ansehen ohne Download: verkleinerte Bilder im Branch "screenshot-vorschau-<branch>"
       - name: Vorschau in eigenen Branch legen
-        if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p "$RUNNER_TEMP/preview"
           for f in screenshots/*.png; do
             sips -Z 900 "$f" --out "$RUNNER_TEMP/preview/$(basename "$f")" >/dev/null
           done
           cd "$RUNNER_TEMP/preview"
-          git init -q -b screenshot-vorschau
+          git init -q -b "screenshot-vorschau-${GITHUB_REF_NAME}"
           git add .
           git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Screenshot-Vorschau für ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshot-vorschau
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "screenshot-vorschau-${GITHUB_REF_NAME}"

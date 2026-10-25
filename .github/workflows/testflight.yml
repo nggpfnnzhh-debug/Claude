@@ -8,10 +8,16 @@ name: Upload zu TestFlight
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Mac-Image (Standard macos-26; Ausweichen z. B. auf macos-15)
+        required: false
+        default: macos-26
 
 jobs:
   upload:
-    runs-on: macos-26
+    # Bei Engpässen kann manuell ein anderes Mac-Image gewählt werden (es muss Xcode 26+ enthalten).
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 45
     env:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

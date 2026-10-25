@@ -7,19 +7,31 @@ final class VoiceCoverageTests: XCTestCase {
     private func spokenTexts() -> [String] {
         var texts: [String] = []
         for game in Game.allCases where game != .memory {
-            for _ in 0..<60 {
-                for countingMax in [5, 10] {
-                    for task in TaskFactory.tasks(for: game, countingUpTo: countingMax) {
+            for level in 0...game.maxLevel {
+                for _ in 0..<60 {
+                    for task in TaskFactory.tasks(for: game, level: level) {
                         texts.append(task.instruction)
                         texts.append(task.correctFeedback)
                         texts += task.choices.map(\.wrongFeedback)
-                        if case let .letter(letter) = task.prompt { texts.append(letter) }
+                        switch task.prompt {
+                        case let .letter(_, sound): texts.append(sound)
+                        case let .word(_, syllables): texts.append(syllables)
+                        default: break
+                        }
                     }
                 }
             }
         }
-        texts += Phrases.praise + Phrases.retry + Phrases.numberWords.dropFirst()
+        // Uhr: alle Zeiten vollständig, nicht nur zufällig erzeugte
+        for hour in 1...12 {
+            for minute in [0, 30] {
+                let time = TaskFactory.timeText(hour: hour, minute: minute)
+                texts += ["Wo ist es \(time)?", "Es ist \(time).", "Hier ist es \(time)."]
+            }
+        }
+        texts += Phrases.firstTryPraise + Phrases.persistencePraise + Phrases.numberWords.dropFirst()
         texts += Lines.fixed
+        texts += Game.allCases.compactMap(\.tapHint)
         for nickname in ChildProfile.nicknames {
             let spoken = ChildProfile.spokenName(name: nickname.name, adjective: nickname.adjective) ?? ""
             texts.append(Lines.hello(spoken))
@@ -32,12 +44,13 @@ final class VoiceCoverageTests: XCTestCase {
     func testEverySpokenSentenceHasRecording() {
         let sentences = Set(spokenTexts().flatMap(Speaker.sentences(in:)))
         let missing = sentences.filter { !Speaker.shared.hasClip(for: $0) }.sorted()
-        XCTAssertTrue(missing.isEmpty, "Ohne Aufnahme: \(missing)")
+        XCTAssertTrue(missing.isEmpty, "Ohne Aufnahme (\(missing.count)): \(missing)")
     }
 
     func testSentenceSplitting() {
         XCTAssertEqual(Speaker.sentences(in: "Das ist Blau. Wo ist Rot?"), ["Das ist Blau.", "Wo ist Rot?"])
         XCTAssertEqual(Speaker.sentences(in: "Super! Drei!"), ["Super!", "Drei!"])
+        XCTAssertEqual(Speaker.sentences(in: "Ba-na-ne. Drei Silben!"), ["Ba-na-ne.", "Drei Silben!"])
         XCTAssertEqual(Speaker.sentences(in: "A"), ["A"])
     }
 }

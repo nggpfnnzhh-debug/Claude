@@ -18,8 +18,11 @@ enum LaunchOptions {
     /// Zeigt auf dem Startbildschirm ein paar gesammelte Sterne, damit die Screenshots lebendig wirken.
     static func prepareScreenshotModeIfNeeded() {
         guard screenshotScreen != nil else { return }
-        let demoStars = ["counting": 4, "colors": 3, "shapes": 2, "letters": 3, "patterns": 1, "memory": 2]
+        let demoStars = ["counting": 4, "colors": 3, "shapes": 2, "letters": 3, "patterns": 1, "memory": 2,
+                         "moreLess": 1, "syllables": 2, "rhymes": 1, "clock": 1]
         UserDefaults.standard.set(demoStars, forKey: "starsByGame")
+        // Etwas fortgeschrittenere Aufgaben wirken auf Screenshots anschaulicher.
+        UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1], forKey: "levelsByGame")
         UserDefaults.standard.set(0, forKey: SettingsKey.breakMinutes)
         UserDefaults.standard.set("Biene", forKey: SettingsKey.childName)
         UserDefaults.standard.set("Kleine", forKey: SettingsKey.childAdjective)
