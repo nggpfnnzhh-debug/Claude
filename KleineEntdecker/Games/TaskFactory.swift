@@ -55,12 +55,19 @@ enum TaskFactory {
         CountItem(emoji: "🐶", plural: "Hunde"),
     ]
 
+    /// Grundmotive plus – je nach Jahreszeit oder Fest – passende Motive, die doppelt im Topf liegen,
+    /// damit sie spürbar oft vorkommen.
+    static var currentCountItems: [CountItem] {
+        let seasonal = Seasonal.active?.countItems ?? []
+        return countItems + seasonal + seasonal
+    }
+
     static let countingLimits = [5, 10, 20]
 
     static func countingTasks(level: Int) -> [QuizTask] {
         let upper = countingLimits[level]
         let numbers = Array(Array(1...upper).shuffled().prefix(tasksPerRound))
-        let items = varied(countItems, count: tasksPerRound)
+        let items = varied(currentCountItems, count: tasksPerRound)
 
         return zip(numbers, items).map { n, item in
             // Ab Stufe 1 liegen die falschen Antworten nah an der richtigen – so lohnt sich genaues Zählen.
@@ -318,7 +325,7 @@ enum TaskFactory {
 
     static func moreLessTasks(level: Int) -> [QuizTask] {
         let (range, minimumDifference) = moreLessRanges[level]
-        return varied(countItems, count: tasksPerRound).map { item in
+        return varied(currentCountItems, count: tasksPerRound).map { item in
             var a = 0, b = 0
             repeat {
                 a = Int.random(in: range)

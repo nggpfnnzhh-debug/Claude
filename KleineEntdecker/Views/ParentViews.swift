@@ -100,6 +100,7 @@ struct ParentSettingsView: View {
     @EnvironmentObject private var progress: ProgressStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage(SettingsKey.speechEnabled) private var speechEnabled = true
+    @AppStorage(SettingsKey.seasonalThemes) private var seasonalThemes = true
     @AppStorage(SettingsKey.breakMinutes) private var breakMinutes = SettingsDefault.breakMinutes
     @AppStorage(SettingsKey.childName) private var childName = ""
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
@@ -156,6 +157,7 @@ struct ParentSettingsView: View {
 
                 Section {
                     Toggle("Sprachausgabe", isOn: $speechEnabled)
+                    Toggle("Feste & Jahreszeiten", isOn: $seasonalThemes)
                     Picker("Pausen-Erinnerung", selection: $breakMinutes) {
                         Text("Aus").tag(0)
                         ForEach([10, 15, 20, 30], id: \.self) { minutes in
@@ -165,7 +167,7 @@ struct ParentSettingsView: View {
                 } header: {
                     Text("Einstellungen")
                 } footer: {
-                    Text("Die Pausen-Erinnerung unterbricht das Spiel freundlich. Weiterspielen ist nur über die Elternschranke möglich. Kurze Einheiten von 10–15 Minuten sind in diesem Alter ideal.")
+                    Text("Die Pausen-Erinnerung unterbricht das Spiel freundlich. Weiterspielen ist nur über die Elternschranke möglich. Kurze Einheiten von 10–15 Minuten sind in diesem Alter ideal.\n\n„Feste & Jahreszeiten“ schmückt die App passend zum Datum, z. B. mit fallenden Blättern im Herbst oder Kürbissen zu Halloween, und bringt passende Motive in die Spiele.")
                 }
 
                 Section("Was lernt mein Kind?") {

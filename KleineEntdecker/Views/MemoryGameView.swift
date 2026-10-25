@@ -75,7 +75,8 @@ struct MemoryGameView: View {
     private func start() {
         pairCount = Self.pairCounts[progress.level(for: game)]
         mismatches = 0
-        let chosen = Self.animals.shuffled().prefix(pairCount)
+        let seasonal = Seasonal.active?.memoryCards ?? []
+        let chosen = (seasonal.shuffled() + Self.animals.shuffled()).prefix(pairCount)
         cards = chosen
             .flatMap { [MemoryCard(emoji: $0.emoji, name: $0.name), MemoryCard(emoji: $0.emoji, name: $0.name)] }
             .shuffled()
