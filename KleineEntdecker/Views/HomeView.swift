@@ -26,6 +26,10 @@ struct HomeView: View {
             )
             .ignoresSafeArea()
 
+            if let seasonal = Seasonal.active, !seasonal.decorations.isEmpty {
+                SeasonalDecorView(emojis: seasonal.decorations)
+            }
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 20 * scale) {
                     header
@@ -62,11 +66,9 @@ struct HomeView: View {
     }
 
     private func greet() {
-        if let name = ChildProfile.recordedSpokenName(name: childName, adjective: childAdjective) {
-            Speaker.shared.say("\(Lines.hello(name)) \(Lines.homeQuestion)")
-        } else {
-            Speaker.shared.say(Lines.homeGreeting)
-        }
+        let hello = ChildProfile.recordedSpokenName(name: childName, adjective: childAdjective).map(Lines.hello) ?? "Huhu!"
+        let announcement = Seasonal.active?.announcement.map { " \($0)" } ?? ""
+        Speaker.shared.say("\(hello)\(announcement) \(Lines.homeQuestion)")
     }
 
     /// iPhone: zwei Spalten. iPad: Grundspiele in drei, Vorschulspiele in vier Spalten –
@@ -128,6 +130,13 @@ struct HomeView: View {
                 Button(action: greet) {
                     Text("🦉")
                         .font(.system(size: 50 * scale))
+                        .overlay(alignment: .bottomTrailing) {
+                            if let accessory = Seasonal.active?.owlAccessory {
+                                Text(accessory)
+                                    .font(.system(size: 22 * scale))
+                                    .offset(x: 6 * scale, y: 2 * scale)
+                            }
+                        }
                 }
                 .buttonStyle(BouncyButtonStyle())
                 .accessibilityLabel("Huhu, die Eule")

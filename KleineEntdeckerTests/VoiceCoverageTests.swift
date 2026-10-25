@@ -4,9 +4,9 @@ import XCTest
 /// Stellt sicher, dass jeder Satz, den die App sprechen kann, als Aufnahme vorliegt.
 /// Schlägt der Test fehl: Satz in scripts/voice/generate.py ergänzen und den Workflow „Stimme erzeugen“ starten.
 final class VoiceCoverageTests: XCTestCase {
-    private func spokenTexts() -> [String] {
+    private func taskTexts(games: [Game]) -> [String] {
         var texts: [String] = []
-        for game in Game.allCases where game != .memory {
+        for game in games {
             for level in 0...game.maxLevel {
                 for _ in 0..<60 {
                     for task in TaskFactory.tasks(for: game, level: level) {
@@ -22,6 +22,22 @@ final class VoiceCoverageTests: XCTestCase {
                 }
             }
         }
+        return texts
+    }
+
+    private func spokenTexts() -> [String] {
+        var texts: [String] = []
+        // Ohne Jahreszeit-Motive …
+        Seasonal.override = Seasonal(season: .summer)
+        texts += taskTexts(games: Game.allCases.filter { $0 != .memory })
+        // … und mit allen Jahreszeiten und Festen (Zählen und Mengen nutzen dieselben Motive).
+        for variant in Seasonal.allVariants {
+            Seasonal.override = variant
+            texts += taskTexts(games: [.counting, .moreLess])
+            texts += variant.memoryCards.map(\.name)
+            if let announcement = variant.announcement { texts.append(announcement) }
+        }
+        Seasonal.override = nil
         // Uhr: alle Zeiten vollständig, nicht nur zufällig erzeugte
         for hour in 1...12 {
             for minute in [0, 30] {

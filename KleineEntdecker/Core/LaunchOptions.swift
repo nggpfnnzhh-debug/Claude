@@ -11,6 +11,19 @@ enum LaunchOptions {
         return arguments[index + 1]
     }
 
+    /// `-season autumn` oder `-season halloween` – nur für Vorschaubilder.
+    static var screenshotSeason: Seasonal? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-season"), arguments.indices.contains(index + 1) else {
+            return nil
+        }
+        let value = arguments[index + 1]
+        if let festival = Seasonal.Festival(rawValue: value) {
+            return Seasonal(season: .autumn, festival: festival, isFestivalDay: true)
+        }
+        return Seasonal.Season(rawValue: value).map { Seasonal(season: $0) }
+    }
+
     static var screenshotGame: Game? {
         screenshotScreen.flatMap(Game.init(rawValue:))
     }
@@ -27,5 +40,8 @@ enum LaunchOptions {
         UserDefaults.standard.set("Biene", forKey: SettingsKey.childName)
         UserDefaults.standard.set("Kleine", forKey: SettingsKey.childAdjective)
         UserDefaults.standard.set("🐝", forKey: SettingsKey.childEmoji)
+        // Store-Screenshots sollen das ganze Jahr passen.
+        UserDefaults.standard.set(screenshotSeason != nil, forKey: SettingsKey.seasonalThemes)
+        Seasonal.override = screenshotSeason
     }
 }

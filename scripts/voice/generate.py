@@ -97,6 +97,11 @@ NICKNAMES = [("Biene", "Kleine"), ("Bär", "Kleiner"), ("Fuchs", "Kleiner"), ("M
              ("Drache", "Kleiner"), ("Einhorn", "Kleines"), ("Pinguin", "Kleiner"), ("Igel", "Kleiner"),
              ("Tiger", "Kleiner"), ("Katze", "Kleine"), ("Frosch", "Kleiner"), ("Dino", "Kleiner"),
              ("Hase", "Kleiner"), ("Löwe", "Kleiner"), ("Schildkröte", "Kleine")]
+# „Huhus Jahr“ (Seasonal.swift): Herbst und Halloween
+SEASONAL_COUNT_PLURALS = ["Kürbisse", "Fledermäuse", "Gespenster", "Bonbons",
+                          "Blätter", "Kastanien", "Pilze", "Igel"]
+SEASONAL_MEMORY = ["Kürbis", "Fledermaus", "Gespenst", "Bonbon", "Igel", "Eichhörnchen", "Pilz", "Kastanie"]
+SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!"]
 MEMORY_ANIMALS = ["Hund", "Katze", "Maus", "Hase", "Fuchs", "Bär", "Panda", "Frosch",
                   "Affe", "Schwein", "Kuh", "Löwe"]
 FIXED = [
@@ -133,7 +138,7 @@ def time_text(hour: int, minute: int) -> str:
 def all_sentences():
     s = FIRST_TRY_PRAISE + PERSISTENCE_PRAISE + NUMBER_WORDS[1:] + FIXED
     s += [f"{w.capitalize()}!" for w in NUMBER_WORDS[1:]]
-    s += [f"Wie viele {p} siehst du?" for p in COUNT_PLURALS]
+    s += [f"Wie viele {p} siehst du?" for p in COUNT_PLURALS + SEASONAL_COUNT_PLURALS]
     for c in COLORS:
         s += [f"Tippe auf {c}!", f"Das ist {c}.", f"Wo ist {c}?"]
     for name, article in SHAPES:
@@ -145,7 +150,7 @@ def all_sentences():
     for letter, word in LETTER_WORDS:
         s += [f"{letter}, {letter}, {word}!", f"{letter}, {letter}, {word}."]
     # Mehr oder weniger? (Mengen 2–10)
-    for plural in COUNT_PLURALS:
+    for plural in COUNT_PLURALS + SEASONAL_COUNT_PLURALS:
         s += [f"Wo sind mehr {plural}?", f"Wo sind weniger {plural}?"]
     s += [f"Hier sind es {NUMBER_WORDS[n]}." for n in range(2, 11)]
     # Silben
@@ -166,7 +171,7 @@ def all_sentences():
     for name, adjective in NICKNAMES:
         spoken = f"{adjective.lower()} {name}"
         s += [f"Huhu, {spoken}!", f"Super gemacht, {spoken}!"]
-    s += MEMORY_ANIMALS
+    s += MEMORY_ANIMALS + SEASONAL_MEMORY + SEASONAL_ANNOUNCEMENTS
     return list(dict.fromkeys(s))  # Reihenfolge erhalten, Dubletten entfernen
 
 
