@@ -26,10 +26,6 @@ struct HomeView: View {
             )
             .ignoresSafeArea()
 
-            if let seasonal = Seasonal.active, !seasonal.decorations.isEmpty {
-                SeasonalDecorView(emojis: seasonal.decorations)
-            }
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 20 * scale) {
                     header
@@ -44,6 +40,11 @@ struct HomeView: View {
                 .padding(24)
                 .frame(maxWidth: 900 * scale)
                 .frame(maxWidth: .infinity)
+            }
+
+            // Über den Kacheln, damit man es sieht – reagiert aber nicht auf Tippen.
+            if let seasonal = Seasonal.active, !seasonal.decorations.isEmpty {
+                SeasonalDecorView(emojis: seasonal.decorations)
             }
         }
         .onAppear {
