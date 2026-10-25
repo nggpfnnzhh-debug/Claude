@@ -18,8 +18,15 @@ struct SeasonalDecorView: View {
         let spin = Double.random(in: -120...120)
     }
 
-    @State private var pieces: [Piece] = []
+    @State private var pieces: [Piece]
     @State private var fall = false
+
+    init(emojis: [String]) {
+        self.emojis = emojis
+        // Die Teile müssen schon vor dem ersten Erscheinen da sein – sonst gibt es keinen Startpunkt
+        // für die Animation und alles läge sofort am Ziel (unterhalb des Bildschirms).
+        _pieces = State(initialValue: (0..<10).map { index in Piece(emoji: emojis[index % emojis.count]) })
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -45,8 +52,7 @@ struct SeasonalDecorView: View {
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .onAppear {
-            pieces = (0..<10).map { index in Piece(emoji: emojis[index % emojis.count]) }
-            fall = true
+            DispatchQueue.main.async { fall = true }
         }
     }
 }
