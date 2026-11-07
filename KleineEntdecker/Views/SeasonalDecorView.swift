@@ -50,3 +50,37 @@ struct SeasonalDecorView: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Kleiner Adventskranz auf dem Startbildschirm – so viele Kerzen brennen, wie Adventssonntage vorbei sind.
+struct AdventWreathView: View {
+    let candles: Int
+
+    @Environment(\.layoutScale) private var scale
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 14 * scale) {
+            ForEach(0..<4, id: \.self) { index in
+                VStack(spacing: 2 * scale) {
+                    // Flamme nur bei brennenden Kerzen
+                    Ellipse()
+                        .fill(index < candles ? Color.orange : Color.clear)
+                        .frame(width: 8 * scale, height: 13 * scale)
+                    RoundedRectangle(cornerRadius: 3 * scale)
+                        .fill(Color(red: 0.80, green: 0.15, blue: 0.20))
+                        .frame(width: 12 * scale, height: 26 * scale)
+                }
+            }
+        }
+        .padding(.horizontal, 22 * scale)
+        .padding(.top, 4 * scale)
+        .padding(.bottom, 6 * scale)
+        .background(
+            Capsule()
+                .fill(Color(red: 0.15, green: 0.45, blue: 0.25))
+                .frame(height: 14 * scale)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Adventskranz mit \(candles) brennenden Kerzen")
+    }
+}

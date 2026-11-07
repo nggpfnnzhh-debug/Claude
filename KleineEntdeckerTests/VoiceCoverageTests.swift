@@ -55,6 +55,7 @@ final class VoiceCoverageTests: XCTestCase {
         }
         texts += MemoryGameView.animals.map(\.name)
         texts += NumberBuilder.allTexts
+        texts += Stories.allTexts
         return texts
     }
 

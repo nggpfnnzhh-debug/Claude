@@ -153,6 +153,10 @@ struct HomeView: View {
                     StarSkyView(starCount: progress.totalStars)
                 }
             }
+
+            if let seasonal = Seasonal.active, seasonal.adventCandles > 0, seasonal.festival != .christmas {
+                AdventWreathView(candles: seasonal.adventCandles)
+            }
         }
     }
 }

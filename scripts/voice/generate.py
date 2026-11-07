@@ -99,9 +99,41 @@ NICKNAMES = [("Biene", "Kleine"), ("Bär", "Kleiner"), ("Fuchs", "Kleiner"), ("M
              ("Hase", "Kleiner"), ("Löwe", "Kleiner"), ("Schildkröte", "Kleine")]
 # „Huhus Jahr“ (Seasonal.swift): Herbst und Halloween
 SEASONAL_COUNT_PLURALS = ["Kürbisse", "Fledermäuse", "Gespenster", "Bonbons",
-                          "Blätter", "Kastanien", "Pilze", "Igel"]
-SEASONAL_MEMORY = ["Kürbis", "Fledermaus", "Gespenst", "Bonbon", "Igel", "Eichhörnchen", "Pilz", "Kastanie"]
-SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!"]
+                          "Blätter", "Kastanien", "Pilze", "Igel",
+                          "Geschenke", "Kerzen", "Kekse", "Tannenbäume",
+                          "Schneemänner", "Schneeflocken", "Handschuhe", "Schlitten"]
+SEASONAL_MEMORY = ["Kürbis", "Fledermaus", "Gespenst", "Bonbon", "Igel", "Eichhörnchen", "Pilz", "Kastanie",
+                   "Tannenbaum", "Geschenk", "Kerze", "Keks", "Schneemann", "Handschuh", "Schlitten", "Pinguin"]
+SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!",
+                          "Es ist Adventszeit!", "Am Adventskranz brennt schon eine Kerze.",
+                          "Am Adventskranz brennen schon zwei Kerzen.", "Am Adventskranz brennen schon drei Kerzen.",
+                          "Am Adventskranz brennen schon vier Kerzen.",
+                          "Morgen ist Nikolaus!", "Heute ist Nikolaus!", "Frohe Weihnachten!",
+                          "Heute ist Silvester!", "Frohes neues Jahr!"]
+
+# Welche Zahl fehlt?, Oben/unten/neben, Bildergeschichten (TaskFactory.swift, Stories.swift)
+MISSING_NUMBER = ["Welche Zahl fehlt?", "Hier zählen wir rückwärts!", "Zähl noch einmal von vorne!",
+                  "Tippe unten auf die fehlende Zahl!"]
+POSITION_ANIMALS = ["die Katze", "der Hund", "die Maus", "der Hase"]
+POSITION_PHRASES = ["auf dem Tisch", "unter dem Tisch", "neben dem Tisch", "vor dem Tisch", "hinter dem Tisch"]
+STORY_TEXTS = ["Was passiert zuerst?", "Tippe die Bilder der Reihe nach an!", "Das kommt später!",
+               "Es schneit.", "Wir bauen einen Schneemann.", "Der Schneemann ist geschmolzen.",
+               "Ein Samen keimt.", "Die Pflanze wächst.", "Eine Sonnenblume blüht.",
+               "Wolken ziehen auf.", "Es regnet.", "Ein Regenbogen!",
+               "Wir holen die Zutaten.", "Wir rühren den Teig.", "Der Kuchen ist fertig!",
+               "Ein Ei.", "Das Küken schlüpft.", "Ein kleines Küken.", "Ein großes Huhn.",
+               "Die Sonne geht auf.", "Mittags scheint die Sonne.", "Am Abend geht die Sonne unter.",
+               "In der Nacht scheint der Mond.",
+               "Ein Baby.", "Ein Kind.", "Ein Erwachsener.", "Ein alter Mensch.",
+               "Der Apfelbaum blüht.", "Ein kleiner grüner Apfel wächst.", "Der Apfel ist reif.", "Ein Apfelkuchen!"]
+
+
+def new_games_sentences():
+    s = list(MISSING_NUMBER) + list(STORY_TEXTS)
+    s += [f"Wo ist {a}?" for a in POSITION_ANIMALS]
+    s += [p[0].upper() + p[1:] + "!" for p in POSITION_PHRASES]
+    s += [f"{a[0].upper() + a[1:]} ist {p}." for a in POSITION_ANIMALS for p in POSITION_PHRASES]
+    return s
 MEMORY_ANIMALS = ["Hund", "Katze", "Maus", "Hase", "Fuchs", "Bär", "Panda", "Frosch",
                   "Affe", "Schwein", "Kuh", "Löwe"]
 FIXED = [
@@ -197,6 +229,7 @@ def all_sentences():
         s += [f"Huhu, {spoken}!", f"Super gemacht, {spoken}!"]
     s += MEMORY_ANIMALS + SEASONAL_MEMORY + SEASONAL_ANNOUNCEMENTS
     s += number_builder_sentences()
+    s += new_games_sentences()
     return list(dict.fromkeys(s))  # Reihenfolge erhalten, Dubletten entfernen
 
 

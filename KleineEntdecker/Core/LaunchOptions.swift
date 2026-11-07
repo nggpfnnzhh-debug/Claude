@@ -19,7 +19,12 @@ enum LaunchOptions {
         }
         let value = arguments[index + 1]
         if let festival = Seasonal.Festival(rawValue: value) {
-            return Seasonal(season: .autumn, festival: festival, isFestivalDay: true)
+            return Seasonal(
+                season: festival == .halloween ? .autumn : .winter,
+                festival: festival,
+                isFestivalDay: true,
+                adventCandles: festival == .advent || festival == .nikolaus ? 2 : 0
+            )
         }
         return Seasonal.Season(rawValue: value).map { Seasonal(season: $0) }
     }

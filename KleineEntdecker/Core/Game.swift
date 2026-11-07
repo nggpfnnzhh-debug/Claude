@@ -2,7 +2,7 @@ import SwiftUI
 
 enum Game: String, CaseIterable, Identifiable {
     case counting, colors, shapes, letters, patterns, memory
-    case moreLess, syllables, rhymes, clock, buildNumbers
+    case moreLess, missingNumber, buildNumbers, clock, positions, syllables, rhymes, story
 
     var id: String { rawValue }
 
@@ -12,7 +12,7 @@ enum Game: String, CaseIterable, Identifiable {
     /// Vorschulspiele (ca. 5–6 Jahre) stehen auf dem Startbildschirm in einem eigenen Bereich.
     var isPreschool: Bool {
         switch self {
-        case .moreLess, .syllables, .rhymes, .clock, .buildNumbers: return true
+        case .moreLess, .missingNumber, .buildNumbers, .clock, .positions, .syllables, .rhymes, .story: return true
         default: return false
         }
     }
@@ -33,6 +33,9 @@ enum Game: String, CaseIterable, Identifiable {
         case .rhymes: return "Reime finden"
         case .clock: return "Uhr lesen"
         case .buildNumbers: return "Zahlen bauen"
+        case .missingNumber: return "Welche Zahl fehlt?"
+        case .positions: return "Oben, unten, neben"
+        case .story: return "Bilder\u{00AD}geschichten"
         }
     }
 
@@ -49,6 +52,9 @@ enum Game: String, CaseIterable, Identifiable {
         case .rhymes: return "🎵"
         case .clock: return "🕒"
         case .buildNumbers: return "🔢"
+        case .missingNumber: return "🪜"
+        case .positions: return "📦"
+        case .story: return "📖"
         }
     }
 
@@ -65,6 +71,9 @@ enum Game: String, CaseIterable, Identifiable {
         case .rhymes: return Color(red: 0.20, green: 0.65, blue: 0.55)
         case .clock: return Color(red: 0.35, green: 0.45, blue: 0.80)
         case .buildNumbers: return Color(red: 0.10, green: 0.50, blue: 0.65)
+        case .missingNumber: return Color(red: 0.85, green: 0.35, blue: 0.30)
+        case .positions: return Color(red: 0.55, green: 0.42, blue: 0.30)
+        case .story: return Color(red: 0.45, green: 0.35, blue: 0.75)
         }
     }
 
@@ -80,6 +89,9 @@ enum Game: String, CaseIterable, Identifiable {
         case .rhymes: return "Tippe auf das Bild, das sich reimt!"
         case .clock: return "Tippe auf die richtige Uhr!"
         case .buildNumbers: return "Tippe unten auf die richtigen Ziffern!"
+        case .missingNumber: return "Tippe unten auf die fehlende Zahl!"
+        case .positions: return "Tippe auf das richtige Bild!"
+        case .story: return nil
         }
     }
 
@@ -106,6 +118,12 @@ enum Game: String, CaseIterable, Identifiable {
             return "Reime erkennen. Zusammen mit Silben und Anlauten bildet das die phonologische Bewusstheit – die wichtigste Vorläuferfähigkeit für das Lesen- und Schreibenlernen."
         case .clock:
             return "Die analoge Uhr kennenlernen: erst volle, dann halbe Stunden."
+        case .missingNumber:
+            return "Zahlen in ihrer Reihenfolge kennen: Welche Zahl kommt vor, welche nach einer anderen? Das Verständnis der Zahlenreihe gilt als einer der wichtigsten Grundsteine für Mathe in der Schule. Erst bis 5, dann bis 10, zuletzt bis 20 – auch rückwärts."
+        case .positions:
+            return "Raum-Lage-Begriffe verstehen: auf, unter, neben, vor und hinter. Räumliches Denken und die passenden Wörter dazu helfen später in Mathe – und sind oft Thema bei der Einschulungsuntersuchung."
+        case .story:
+            return "Bildergeschichten in die richtige Reihenfolge bringen: Was passiert zuerst, was danach? Das übt zeitliche Abfolgen, Ursache und Wirkung – und das Erzählen."
         case .buildNumbers:
             return "Zahlen lesen und aus Ziffern zusammensetzen. Zehnerstangen zeigen, was die Ziffern bedeuten: Die 8 in der 80 steht für acht Zehner. Erst 10 bis 20, dann volle Zehner, zuletzt alle Zahlen bis 99 – dort übt Ihr Kind die „verdrehte“ deutsche Sprechweise: Bei „vierundzwanzig“ hört man die 4 zuerst, geschrieben wird aber zuerst die 2."
         }
@@ -173,6 +191,24 @@ enum Game: String, CaseIterable, Identifiable {
                 "Eine Spielzeuguhr oder eine echte Wanduhr gemeinsam anschauen und stellen.",
                 "Feste Zeiten benennen: „Um sechs Uhr gibt es Abendessen.“",
                 "Erst nur volle Stunden üben – halbe Stunden kommen später ganz von allein.",
+            ]
+        case .missingNumber:
+            return [
+                "Treppenstufen zählen – vorwärts beim Hochgehen, rückwärts beim Runtergehen.",
+                "Zahlen-Raten: „Ich denke an die Zahl nach der Vier. Welche ist es?“",
+                "Einen Countdown spielen: „Zehn, neun, acht … Start!“",
+            ]
+        case .positions:
+            return [
+                "Teddy verstecken: „Ich habe ihn unter das Kissen gelegt!“ – dann tauschen.",
+                "Beim Aufräumen Wege beschreiben: „Leg das Buch neben die Lampe.“",
+                "Bilderbücher anschauen und fragen: „Wer sitzt hinter dem Baum?“",
+            ]
+        case .story:
+            return [
+                "Den Tag gemeinsam nacherzählen: Was haben wir zuerst gemacht, was danach?",
+                "Beim Backen oder Zähneputzen die Schritte der Reihe nach benennen.",
+                "Beim Vorlesen innehalten: „Was glaubst du, passiert als Nächstes?“",
             ]
         case .buildNumbers:
             return [

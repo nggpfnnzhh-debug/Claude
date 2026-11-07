@@ -207,6 +207,8 @@ struct PromptView: View {
             }
             .buttonStyle(BouncyButtonStyle())
             .accessibilityLabel("Wort anhören")
+        case let .numberLine(numbers):
+            NumberLineView(numbers: numbers, tint: tint)
         case .empty:
             EmptyView()
         }
@@ -341,9 +343,20 @@ struct ChoiceRow: View {
     /// Vier Karten passen auf dem iPhone nur sehr klein nebeneinander (z. B. Uhren) – dann 2 × 2.
     private var usesTwoRows: Bool { choices.count == 4 && scale <= 1 }
 
+    /// Bilder mit Tisch brauchen Breite – auf dem iPhone untereinander.
+    private var usesColumn: Bool {
+        guard scale <= 1, let first = choices.first, case .scene = first.content else { return false }
+        return true
+    }
+
     var body: some View {
         Group {
-            if usesTwoRows {
+            if usesColumn {
+                VStack(spacing: 12) {
+                    cards
+                }
+                .frame(maxWidth: 300)
+            } else if usesTwoRows {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16) {
                     cards
                 }
@@ -386,8 +399,16 @@ struct ChoiceCard: View {
 
     /// Mengen-Karten (Mehr oder weniger?) brauchen mehr Platz.
     private var maxWidth: CGFloat {
-        if case .group = content { return 260 * scale }
-        return 160 * scale
+        switch content {
+        case .group: return 260 * scale
+        case .scene: return 300 * scale
+        default: return 160 * scale
+        }
+    }
+
+    private var aspectRatio: CGFloat {
+        if case .scene = content { return 1.5 }
+        return 1
     }
 
     var body: some View {
@@ -398,7 +419,7 @@ struct ChoiceCard: View {
             ChoiceContentView(content: content)
                 .padding(16)
         }
-        .aspectRatio(1, contentMode: .fit)
+        .aspectRatio(aspectRatio, contentMode: .fit)
         .frame(maxWidth: maxWidth)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -475,6 +496,8 @@ struct ChoiceContentView: View {
             }
         case let .clock(hour, minute):
             ClockFace(hour: hour, minute: minute)
+        case let .scene(animal, position):
+            SceneView(animal: animal, position: position)
         }
     }
 }
@@ -520,5 +543,108 @@ struct ClockFace: View {
             .frame(width: width, height: length)
             .offset(y: -length / 2)
             .rotationEffect(.degrees(degrees))
+    }
+}
+
+/// Zahlenreihe mit einer Lücke: 1 2 ? 4
+struct NumberLineView: View {
+    let numbers: [Int?]
+    let tint: Color
+
+    @Environment(\.layoutScale) private var scale
+
+    var body: some View {
+        HStack(spacing: 8 * scale) {
+            ForEach(Array(numbers.enumerated()), id: \.offset) { _, number in
+                Group {
+                    if let number {
+                        Text("\(number)")
+                            .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.3))
+                            .background(
+                                RoundedRectangle(cornerRadius: 14 * scale, style: .continuous)
+                                    .fill(Color.white)
+                                    .frame(width: 58 * scale, height: 70 * scale)
+                                    .shadow(color: .black.opacity(0.1), radius: 3, y: 2)
+                            )
+                    } else {
+                        Text("?")
+                            .foregroundColor(tint)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14 * scale, style: .continuous)
+                                    .strokeBorder(tint, style: StrokeStyle(lineWidth: 3, dash: [6]))
+                                    .frame(width: 58 * scale, height: 70 * scale)
+                            )
+                    }
+                }
+                .font(.system(size: 40 * scale, weight: .heavy, design: .rounded))
+                .frame(width: 58 * scale, height: 70 * scale)
+            }
+        }
+        .padding(14 * scale)
+        .cardBackground()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(numbers.map { $0.map(String.init) ?? "Lücke" }.joined(separator: ", "))
+    }
+}
+
+/// Ein Tisch und ein Tier – auf, unter, neben, vor oder hinter dem Tisch.
+struct SceneView: View {
+    let animal: String
+    let position: SpatialPosition
+
+    private let wood = Color(red: 0.62, green: 0.40, blue: 0.22)
+
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width, h = proxy.size.height
+            let size = h * 0.24
+            let topY = h * 0.42
+            let floorY = h * 0.88
+
+            ZStack {
+                // Boden
+                Rectangle()
+                    .fill(Color.gray.opacity(0.25))
+                    .frame(width: w * 0.92, height: 3)
+                    .position(x: w / 2, y: floorY)
+
+                // Hinter und unter dem Tisch: zuerst zeichnen, damit der Tisch davor liegt.
+                if position == .behind {
+                    animalText(size * 0.8).position(x: w / 2, y: topY - size * 0.18)
+                }
+                if position == .under {
+                    animalText(size * 0.85).position(x: w / 2, y: floorY - size * 0.42)
+                }
+
+                // Tisch: Platte und zwei Beine
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(wood)
+                    .frame(width: w * 0.56, height: h * 0.08)
+                    .position(x: w / 2, y: topY)
+                ForEach([0.31, 0.69], id: \.self) { x in
+                    Rectangle()
+                        .fill(wood)
+                        .frame(width: w * 0.04, height: floorY - topY)
+                        .position(x: w * x, y: (topY + floorY) / 2)
+                }
+
+                switch position {
+                case .on:
+                    animalText(size).position(x: w / 2, y: topY - h * 0.04 - size * 0.5)
+                case .beside:
+                    animalText(size).position(x: w * 0.87, y: floorY - size * 0.5)
+                case .inFront:
+                    // Größer und tiefer im Bild: näher beim Betrachter.
+                    animalText(size * 1.35).position(x: w / 2, y: floorY - size * 0.45)
+                case .under, .behind:
+                    EmptyView()
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func animalText(_ size: CGFloat) -> some View {
+        Text(animal).font(.system(size: size))
     }
 }

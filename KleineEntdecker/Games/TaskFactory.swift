@@ -20,7 +20,9 @@ enum TaskFactory {
         case .syllables: return syllableTasks(level: level)
         case .rhymes: return rhymeTasks(level: level)
         case .clock: return clockTasks(level: level)
-        case .memory, .buildNumbers: return []
+        case .missingNumber: return missingNumberTasks(level: level)
+        case .positions: return positionTasks(level: level)
+        case .memory, .buildNumbers, .story: return []
         }
     }
 
@@ -512,6 +514,111 @@ enum TaskFactory {
                 instruction: "Wo ist es \(targetText)?",
                 choices: choices,
                 correctFeedback: "Es ist \(targetText)."
+            )
+        }
+    }
+}
+
+// MARK: - Welche Zahl fehlt?
+
+extension TaskFactory {
+    /// Größte Zahl je Stufe; ab Stufe 2 auch rückwärts.
+    static let missingNumberLimits = [5, 10, 20]
+    static let countBackwards = "Hier zählen wir rückwärts!"
+    static let countFromStart = "Zähl noch einmal von vorne!"
+
+    static func missingNumberTasks(level: Int) -> [QuizTask] {
+        let upper = missingNumberLimits[level]
+        let length = level == 0 ? 4 : 5
+        return (0..<tasksPerRound).map { _ in
+            let start = Int.random(in: 1...(upper - length + 1))
+            var numbers = Array(start..<(start + length))
+            let backwards = level == 2 && Bool.random()
+            if backwards { numbers.reverse() }
+            // Nie die erste Zahl weglassen – die Reihe braucht einen Anfang.
+            let gap = Int.random(in: 1..<length)
+            let answer = numbers[gap]
+            let line: [Int?] = numbers.enumerated().map { $0.offset == gap ? nil : $0.element }
+
+            var options: Set<Int> = [answer]
+            while options.count < 3 {
+                let candidate = answer + Int.random(in: -3...3)
+                if (1...upper).contains(candidate) { options.insert(candidate) }
+            }
+            let choices = options.shuffled().map { value in
+                Choice(
+                    content: .number(value),
+                    isCorrect: value == answer,
+                    spokenName: "\(value)",
+                    wrongFeedback: countFromStart
+                )
+            }
+            return QuizTask(
+                prompt: .numberLine(line),
+                instruction: backwards ? "Welche Zahl fehlt? \(countBackwards)" : "Welche Zahl fehlt?",
+                choices: choices,
+                correctFeedback: "\(Phrases.numberWords[answer].capitalized)!"
+            )
+        }
+    }
+}
+
+// MARK: - Oben, unten, neben, hinter
+
+extension TaskFactory {
+    struct PositionAnimal: Equatable {
+        let emoji: String
+        /// Mit Artikel, z. B. „die Katze“.
+        let name: String
+    }
+
+    static let positionAnimals: [PositionAnimal] = [
+        .init(emoji: "🐱", name: "die Katze"),
+        .init(emoji: "🐶", name: "der Hund"),
+        .init(emoji: "🐭", name: "die Maus"),
+        .init(emoji: "🐰", name: "der Hase"),
+    ]
+
+    /// Welche Begriffe je Stufe vorkommen.
+    static let positionLevels: [[SpatialPosition]] = [
+        [.on, .under],
+        [.on, .under, .beside],
+        SpatialPosition.allCases,
+    ]
+
+    static func positionQuestion(_ animal: PositionAnimal) -> String {
+        "Wo ist \(animal.name)?"
+    }
+
+    static func positionAnswer(_ position: SpatialPosition) -> String {
+        "\(position.phrase.prefix(1).uppercased())\(position.phrase.dropFirst())!"
+    }
+
+    static func positionStatement(_ animal: PositionAnimal, _ position: SpatialPosition) -> String {
+        "\(animal.name.prefix(1).uppercased())\(animal.name.dropFirst()) ist \(position.phrase)."
+    }
+
+    static func positionTasks(level: Int) -> [QuizTask] {
+        let positions = positionLevels[level]
+        let targets = varied(positions, count: tasksPerRound)
+        let animals = varied(positionAnimals, count: tasksPerRound)
+        return zip(targets, animals).map { target, animal in
+            let others = positions.filter { $0 != target }.shuffled().prefix(2)
+            let options = ([target] + others).shuffled()
+            let choices = options.map { position in
+                Choice(
+                    content: .scene(animal: animal.emoji, position: position),
+                    isCorrect: position == target,
+                    spokenName: positionStatement(animal, position),
+                    wrongFeedback: positionStatement(animal, position)
+                )
+            }
+            return QuizTask(
+                prompt: .empty,
+                // Frage und Antwort-Begriff: Das Kind hört die räumliche Sprache vorgemacht.
+                instruction: "\(positionQuestion(animal)) \(positionAnswer(target))",
+                choices: choices,
+                correctFeedback: positionStatement(animal, target)
             )
         }
     }
