@@ -41,7 +41,7 @@ struct StoryOrderView: View {
                     // Die Geschichte entsteht oben: nummerierte Felder füllen sich nacheinander.
                     HStack(spacing: 8 * scale) {
                         ForEach(task.story.steps.indices, id: \.self) { step in
-                            StorySlot(number: step + 1, emoji: step < placed ? task.story.steps[step].emoji : nil, tint: game.tint)
+                            StorySlot(number: step + 1, emoji: step < placed ? task.story.steps[step].emoji : nil, tint: game.tint, side: cardSide(for: task))
                         }
                     }
                     .id(task.id)
@@ -56,6 +56,7 @@ struct StoryOrderView: View {
                             } label: {
                                 StoryCard(
                                     emoji: task.story.steps[step].emoji,
+                                    side: cardSide(for: task),
                                     isWrong: wrongStep == step,
                                     isHinted: hintActive && step == placed
                                 )
@@ -88,6 +89,11 @@ struct StoryOrderView: View {
             guard !Task.isCancelled else { return }
             advance()
         }
+    }
+
+    /// Drei Bilder dürfen größer sein als vier – beides passt auch auf kleine iPhones.
+    private func cardSide(for task: StoryTask) -> CGFloat {
+        (task.story.steps.count == 3 ? 96 : 74) * scale
     }
 
     private func start() {
@@ -164,6 +170,7 @@ private struct StorySlot: View {
     let number: Int
     let emoji: String?
     let tint: Color
+    let side: CGFloat
 
     @Environment(\.layoutScale) private var scale
 
@@ -177,7 +184,7 @@ private struct StorySlot: View {
                 )
             if let emoji {
                 Text(emoji)
-                    .font(.system(size: 44 * scale))
+                    .font(.system(size: side * 0.6))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.scale)
             }
@@ -188,13 +195,14 @@ private struct StorySlot: View {
                 .background(Circle().fill(tint))
                 .offset(x: -6, y: -6)
         }
-        .frame(width: 72 * scale, height: 72 * scale)
+        .frame(width: side, height: side)
         .accessibilityHidden(true)
     }
 }
 
 private struct StoryCard: View {
     let emoji: String
+    let side: CGFloat
     let isWrong: Bool
     let isHinted: Bool
 
@@ -203,8 +211,8 @@ private struct StoryCard: View {
 
     var body: some View {
         Text(emoji)
-            .font(.system(size: 46 * scale))
-            .frame(width: 72 * scale, height: 72 * scale)
+            .font(.system(size: side * 0.64))
+            .frame(width: side, height: side)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color.white)
