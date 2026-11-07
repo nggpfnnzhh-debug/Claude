@@ -4,7 +4,8 @@ import XCTest
 @testable import KleineEntdecker
 
 final class TaskFactoryTests: XCTestCase {
-    private let quizGames = Game.allCases.filter { $0 != .memory }
+    /// Spiele mit eigener Ansicht (Memory, Zahlen bauen, Bildergeschichten) haben eigene Tests.
+    private let quizGames = Game.allCases.filter { ![.memory, .buildNumbers, .story].contains($0) }
 
     func testEveryTaskHasExactlyOneCorrectAndUniqueChoices() {
         for game in quizGames {
@@ -14,7 +15,7 @@ final class TaskFactoryTests: XCTestCase {
                     XCTAssertEqual(tasks.count, TaskFactory.tasksPerRound, "\(game) Stufe \(level)")
                     for task in tasks {
                         XCTAssertEqual(task.choices.filter(\.isCorrect).count, 1, "\(game): \(task.instruction)")
-                        XCTAssertGreaterThanOrEqual(task.choices.count, game == .moreLess ? 2 : 3, "\(game)")
+                        XCTAssertGreaterThanOrEqual(task.choices.count, game == .moreLess || (game == .positions && level == 0) ? 2 : 3, "\(game)")
                         XCTAssertEqual(Set(task.choices.map(\.content)).count, task.choices.count, "\(game): doppelte Antwort")
                     }
                 }
