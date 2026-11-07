@@ -20,7 +20,7 @@ enum TaskFactory {
         case .syllables: return syllableTasks(level: level)
         case .rhymes: return rhymeTasks(level: level)
         case .clock: return clockTasks(level: level)
-        case .memory: return []
+        case .memory, .buildNumbers: return []
         }
     }
 

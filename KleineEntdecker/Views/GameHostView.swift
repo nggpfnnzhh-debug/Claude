@@ -8,6 +8,8 @@ struct GameHostView: View {
         switch game {
         case .memory:
             MemoryGameView(game: game, onExit: onExit)
+        case .buildNumbers:
+            NumberBuilderView(game: game, onExit: onExit)
         default:
             QuizView(game: game, onExit: onExit)
         }

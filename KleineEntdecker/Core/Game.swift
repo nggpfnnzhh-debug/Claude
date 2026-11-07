@@ -2,7 +2,7 @@ import SwiftUI
 
 enum Game: String, CaseIterable, Identifiable {
     case counting, colors, shapes, letters, patterns, memory
-    case moreLess, syllables, rhymes, clock
+    case moreLess, syllables, rhymes, clock, buildNumbers
 
     var id: String { rawValue }
 
@@ -12,7 +12,7 @@ enum Game: String, CaseIterable, Identifiable {
     /// Vorschulspiele (ca. 5–6 Jahre) stehen auf dem Startbildschirm in einem eigenen Bereich.
     var isPreschool: Bool {
         switch self {
-        case .moreLess, .syllables, .rhymes, .clock: return true
+        case .moreLess, .syllables, .rhymes, .clock, .buildNumbers: return true
         default: return false
         }
     }
@@ -32,6 +32,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .syllables: return "Silben klatschen"
         case .rhymes: return "Reime finden"
         case .clock: return "Uhr lesen"
+        case .buildNumbers: return "Zahlen bauen"
         }
     }
 
@@ -47,6 +48,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .syllables: return "👏"
         case .rhymes: return "🎵"
         case .clock: return "🕒"
+        case .buildNumbers: return "🔢"
         }
     }
 
@@ -62,6 +64,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .syllables: return Color(red: 0.95, green: 0.55, blue: 0.30)
         case .rhymes: return Color(red: 0.20, green: 0.65, blue: 0.55)
         case .clock: return Color(red: 0.35, green: 0.45, blue: 0.80)
+        case .buildNumbers: return Color(red: 0.10, green: 0.50, blue: 0.65)
         }
     }
 
@@ -76,6 +79,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .syllables: return "Tippe unten, wie oft du klatschst!"
         case .rhymes: return "Tippe auf das Bild, das sich reimt!"
         case .clock: return "Tippe auf die richtige Uhr!"
+        case .buildNumbers: return "Tippe unten auf die richtigen Ziffern!"
         }
     }
 
@@ -102,6 +106,8 @@ enum Game: String, CaseIterable, Identifiable {
             return "Reime erkennen. Zusammen mit Silben und Anlauten bildet das die phonologische Bewusstheit – die wichtigste Vorläuferfähigkeit für das Lesen- und Schreibenlernen."
         case .clock:
             return "Die analoge Uhr kennenlernen: erst volle, dann halbe Stunden."
+        case .buildNumbers:
+            return "Zahlen lesen und aus Ziffern zusammensetzen. Zehnerstangen zeigen, was die Ziffern bedeuten: Die 8 in der 80 steht für acht Zehner. Erst 10 bis 20, dann volle Zehner, zuletzt alle Zahlen bis 99 – dort übt Ihr Kind die „verdrehte“ deutsche Sprechweise: Bei „vierundzwanzig“ hört man die 4 zuerst, geschrieben wird aber zuerst die 2."
         }
     }
 
@@ -167,6 +173,12 @@ enum Game: String, CaseIterable, Identifiable {
                 "Eine Spielzeuguhr oder eine echte Wanduhr gemeinsam anschauen und stellen.",
                 "Feste Zeiten benennen: „Um sechs Uhr gibt es Abendessen.“",
                 "Erst nur volle Stunden üben – halbe Stunden kommen später ganz von allein.",
+            ]
+        case .buildNumbers:
+            return [
+                "Zehnerbündel basteln: je zehn Strohhalme oder Eisstiele mit einem Gummi bündeln – wie viele Bündel sind dreißig?",
+                "Hausnummern, Busnummern und Preisschilder gemeinsam lesen: Welche Ziffer steht vorne, welche hinten?",
+                "Mit Münzen legen: 23 Cent sind zwei Zehn-Cent-Stücke und drei Ein-Cent-Stücke.",
             ]
         }
     }

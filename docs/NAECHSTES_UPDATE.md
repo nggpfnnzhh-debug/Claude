@@ -75,6 +75,9 @@ Kostenlos, ohne Kaufangebote, ohne Datenübertragung.
 
 Auswahl nach Nutzen für die kognitive Entwicklung (Vorläuferfähigkeiten für die Schule):
 
+0. **Zahlen bauen** (in Arbeit) – Huhu nennt eine Zahl, das Kind setzt sie aus Ziffern zusammen;
+   Zehnerstangen zeigen den Stellenwert. Stufen: 10–20 → volle Zehner → alle Zahlen bis 99
+   (mit Hinweis auf den Zahlendreher „vierundzwanzig“ → zuerst die 2).
 1. **Welche Zahl fehlt?** – Zahlenstrahl/Zahlenreihe mit Lücke (z. B. 1, 2, _, 4).
    Zahlreihenfolge und -größe auf einer Linie; gut belegter Prädiktor für späteren Matheerfolg.
    Stufen: bis 5 → bis 10 → bis 20, später auch rückwärts.

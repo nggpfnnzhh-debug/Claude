@@ -126,3 +126,36 @@ extension View {
         )
     }
 }
+
+/// Pulsierender Rahmen um alle Antworten: „Hier unten wird getippt!“
+/// Ein Rahmen statt eines Zeigers, damit keine einzelne Antwort hervorgehoben wirkt.
+struct TapArea: ViewModifier {
+    let active: Bool
+    let tint: Color
+
+    @Environment(\.layoutScale) private var scale
+    @State private var pulse = false
+
+    func body(content: Content) -> some View {
+        content
+            .padding(14 * scale)
+            .overlay {
+                if active {
+                    RoundedRectangle(cornerRadius: 32 * scale, style: .continuous)
+                        .stroke(tint, style: StrokeStyle(lineWidth: 5 * scale, dash: [14 * scale, 10 * scale]))
+                        .opacity(pulse ? 1 : 0.35)
+                        .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: pulse)
+                        .onAppear { pulse = true }
+                        .onDisappear { pulse = false }
+                        .transition(.opacity)
+                        .accessibilityHidden(true)
+                }
+            }
+    }
+}
+
+extension View {
+    func tapArea(active: Bool, tint: Color) -> some View {
+        modifier(TapArea(active: active, tint: tint))
+    }
+}

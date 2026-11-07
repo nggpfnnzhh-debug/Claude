@@ -129,6 +129,30 @@ FIXED = [
 ]
 
 
+# Zahlen bauen (NumberBuilder.swift)
+TENS_WORDS = ["", "zehn", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"]
+BUILD_NUMBERS = list(range(10, 21)) + list(range(30, 100, 10)) + [n for n in range(21, 100) if n % 10]
+
+
+def number_word(n: int) -> str:
+    if n <= 20:
+        return NUMBER_WORDS[n]
+    tens, ones = divmod(n, 10)
+    if ones == 0:
+        return TENS_WORDS[tens]
+    return ("ein" if ones == 1 else NUMBER_WORDS[ones]) + "und" + TENS_WORDS[tens]
+
+
+def number_builder_sentences():
+    s = ["Zähl die Zehnerstangen!", "Zähl die einzelnen Punkte!", "Zuerst kommen die Zehner!",
+         "Tippe unten auf die richtigen Ziffern!"]
+    for n in BUILD_NUMBERS:
+        s += [f"Bau die Zahl {number_word(n)}!", f"{number_word(n).capitalize()}!"]
+    s += ["Ein Zehner!"] + [f"{NUMBER_WORDS[t].capitalize()} Zehner!" for t in range(2, 10)]
+    s += ["Keine Einer!", "Ein Einer!"] + [f"{NUMBER_WORDS[o].capitalize()} Einer!" for o in range(2, 10)]
+    return s
+
+
 def time_text(hour: int, minute: int) -> str:
     if minute == 0:
         return "ein Uhr" if hour == 1 else f"{NUMBER_WORDS[hour]} Uhr"
@@ -172,6 +196,7 @@ def all_sentences():
         spoken = f"{adjective.lower()} {name}"
         s += [f"Huhu, {spoken}!", f"Super gemacht, {spoken}!"]
     s += MEMORY_ANIMALS + SEASONAL_MEMORY + SEASONAL_ANNOUNCEMENTS
+    s += number_builder_sentences()
     return list(dict.fromkeys(s))  # Reihenfolge erhalten, Dubletten entfernen
 
 
