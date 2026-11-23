@@ -1,0 +1,674 @@
+<title>Lernlabor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: eine schmale App-Spalte wie auf dem Handy, unten eine Tab-Leiste. Ruhiges Labor-Papier, Tinte, ein Kobalt-Akzent; jedes Tier hat eine eigene Farbe. */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --ink: #16232a;
+  --muted: #5a6b72;
+  --line: #d3dcdb;
+  --accent: #2550d9;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2e9fd;
+  --good: #1d7a4f;
+  --bad: #b3372e;
+  --krake: #8b4fc9;
+  --biber: #a8662b;
+  --otter: #0f8a8a;
+  --elefant: #5c6f9e;
+  --kroete: #3f8a3a;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1619; --surface: #18232a; --ink: #e6eef0; --muted: #9aabb1; --line: #2c3a41;
+    --accent: #7d9bff; --accent-ink: #0d1530; --accent-soft: #1f2b4d; --good: #5cc694; --bad: #f08a80;
+    --krake: #b98af0; --biber: #d99a5b; --otter: #4cc6c4; --elefant: #93a6d6; --kroete: #7cc775;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1619; --surface: #18232a; --ink: #e6eef0; --muted: #9aabb1; --line: #2c3a41;
+  --accent: #7d9bff; --accent-ink: #0d1530; --accent-soft: #1f2b4d; --good: #5cc694; --bad: #f08a80;
+  --krake: #b98af0; --biber: #d99a5b; --otter: #4cc6c4; --elefant: #93a6d6; --kroete: #7cc775;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+}
+.app {
+  max-width: 460px; margin: 0 auto; min-height: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px calc(96px + env(safe-area-inset-bottom, 0px));
+}
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+.proto {
+  display: inline-flex; align-self: flex-start; gap: 6px; align-items: center;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); border: 1px dashed var(--line); border-radius: 999px; padding: 3px 10px;
+}
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+button { font: inherit; color: inherit; }
+.btn {
+  appearance: none; border: 0; border-radius: 12px; padding: 14px 18px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 1rem; width: 100%;
+}
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btn.link { background: none; color: var(--accent); padding: 6px 0; width: auto; font-weight: 500; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.entry {
+  display: grid; grid-template-columns: 48px 1fr auto; gap: 14px; align-items: center;
+  text-align: left; width: 100%; cursor: pointer; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+}
+.entry .ico { font-size: 1.8rem; text-align: center; }
+.entry .meta { font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.entry .t { font-weight: 600; }
+.entry .d { font-size: 0.875rem; color: var(--muted); }
+.entry > div { min-width: 0; }
+.back { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 4px 0; font-weight: 500; align-self: flex-start; }
+.progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .25s; }
+.statement { font-family: var(--f-display); font-size: 1.6rem; font-weight: 500; line-height: 1.25; min-height: 4.2em; display: flex; align-items: center; }
+.scale { display: flex; flex-direction: column; gap: 8px; }
+.scale button {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 13px 16px;
+  text-align: left; cursor: pointer; font-weight: 500;
+}
+.scale button.on { border-color: var(--accent); background: var(--accent-soft); }
+.animal-row { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+.animal-row .em { font-size: 1.9rem; line-height: 1; padding-top: 2px; }
+.animal-row > div { min-width: 0; }
+.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.bar > i { display: block; height: 100%; border-radius: 99px; }
+.bar-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.level { font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+details { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 0.9rem; }
+details p { margin-top: 8px; font-size: 0.925rem; }
+.word {
+  text-align: center; padding: 36px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+}
+.word .src { font-family: var(--f-display); font-size: 2.4rem; font-weight: 700; }
+.word .eq { color: var(--muted); font-size: 0.9rem; margin: 4px 0; }
+.word .dst { font-size: 1.5rem; font-weight: 600; }
+input[type=text], input[type=number] {
+  width: 100%; font: inherit; font-size: 1.15rem; padding: 14px 16px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.fb { font-weight: 600; }
+.fb.ok { color: var(--good); }
+.fb.no { color: var(--bad); }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.compare .card { text-align: center; }
+.big { font-family: var(--f-display); font-size: 2.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 0.8rem; border-radius: 99px; padding: 3px 10px; border: 1px solid var(--line); }
+.chip.ok { color: var(--good); border-color: currentColor; }
+.chip.no { color: var(--bad); border-color: currentColor; }
+.myth { cursor: pointer; text-align: left; width: 100%; }
+.myth .verdict { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: .04em; }
+.verdict.falsch { color: var(--bad); }
+.verdict.teils { color: var(--biber); }
+.verdict.stimmt { color: var(--good); }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-size: 0.925rem; }
+.choice { display: flex; flex-direction: column; gap: 8px; }
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tabs nav { max-width: 460px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.tabs button {
+  background: none; border: 0; padding: 10px 4px 12px; cursor: pointer; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.75rem; font-weight: 500;
+}
+.tabs button svg { width: 22px; height: 22px; }
+.tabs button.on { color: var(--accent); }
+.price { font-family: var(--f-display); font-size: 2rem; font-weight: 700; }
+ul.plain { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app"><main id="view" class="stack" aria-live="polite"></main></div>
+<div class="tabs"><nav id="tabs"></nav></div>
+
+<script>
+// ---------- Daten ----------
+const ANIMALS = {
+  O: { name: "Krake", em: "🐙", color: "var(--krake)", trait: "Offenheit", short: "neugierig, fantasievoll, mag Neues",
+       hi: "Du lernst gern über Zusammenhänge. Frag bei jedem Thema „Warum?“ und verknüpfe Neues mit dem, was du schon weißt. Vorsicht: Neugier springt gern weiter. Erst abfragen, dann zum nächsten Thema.",
+       mid: "Du magst Neues, brauchst aber auch Bekanntes. Wechsle zwischen Grundlagen und spannenden Hintergründen.",
+       lo: "Du magst es praktisch. Starte mit konkreten Beispielen und Anwendungen, die Theorie kommt danach." },
+  C: { name: "Biber", em: "🦫", color: "var(--biber)", trait: "Gewissenhaftigkeit", short: "ausdauernd, ordentlich, plant",
+       hi: "Du hältst Pläne gut ein. Plane die Wiederholungen gleich mit ein, zum Beispiel nach 1, 3 und 7 Tagen.",
+       mid: "Mit etwas Struktur bleibst du gut dran. Feste Lernzeiten im Kalender helfen dir.",
+       lo: "Mach es dir leicht: 10 Minuten zu einer festen Uhrzeit, mit Erinnerung. Kleine Ziele schlagen große Vorsätze." },
+  E: { name: "Otter", em: "🦦", color: "var(--otter)", trait: "Geselligkeit (Extraversion)", short: "gesellig, gesprächig, tankt bei anderen auf",
+       hi: "Erklär den Stoff anderen oder lern zu zweit und fragt euch gegenseitig ab.",
+       mid: "Du kannst allein und mit anderen lernen. Probier aus, ob Erklären dir zusätzlich hilft.",
+       lo: "Du tankst allein auf. Erklär den Stoff laut für dich oder schreib ihn auf, als würdest du ihn jemandem beibringen." },
+  A: { name: "Elefant", em: "🐘", color: "var(--elefant)", trait: "Verträglichkeit", short: "hilfsbereit, kooperativ, harmonisch",
+       hi: "Ein Lernpartner, der auf dich zählt, hält dich bei der Stange. In Gruppen: Frag nach, auch wenn es sich unangenehm anfühlt.",
+       mid: "Du arbeitest gern mit anderen, kannst aber auch kritisch sein. Beides hilft in einer Lerngruppe.",
+       lo: "Du magst Herausforderungen. Setz dir Bestwerte und miss dich an deinem früheren Ich." },
+  N: { name: "Schildkröte", em: "🐢", color: "var(--kroete)", trait: "Gelassenheit", short: "ruhig, belastbar, bleibt bei Druck gelassen",
+       hi: "Du bleibst ruhig. Prüf dich trotzdem echt ab: Gelassene Menschen überschätzen leicht, wie viel sie schon können.",
+       mid: "Normaler Druck stört dich kaum. Vor Prüfungen helfen Probe-Abfragen, damit nichts überrascht.",
+       lo: "Druck setzt dir zu. Übe mit Probe-Abfragen ohne Bewertung. Abfragen hilft nachweislich auch unter Stress. Und: Mach deinen Fortschritt sichtbar." }
+};
+const ORDER = ["C", "E", "O", "A", "N"];
+
+// Mini-IPIP (Donnellan u. a. 2006, gemeinfrei, IPIP). Deutsche Prototyp-Übersetzung, nicht validiert.
+const ITEMS = [
+  ["E", +1, "Auf Feiern bin ich oft der Mittelpunkt."],
+  ["A", +1, "Ich fühle mit, wenn es anderen schlecht geht."],
+  ["C", +1, "Ich erledige Aufgaben sofort."],
+  ["N", +1, "Meine Stimmung schwankt häufig."],
+  ["O", +1, "Ich habe eine lebhafte Fantasie."],
+  ["E", -1, "Ich rede nicht viel."],
+  ["A", -1, "Die Probleme anderer interessieren mich nicht besonders."],
+  ["C", -1, "Ich vergesse oft, Dinge an ihren Platz zurückzulegen."],
+  ["N", -1, "Meistens bin ich entspannt."],
+  ["O", -1, "Abstrakte Ideen interessieren mich nicht."],
+  ["E", +1, "Auf Feiern unterhalte ich mich mit vielen verschiedenen Leuten."],
+  ["A", +1, "Ich spüre, wie es anderen geht."],
+  ["C", +1, "Ich mag Ordnung."],
+  ["N", +1, "Ich rege mich schnell auf."],
+  ["O", -1, "Mit abstrakten Ideen tue ich mich schwer."],
+  ["E", -1, "Ich halte mich eher im Hintergrund."],
+  ["A", -1, "Andere Menschen interessieren mich nicht wirklich."],
+  ["C", -1, "Ich bringe Dinge oft durcheinander."],
+  ["N", -1, "Ich bin selten niedergeschlagen."],
+  ["O", -1, "Ich habe nicht viel Fantasie."]
+];
+const SCALE = ["Trifft gar nicht zu", "Trifft eher nicht zu", "Teils, teils", "Trifft eher zu", "Trifft voll zu"];
+
+const WORDS = [
+  ["maji", "Wasser"], ["kitabu", "Buch"], ["nyumba", "Haus"], ["chakula", "Essen", ["nahrung", "speise"]],
+  ["rafiki", "Freund", ["freundin"]], ["mti", "Baum"], ["jua", "Sonne"], ["mvua", "Regen"],
+  ["samaki", "Fisch"], ["mbwa", "Hund"], ["paka", "Katze"], ["gari", "Auto", ["wagen"]],
+  ["kalamu", "Stift", ["kugelschreiber", "füller"]], ["mlima", "Berg"], ["mto", "Fluss"], ["nyota", "Stern"]
+];
+
+const MYTHS = [
+  ["Jeder Mensch hat einen Lerntyp: visuell, auditiv oder haptisch.", "falsch",
+   "Menschen haben Vorlieben, aber wer nach seinem „Typ“ lernt, lernt in Studien nicht besser. Was wirkt, hängt vor allem vom Stoff ab: Aussprache lernt jeder besser über das Ohr, Landkarten jeder besser über das Auge. Am besten wirkt die Kombination."],
+  ["Nochmal lesen ist eine gute Lernmethode.", "falsch",
+   "Es fühlt sich gut an, weil der Text vertraut wirkt. Sich selbst abfragen bringt aber deutlich mehr, vor allem nach ein paar Tagen. Probier es im Selbstversuch aus."],
+  ["Wir nutzen nur 10 % unseres Gehirns.", "falsch",
+   "Hirnscans zeigen: Über den Tag sind praktisch alle Bereiche aktiv. Ein „ungenutztes Reservegehirn“ gibt es nicht."],
+  ["Mozart-Musik macht schlauer.", "falsch",
+   "Der berühmte Effekt war winzig, kurz und ließ sich kaum wiederholen. Musik kann die Stimmung heben, schlauer macht sie nicht."],
+  ["Verteilt lernen schlägt Pauken am Stück.", "stimmt",
+   "Dreimal 20 Minuten an verschiedenen Tagen bringen mehr als eine Stunde am Stück. Das ist einer der am besten belegten Befunde der Lernforschung."],
+  ["Mit Multitasking schafft man mehr.", "falsch",
+   "Das Gehirn springt zwischen Aufgaben hin und her. Das kostet Zeit und erzeugt Fehler. Handy weg beim Lernen hilft messbar."],
+  ["Es gibt Morgen- und Abendmenschen.", "stimmt",
+   "Der Schlaftyp (Lerche oder Eule) ist biologisch gut belegt und verändert sich mit dem Alter. Wann du lernst, kann also einen Unterschied machen."],
+  ["Die Persönlichkeit bestimmt, welche Lernmethode wirkt.", "teils",
+   "Persönlichkeit sagt viel darüber, wie gut du dranbleibst. Dass sie die beste Methode festlegt, ist nicht belegt. Darum testet das Lernlabor, statt zu raten."]
+];
+
+// ---------- Speicher (nur auf diesem Gerät) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("lernlabor." + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("lernlabor." + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem("lernlabor." + k); } catch (e) {} }
+};
+
+// ---------- Hilfen ----------
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const level = (v) => v < 40 ? "lo" : v > 60 ? "hi" : "mid";
+const levelText = { lo: "eher wenig", mid: "mittel", hi: "eher viel" };
+
+function norm(s) {
+  return s.toLowerCase().trim()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/^(der|die|das|ein|eine|einen)\s+/, "").replace(/[^a-z]/g, "");
+}
+function lev(a, b) {
+  const m = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) m[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return m[a.length][b.length];
+}
+function correct(answer, word) {
+  const a = norm(answer); if (!a) return false;
+  return [word[1]].concat(word[2] || []).some(t => { const n = norm(t); return a === n || (n.length >= 4 && lev(a, n) <= 1); });
+}
+
+function scores(answers) {
+  const sum = {}, cnt = {};
+  ITEMS.forEach((it, i) => {
+    const [t, key] = it; const v = answers[i]; if (v == null) return;
+    const val = key > 0 ? v : 6 - v;
+    sum[t] = (sum[t] || 0) + val; cnt[t] = (cnt[t] || 0) + 1;
+  });
+  const out = {};
+  for (const t in sum) out[t] = Math.round((sum[t] / cnt[t] - 1) / 4 * 100);
+  if (out.N != null) out.N = 100 - out.N; // als Gelassenheit anzeigen
+  return out;
+}
+
+// ---------- Zustand ----------
+let state = { tab: "start", view: "home" };
+let test = null;   // { i, answers }
+let lab = null;    // laufender Selbstversuch
+let gateTimer = null;
+
+function go(view, tab) { state.view = view; if (tab) state.tab = tab; clearTimeout(gateTimer); render(); window.scrollTo(0, 0); }
+
+// ---------- Tab-Leiste ----------
+const ICONS = {
+  start: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  labor: '<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  wissen: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/>',
+  profil: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'
+};
+const TABS = [["start", "Start", "home"], ["labor", "Labor", "lab"], ["wissen", "Wissen", "myths"], ["profil", "Profil", "profile"]];
+function renderTabs() {
+  $("#tabs").innerHTML = TABS.map(([k, l, v]) =>
+    `<button data-tab="${k}" data-view="${v}" class="${state.tab === k ? "on" : ""}" aria-current="${state.tab === k ? "page" : "false"}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>${l}</button>`).join("");
+}
+
+// ---------- Ansichten ----------
+const V = {};
+
+V.home = () => {
+  const p = store.get("profile", null);
+  const pending = store.get("pending", null);
+  return `
+  <span class="proto">Prototyp · alles bleibt auf diesem Gerät</span>
+  <div class="stack-sm">
+    <h1>Lernlabor</h1>
+    <p class="muted">Finde heraus, wie du wirklich am besten lernst. Nicht mit Schubladen, sondern mit kleinen Versuchen an dir selbst.</p>
+  </div>
+  ${pending ? `<div class="card stack-sm"><span class="eyebrow">Wartet auf dich</span><p>Dein Selbstversuch „Lesen oder Abfragen“ ist bereit für den Test.</p><button class="btn" data-go="labTestStart">Jetzt testen</button></div>` : ""}
+  <div class="stack-sm">
+    <span class="eyebrow">Schritt 1</span>
+    <button class="entry" data-go="testIntro"><span class="ico" aria-hidden="true">🦫</span><div><div class="t">Lerne deine Tiere kennen</div><div class="d">${p ? "Erledigt. Nochmal machen?" : "20 Aussagen zu deiner Persönlichkeit"}</div></div><span class="meta">4 Min</span></button>
+  </div>
+  <div class="stack-sm">
+    <span class="eyebrow">Schritt 2</span>
+    <button class="entry" data-go="lab" data-tab="labor"><span class="ico" aria-hidden="true">🧪</span><div><div class="t">Selbstversuch: Lesen oder Abfragen?</div><div class="d">Was bleibt bei dir besser hängen?</div></div><span class="meta">10 Min</span></button>
+  </div>
+  <div class="stack-sm">
+    <span class="eyebrow">Zwischendurch</span>
+    <button class="entry" data-go="myths" data-tab="wissen"><span class="ico" aria-hidden="true">💡</span><div><div class="t">Mythen-Check</div><div class="d">8 Lern-Mythen, was die Forschung sagt</div></div><span class="meta">3 Min</span></button>
+  </div>`;
+};
+
+V.testIntro = () => `
+  <button class="back" data-go="home">← Zurück</button>
+  <h2>Lerne deine Tiere kennen</h2>
+  <p>Fünf Tiere stehen für fünf Seiten deiner Persönlichkeit. Du hast alle fünf in dir, nur unterschiedlich stark.</p>
+  <div class="card stack">
+    ${ORDER.map(k => `<div class="animal-row"><span class="em" aria-hidden="true">${ANIMALS[k].em}</span><div><strong>${ANIMALS[k].name}</strong> · ${ANIMALS[k].trait}<div class="small muted">${ANIMALS[k].short}</div></div></div>`).join("")}
+  </div>
+  <p class="small muted">Grundlage ist das Big-Five-Modell der Psychologie, gemessen mit einem kurzen, frei verfügbaren Fragebogen (Mini-IPIP). Das Ergebnis ist eine Selbsteinschätzung, keine Diagnose.</p>
+  <button class="btn" data-act="startTest">Los geht's</button>`;
+
+V.test = () => {
+  const i = test.i, it = ITEMS[i], a = test.answers[i];
+  return `
+  <button class="back" data-act="testBack">← ${i === 0 ? "Abbrechen" : "Zurück"}</button>
+  <div class="stack-sm"><div class="progress" aria-hidden="true"><i style="width:${(i / ITEMS.length) * 100}%"></i></div>
+  <span class="eyebrow">Aussage ${i + 1} von ${ITEMS.length}</span></div>
+  <p class="statement">${esc(it[2])}</p>
+  <div class="scale">${SCALE.map((s, k) => `<button data-act="answer" data-v="${k + 1}" class="${a === k + 1 ? "on" : ""}">${s}</button>`).join("")}</div>`;
+};
+
+function animalBars(sc, withTips) {
+  return ORDER.map(k => {
+    const A = ANIMALS[k], v = sc[k], l = level(v);
+    return `<div class="animal-row"><span class="em" aria-hidden="true">${A.em}</span><div>
+      <div class="bar-head"><strong>${A.name}</strong><span class="level">${levelText[l]} · ${v}</span></div>
+      <div class="small muted">${A.trait}</div>
+      <div class="bar" role="img" aria-label="${A.name}: ${v} von 100"><i style="width:${Math.max(v, 3)}%;background:${A.color}"></i></div>
+      ${withTips ? `<details><summary>Was heißt das fürs Lernen?</summary><p>${A[l]}</p></details>` : ""}
+    </div></div>`;
+  }).join("");
+}
+function topTwo(sc) { return ORDER.slice().sort((a, b) => sc[b] - sc[a]).slice(0, 2); }
+
+V.result = () => {
+  const p = store.get("profile", null) || { scores: scores(test ? test.answers : []) };
+  const sc = p.scores, [t1, t2] = topTwo(sc);
+  const hyp = sc.E > 60
+    ? "Du bist ein starker Otter. Vielleicht hilft dir Erklären mehr als stilles Lesen. Das prüft später der Selbstversuch „Erklären oder Lesen“."
+    : sc.C < 40
+      ? "Der Biber ist bei dir eher klein. Vermutlich helfen dir kurze, feste Lerneinheiten mehr als lange. Das prüft später der Selbstversuch „Am Stück oder verteilt“."
+      : "Egal welche Tiere vorne liegen: Ob Abfragen bei dir besser wirkt als Lesen, zeigt nur ein Versuch.";
+  return `
+  <button class="back" data-go="home" data-tab="start">← Start</button>
+  <div class="stack-sm"><span class="eyebrow">Dein Ergebnis</span>
+  <h2>Bei dir sind ${ANIMALS[t1].em} ${ANIMALS[t1].name} und ${ANIMALS[t2].em} ${ANIMALS[t2].name} am stärksten</h2></div>
+  <p class="muted">Jedes Tier ist eine eigene Skala von 0 bis 100. Wenig ist nicht schlecht, sondern nur anders. Tipp auf „Was heißt das fürs Lernen?“.</p>
+  <div class="card stack">${animalBars(sc, true)}</div>
+  <div class="card stack-sm"><span class="eyebrow">Vermutung zum Testen</span><p>${hyp}</p></div>
+  <button class="btn" data-go="lab" data-tab="labor">Zum Selbstversuch</button>
+  <p class="small muted">Kurzer Fragebogen mit 20 Aussagen, Prototyp-Übersetzung. Persönlichkeit sagt viel darüber, wie du dranbleibst, aber nicht, welche Lernmethode wirkt. Das zeigen die Selbstversuche.</p>`;
+};
+
+// ---------- Selbstversuch ----------
+V.lab = () => {
+  const pending = store.get("pending", null);
+  const runs = store.get("runs", []);
+  return `
+  <span class="proto">Prototyp</span>
+  <h1>Labor</h1>
+  ${pending ? `<div class="card stack-sm"><span class="eyebrow">Läuft</span><p>„Lesen oder Abfragen“: Gelernt am ${new Date(pending.learnedAt).toLocaleDateString("de-DE")}. ${Date.now() >= pending.due ? "Der Test ist fällig." : "Empfohlener Test ab " + new Date(pending.due).toLocaleDateString("de-DE", { weekday: "long" }) + "."}</p>
+    <button class="btn" data-go="labTestStart">${Date.now() >= pending.due ? "Jetzt testen" : "Trotzdem jetzt testen"}</button>
+    <button class="btn link" data-act="dropPending">Versuch verwerfen</button></div>` : ""}
+  <div class="card stack">
+    <div class="stack-sm"><span class="eyebrow">Selbstversuch 1 · kostenlos</span><h2>Lesen oder Abfragen?</h2></div>
+    <p>Du lernst 16 Wörter auf Suaheli. Die Hälfte liest du ein zweites Mal, die andere Hälfte fragst du dich selbst ab. Später testen wir alle 16 und vergleichen.</p>
+    <ul class="plain small muted"><li>Dauer: etwa 10 Minuten, dazu ein kurzer Test später</li><li>Suaheli, damit niemand Vorwissen hat</li><li>Welches Wort in welche Gruppe kommt, entscheidet der Zufall</li></ul>
+    ${pending ? "" : `<button class="btn" data-go="labPredict">Versuch starten</button>`}
+    ${runs.length ? `<p class="small muted">Schon ${runs.length}× gemacht. Ergebnisse im Profil.</p>` : ""}
+  </div>
+  <div class="stack-sm"><span class="eyebrow">In der Vollversion</span>
+    ${[["⏱️", "Am Stück oder verteilt?", "Einmal 15 oder dreimal 5 Minuten"], ["🗣️", "Erklären oder Lesen?", "Bringt dir lautes Erklären etwas?"], ["👂", "Hören, Lesen oder Schreiben?", "Gibt es bei dir einen Unterschied?"], ["🌅", "Lerche oder Eule?", "Morgens oder abends lernen"]].map(([i, t, d]) =>
+      `<button class="entry" data-go="premium"><span class="ico" aria-hidden="true">${i}</span><div><div class="t">${t}</div><div class="d">${d}</div></div><span class="meta">🔒</span></button>`).join("")}
+  </div>`;
+};
+
+V.labPredict = () => `
+  <button class="back" data-go="lab">← Zurück</button>
+  <span class="eyebrow">Bevor es losgeht</span>
+  <h2>Was glaubst du: Was bleibt bei dir besser hängen?</h2>
+  <p class="muted">Deine Vermutung vergleichen wir am Ende mit dem Ergebnis.</p>
+  <div class="choice">
+    <button class="btn ghost" data-act="predict" data-v="read">Nochmal lesen</button>
+    <button class="btn ghost" data-act="predict" data-v="quiz">Mich selbst abfragen</button>
+    <button class="btn ghost" data-act="predict" data-v="same">Kein Unterschied</button>
+  </div>`;
+
+function newLab(pred) {
+  const idx = shuffle(WORDS.map((_, i) => i));
+  const cond = {}; idx.forEach((w, k) => cond[w] = k < 8 ? "read" : "quiz");
+  lab = { pred, cond, phase: "study", order: shuffle(WORDS.map((_, i) => i)), pos: 0, answered: null };
+}
+
+function gate(ms) {
+  clearTimeout(gateTimer);
+  gateTimer = setTimeout(() => { const b = $("#next"); if (b) b.disabled = false; }, ms);
+}
+
+V.labStudy = () => {
+  const w = WORDS[lab.order[lab.pos]];
+  gate(2500);
+  return `
+  <div class="stack-sm"><div class="progress"><i style="width:${lab.pos / 16 * 100}%"></i></div>
+  <span class="eyebrow">Runde 1 · Einprägen · ${lab.pos + 1} von 16</span></div>
+  <p class="muted small">Präg dir jedes Wortpaar ein.</p>
+  <div class="word"><div class="src">${w[0]}</div><div class="eq">heißt</div><div class="dst">${w[1]}</div></div>
+  <button class="btn" id="next" data-act="studyNext" disabled>Weiter</button>`;
+};
+
+V.labPractice = () => {
+  const wi = lab.order[lab.pos], w = WORDS[wi], c = lab.cond[wi];
+  const head = `<div class="stack-sm"><div class="progress"><i style="width:${lab.pos / 16 * 100}%"></i></div>
+    <span class="eyebrow">Runde 2 · Üben · ${lab.pos + 1} von 16</span></div>`;
+  if (c === "read") {
+    gate(2500);
+    return `${head}<p class="muted small"><strong>Lies</strong> das Wortpaar noch einmal.</p>
+    <div class="word"><div class="src">${w[0]}</div><div class="eq">heißt</div><div class="dst">${w[1]}</div></div>
+    <button class="btn" id="next" data-act="practiceNext" disabled>Weiter</button>`;
+  }
+  if (lab.answered == null) {
+    return `${head}<p class="muted small"><strong>Frag dich ab:</strong> Was heißt das Wort?</p>
+    <div class="word"><div class="src">${w[0]}</div><div class="eq">heißt</div><div class="dst">?</div></div>
+    <form id="qf" class="stack-sm"><label class="small muted" for="qa">Deine Antwort</label>
+    <input id="qa" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Auf Deutsch">
+    <button class="btn" type="submit">Prüfen</button></form>`;
+  }
+  const ok = lab.answered;
+  return `${head}<div class="word"><div class="src">${w[0]}</div><div class="eq">heißt</div><div class="dst">${w[1]}</div></div>
+    <p class="fb ${ok ? "ok" : "no"}">${ok ? "Richtig!" : "Noch nicht. Präg dir die Lösung ein."}</p>
+    <button class="btn" data-act="practiceNext">Weiter</button>`;
+};
+
+V.labPause = () => `
+  <span class="eyebrow">Geschafft</span>
+  <h2>Jetzt kommt das Wichtigste: die Pause</h2>
+  <p>Was direkt danach noch da ist, sagt wenig. Entscheidend ist, was nach ein paar Tagen hängen bleibt. Genau da zeigen sich die Unterschiede zwischen Methoden meist erst.</p>
+  <div class="choice">
+    <button class="btn" data-act="later">In 2 Tagen testen (empfohlen)</button>
+    <button class="btn ghost" data-act="now">Jetzt testen (Schnell-Demo)</button>
+  </div>
+  <p class="small muted">In der fertigen App erinnert dich eine Mitteilung. Im Prototyp findest du den Test im Labor.</p>`;
+
+V.labSaved = () => `
+  <span class="eyebrow">Gespeichert</span>
+  <h2>Bis in 2 Tagen!</h2>
+  <p>Der Test wartet im Labor auf dich. Bitte nicht zwischendurch die Wörter wiederholen, sonst verfälscht das den Versuch.</p>
+  <button class="btn" data-go="home" data-tab="start">Zum Start</button>`;
+
+V.labDistract = () => {
+  const t = lab.distract;
+  return `
+  <span class="eyebrow">Kurze Ablenkung · ${t.k + 1} von 5</span>
+  <h2>Rechne im Kopf</h2>
+  <p class="muted">Damit die Wörter nicht mehr frisch im Kopf sind.</p>
+  <div class="word"><div class="src">${t.a} − ${t.b}</div></div>
+  <form id="df" class="stack-sm"><label class="small muted" for="da">Ergebnis</label>
+  <input id="da" type="number" inputmode="numeric"><button class="btn" type="submit">Weiter</button></form>
+  <button class="btn link" data-act="skipDistract">Überspringen</button>`;
+};
+
+V.labTest = () => {
+  const wi = lab.order[lab.pos], w = WORDS[wi];
+  return `
+  <div class="stack-sm"><div class="progress"><i style="width:${lab.pos / 16 * 100}%"></i></div>
+  <span class="eyebrow">Test · ${lab.pos + 1} von 16</span></div>
+  <p class="muted small">Was heißt das Wort? Keine Ahnung? Einfach leer lassen.</p>
+  <div class="word"><div class="src">${w[0]}</div><div class="eq">heißt</div><div class="dst">?</div></div>
+  <form id="tf" class="stack-sm"><label class="small muted" for="ta">Deine Antwort</label>
+  <input id="ta" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Auf Deutsch">
+  <button class="btn" type="submit">Weiter</button></form>`;
+};
+
+function verdict(r) {
+  const d = r.quiz - r.read;
+  if (Math.abs(d) >= 3) return d > 0
+    ? ["Abfragen hat bei dir klar gewonnen.", "Ein Unterschied von 3 oder mehr Wörtern ist ein deutlicher Hinweis."]
+    : ["Nochmal lesen hat bei dir klar gewonnen.", "Ungewöhnlich, aber möglich. Wiederhole den Versuch, um sicherzugehen."];
+  if (d === 0) return ["Kein Unterschied.", "Bei so wenigen Wörtern heißt das: Wiederholen lohnt sich, am besten mit Pause."];
+  return [(d > 0 ? "Abfragen" : "Nochmal lesen") + " liegt knapp vorne.", "1 oder 2 Wörter Unterschied können Zufall sein. Ein zweiter Durchgang macht das Ergebnis sicherer."];
+}
+
+V.labResult = () => {
+  const r = lab.result, [h, sub] = verdict(r);
+  const predText = { read: "Nochmal lesen", quiz: "Abfragen", same: "kein Unterschied" }[r.pred];
+  const winner = r.quiz - r.read >= 3 ? "quiz" : r.read - r.quiz >= 3 ? "read" : "same";
+  const chips = (c) => r.items.filter(x => x.c === c).map(x => `<span class="chip ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "✗"} ${x.w}</span>`).join("");
+  return `
+  <span class="eyebrow">Dein Ergebnis</span>
+  <h2>${h}</h2>
+  <div class="compare">
+    <div class="card"><div class="eyebrow">Nochmal gelesen</div><div class="big">${r.read}<span class="muted" style="font-size:1rem"> / 8</span></div></div>
+    <div class="card"><div class="eyebrow">Abgefragt</div><div class="big">${r.quiz}<span class="muted" style="font-size:1rem"> / 8</span></div></div>
+  </div>
+  <p>${sub}</p>
+  <div class="note">Deine Vermutung war: <strong>${predText}</strong>. ${r.pred === winner ? "Das passt zum Ergebnis." : winner === "same" ? "Noch ist der Unterschied zu klein, um das zu bestätigen." : "Das Ergebnis sieht anders aus. Unser Gefühl für gute Lernmethoden täuscht oft."}</div>
+  ${r.delayed ? "" : `<div class="card stack-sm"><span class="eyebrow">Gut zu wissen</span><p class="small">Du hast sofort getestet. Direkt danach schneidet Nochmal-Lesen oft gut ab. Der Vorteil des Abfragens zeigt sich in Studien meist erst nach Tagen (Roediger &amp; Karpicke, 2006). Mach den Versuch nochmal mit 2 Tagen Pause.</p></div>`}
+  <details><summary>Welche Wörter saßen?</summary>
+    <p class="small muted">Nochmal gelesen</p><div class="chips">${chips("read")}</div>
+    <p class="small muted">Abgefragt</p><div class="chips">${chips("quiz")}</div>
+  </details>
+  <button class="btn" data-go="profile" data-tab="profil">Zu meinem Lernprofil</button>
+  <button class="btn ghost" data-go="lab" data-tab="labor">Zurück ins Labor</button>`;
+};
+
+// ---------- Wissen ----------
+let openMyth = -1;
+V.myths = () => `
+  <span class="proto">Prototyp</span>
+  <h1>Mythen-Check</h1>
+  <p class="muted">Stimmt das? Tipp auf eine Aussage für die Auflösung.</p>
+  <div class="stack-sm">${MYTHS.map(([q, v, a], i) => `
+    <button class="card myth stack-sm" data-act="myth" data-i="${i}" aria-expanded="${openMyth === i}">
+      <strong>${q}</strong>
+      ${openMyth === i ? `<span class="verdict ${v}">${{ falsch: "FALSCH", stimmt: "STIMMT", teils: "TEILWEISE" }[v]}</span><span class="small">${a}</span>` : `<span class="small muted">Antippen zum Auflösen</span>`}
+    </button>`).join("")}</div>`;
+
+// ---------- Profil ----------
+const EXAMPLE = { C: 38, E: 72, O: 81, A: 64, N: 45 };
+V.profile = () => {
+  const p = store.get("profile", null), runs = store.get("runs", []);
+  const sc = p ? p.scores : EXAMPLE;
+  const last = runs[runs.length - 1];
+  return `
+  <span class="proto">Prototyp</span>
+  <h1>Mein Lernprofil</h1>
+  <div class="card stack">
+    <div class="bar-head"><span class="eyebrow">Persönlichkeit</span>${p ? "" : `<span class="level">BEISPIEL</span>`}</div>
+    ${animalBars(sc, false)}
+    ${p ? `<button class="btn link" data-go="result">Tipps ansehen</button>` : `<button class="btn" data-go="testIntro" data-tab="start">Eigene Tiere herausfinden</button>`}
+  </div>
+  <div class="card stack-sm">
+    <span class="eyebrow">Gemessen in Selbstversuchen</span>
+    ${last ? `<p><strong>Lesen oder Abfragen:</strong> gelesen ${last.read}/8, abgefragt ${last.quiz}/8 ${last.delayed ? "(nach Pause)" : "(Sofort-Test)"}.</p>
+      <p class="small muted">${verdict(last)[0]} ${runs.length > 1 ? `Durchschnitt aus ${runs.length} Durchgängen: gelesen ${(runs.reduce((s, r) => s + r.read, 0) / runs.length).toFixed(1)}, abgefragt ${(runs.reduce((s, r) => s + r.quiz, 0) / runs.length).toFixed(1)}.` : ""}</p>`
+      : `<p class="muted">Noch keine Messung. Hier erscheint, was bei dir tatsächlich wirkt.</p><button class="btn ghost" data-go="lab" data-tab="labor">Ersten Selbstversuch starten</button>`}
+  </div>
+  <div class="card stack">
+    <div class="stack-sm"><span class="eyebrow">Vollversion</span><h3>Alle Selbstversuche und dein vollständiges Profil</h3></div>
+    <button class="btn" data-go="premium">Mehr erfahren</button>
+  </div>
+  <p class="small muted">Deine Daten bleiben auf diesem Gerät. Kein Konto, keine Werbung, kein Tracking.</p>
+  ${p || runs.length ? `<button class="btn link" data-act="reset">Alle Daten löschen</button>` : ""}`;
+};
+
+V.premium = () => `
+  <button class="back" data-act="backFromPremium">← Zurück</button>
+  <span class="eyebrow">Lernlabor Vollversion</span>
+  <h2>Finde heraus, was bei dir wirklich wirkt</h2>
+  <div class="card stack">
+    <ul class="plain">
+      <li>8 weitere Selbstversuche, zum Beispiel verteilt gegen am Stück, Erklären gegen Lesen, Lerche oder Eule</li>
+      <li>Vollständiges Lernprofil aus Persönlichkeit und echten Messungen</li>
+      <li>Die wichtigsten Lernmethoden mit Übungen</li>
+      <li>Später: eigenen Lernstoff mit deinen besten Methoden lernen</li>
+    </ul>
+    <div><div class="price">7,99 €</div><div class="small muted">einmalig, kein Abo</div></div>
+    <button class="btn" data-act="buy">Vollversion freischalten</button>
+    <p id="buyNote" class="small muted" hidden>Im Prototyp ist der Kauf nur angedeutet. In der App läuft er über den App Store.</p>
+  </div>`;
+
+V.confirmReset = () => `
+  <h2>Alle Daten löschen?</h2>
+  <p>Persönlichkeitsergebnis und alle Selbstversuche auf diesem Gerät werden entfernt.</p>
+  <button class="btn" data-act="doReset">Ja, löschen</button>
+  <button class="btn ghost" data-go="profile">Abbrechen</button>`;
+
+// ---------- Rendern ----------
+let premiumFrom = "lab";
+function render() {
+  $("#view").innerHTML = V[state.view]();
+  renderTabs();
+  const f = $("#qa, #da, #ta"); if (f) f.focus();
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b || b.disabled) return;
+  if (b.dataset.tab && b.dataset.view) { if (b.dataset.view === "myths") openMyth = -1; return go(b.dataset.view, b.dataset.tab); }
+  if (b.dataset.go) {
+    if (b.dataset.go === "premium") premiumFrom = state.view;
+    if (b.dataset.go === "labTestStart") return startDelayedTest();
+    return go(b.dataset.go, b.dataset.tab);
+  }
+  const a = b.dataset.act; if (!a) return;
+  if (a === "startTest") { test = { i: 0, answers: [] }; go("test"); }
+  else if (a === "testBack") { if (test.i === 0) go("testIntro"); else { test.i--; render(); } }
+  else if (a === "answer") {
+    test.answers[test.i] = +b.dataset.v;
+    if (test.i < ITEMS.length - 1) { test.i++; setTimeout(render, 120); b.classList.add("on"); }
+    else { store.set("profile", { scores: scores(test.answers), at: Date.now() }); go("result"); }
+  }
+  else if (a === "predict") { newLab(b.dataset.v); go("labStudy"); }
+  else if (a === "studyNext") {
+    if (++lab.pos < 16) render(); else { lab.phase = "practice"; lab.order = shuffle(lab.order); lab.pos = 0; go("labPractice"); }
+  }
+  else if (a === "practiceNext") {
+    lab.answered = null;
+    if (++lab.pos < 16) render(); else go("labPause");
+  }
+  else if (a === "later") {
+    store.set("pending", { pred: lab.pred, cond: lab.cond, learnedAt: Date.now(), due: Date.now() + 2 * 864e5 });
+    lab = null; go("labSaved");
+  }
+  else if (a === "now") { lab.delayed = false; nextDistract(0); }
+  else if (a === "skipDistract") beginTest();
+  else if (a === "dropPending") { store.del("pending"); render(); }
+  else if (a === "myth") { const i = +b.dataset.i; openMyth = openMyth === i ? -1 : i; render(); }
+  else if (a === "reset") go("confirmReset");
+  else if (a === "doReset") { store.del("profile"); store.del("runs"); store.del("pending"); go("profile"); }
+  else if (a === "buy") { $("#buyNote").hidden = false; }
+  else if (a === "backFromPremium") go(premiumFrom);
+});
+
+function nextDistract(k) {
+  if (k >= 5) return beginTest();
+  lab.distract = { k, a: 40 + Math.floor(Math.random() * 60), b: 6 + Math.floor(Math.random() * 13) };
+  go("labDistract");
+}
+function beginTest() { lab.phase = "test"; lab.order = shuffle(WORDS.map((_, i) => i)); lab.pos = 0; lab.answers = {}; go("labTest"); }
+function startDelayedTest() {
+  const p = store.get("pending", null); if (!p) return go("lab", "labor");
+  lab = { pred: p.pred, cond: p.cond, delayed: Date.now() - p.learnedAt > 20 * 3600e3 };
+  beginTest();
+}
+
+document.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (e.target.id === "qf") {
+    const wi = lab.order[lab.pos];
+    lab.answered = correct($("#qa").value, WORDS[wi]);
+    render();
+  } else if (e.target.id === "df") {
+    nextDistract(lab.distract.k + 1);
+  } else if (e.target.id === "tf") {
+    lab.answers[lab.order[lab.pos]] = $("#ta").value;
+    if (++lab.pos < 16) render(); else finishTest();
+  }
+});
+
+function finishTest() {
+  const items = WORDS.map((w, i) => ({ w: w[0] + " = " + w[1], c: lab.cond[i], ok: correct(lab.answers[i] || "", w) }));
+  const r = { pred: lab.pred, delayed: !!lab.delayed, items, at: Date.now(),
+    read: items.filter(x => x.c === "read" && x.ok).length, quiz: items.filter(x => x.c === "quiz" && x.ok).length };
+  const runs = store.get("runs", []); runs.push({ read: r.read, quiz: r.quiz, delayed: r.delayed, pred: r.pred, at: r.at }); store.set("runs", runs);
+  store.del("pending");
+  lab.result = r; go("labResult", "labor");
+}
+
+render();
+</script>
