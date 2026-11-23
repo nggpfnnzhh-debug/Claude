@@ -10,6 +10,7 @@ struct HomeView: View {
     @Environment(\.layoutScale) private var scale
     @State private var showParents = false
     @State private var showStarSky = false
+    @State private var showCalendar = LaunchOptions.screenshotScreen == "adventCalendar"
     @State private var showNicknamePicker = false
     @State private var isFirstLaunch = false
     @AppStorage(SettingsKey.childName) private var childName = ""
@@ -59,6 +60,13 @@ struct HomeView: View {
                 greet()
             }
             Self.didGreetThisSession = true
+        }
+        .fullScreenCover(isPresented: $showCalendar) {
+            AdventCalendarView(today: AdventCalendar.day() ?? 1) {
+                Speaker.shared.stop()
+                showCalendar = false
+            }
+            .modifier(AdaptiveLayoutScale())
         }
         .sheet(isPresented: $showParents) {
             ParentArea()
@@ -156,6 +164,26 @@ struct HomeView: View {
 
             if let seasonal = Seasonal.active, seasonal.adventCandles > 0, seasonal.festival != .christmas {
                 AdventWreathView(candles: seasonal.adventCandles)
+            }
+
+            // Adventskalender vom 1. bis 26. Dezember (mit „Feste & Jahreszeiten“ abschaltbar).
+            if Seasonal.active != nil, let day = AdventCalendar.day() {
+                Button {
+                    showCalendar = true
+                } label: {
+                    Label("Adventskalender", systemImage: "gift.fill")
+                        .font(.system(size: 18 * scale, weight: .heavy, design: .rounded))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12 * scale)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(Color(red: 0.80, green: 0.18, blue: 0.20))
+                                .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
+                        )
+                }
+                .buttonStyle(BouncyButtonStyle())
+                .accessibilityLabel("Huhus Adventskalender, heute ist der \(day). Dezember")
             }
         }
     }

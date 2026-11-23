@@ -128,6 +128,59 @@ STORY_TEXTS = ["Was passiert zuerst?", "Tippe die Bilder der Reihe nach an!", "D
                "Der Apfelbaum blüht.", "Ein kleiner grüner Apfel wächst.", "Der Apfel ist reif.", "Ein Apfelkuchen!"]
 
 
+# Huhus Adventskalender (AdventCalendar.swift)
+ADVENT_DOORS = [
+    ("Eine Schneeflocke!", "Tanz wie eine Schneeflocke durchs Zimmer!"),
+    ("Ein Rentier!", "Hüpf dreimal wie ein Rentier!"),
+    ("Ein Plätzchen!", "Welche Plätzchen magst du am liebsten?"),
+    ("Ein Tannenbaum!", "Streck dich so groß wie ein Tannenbaum!"),
+    ("Ein Stiefel!", "Heute Abend stellen viele Kinder ihre Stiefel raus."),
+    ("Heute ist Nikolaus!", "Sing ein Lied für den Nikolaus!"),
+    ("Ein Schneemann!", "Mal mit dem Finger einen Schneemann in die Luft!"),
+    ("Eine Glocke!", "Kling, kling – mach ein Glöckchen-Geräusch!"),
+    ("Handschuhe!", "Wie viele Finger hat ein Handschuh?"),
+    ("Ein Pinguin!", "Watschel wie ein Pinguin!"),
+    ("Ein Stern!", "Mach dich groß wie ein Stern: Arme und Beine weit auseinander!"),
+    ("Ein Schlitten!", "Setz dich hin und fahr Schlitten – wuuusch!"),
+    ("Eine Kerze!", "Kerzen zündet man nur mit Erwachsenen an."),
+    ("Ein Geschenk!", "Was könntest du jemandem schenken? Ein Bild oder eine Umarmung!"),
+    ("Ein Apfel!", "Im Winter gibt es Bratäpfel mit Zimt."),
+    ("Huhu!", "Wem möchtest du heute Danke sagen?"),
+    ("Ein Schal!", "Zieh dich warm an, wenn du rausgehst!"),
+    ("Ein Eichhörnchen!", "Das Eichhörnchen schläft im Winter viel in seinem Nest."),
+    ("Musik!", "Sing dein liebstes Winterlied!"),
+    ("Der Mond!", "Schau heute Abend mit deiner Familie zum Himmel!"),
+    ("Die Sonne!", "Heute ist der kürzeste Tag des Jahres! Danach werden die Tage wieder länger."),
+    ("Schokolade!", "Teilen macht Freude!"),
+    ("Ein Teddy!", "Kuschel heute mit deinem Lieblingskuscheltier!"),
+    ("Heute ist Heiligabend!", "Huhu wünscht dir frohe Weihnachten!"),
+]
+
+
+def split_sentences(text: str):
+    """Zerlegt wie Speaker.sentences(in:) an . ! ? – so sind die Aufnahmen geschnitten."""
+    result, current = [], ""
+    for ch in text:
+        current += ch
+        if ch in ".!?":
+            if current.strip():
+                result.append(current.strip())
+            current = ""
+    if current.strip():
+        result.append(current.strip())
+    return result
+
+
+def advent_sentences():
+    s = ["Huhus Adventskalender!", "Diese Tür ist noch zu.",
+         "Dein Türchen für heute ist schon offen. Morgen geht das nächste auf!"]
+    for title, idea in ADVENT_DOORS:
+        s += [title, idea]
+    s += [f"Finde die Tür mit der Zahl {number_word(n)}!" for n in range(1, 25)]
+    s += ["Noch einmal schlafen!"] + [f"Noch {number_word(n)}mal schlafen!" for n in range(2, 24)]
+    return s
+
+
 def new_games_sentences():
     s = list(MISSING_NUMBER) + list(STORY_TEXTS)
     s += [f"Wo ist {a}?" for a in POSITION_ANIMALS]
@@ -230,6 +283,7 @@ def all_sentences():
     s += MEMORY_ANIMALS + SEASONAL_MEMORY + SEASONAL_ANNOUNCEMENTS
     s += number_builder_sentences()
     s += new_games_sentences()
+    s += [x for t in advent_sentences() for x in split_sentences(t)]
     return list(dict.fromkeys(s))  # Reihenfolge erhalten, Dubletten entfernen
 
 

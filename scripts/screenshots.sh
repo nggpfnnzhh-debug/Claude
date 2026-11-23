@@ -60,7 +60,7 @@ shoot iPhone 'iPhone.*Pro Max'
 shoot iPad 'iPad Pro 13-inch'
 # Nur für die Vorschau: normales 6,1"-iPhone (Größe wie iPhone 13–17), nicht für den App Store.
 if [ "${PREVIEW_SMALL_IPHONE:-}" = "1" ]; then
-  SCREENS+=(home@advent missingNumber positions story)
+  SCREENS+=(home@advent adventCalendar missingNumber positions story)
   shoot iPhoneKlein '^iPhone 1[3-9]$'
 fi
 

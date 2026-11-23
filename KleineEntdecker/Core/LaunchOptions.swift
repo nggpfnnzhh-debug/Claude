@@ -48,5 +48,10 @@ enum LaunchOptions {
         // Store-Screenshots sollen das ganze Jahr passen.
         UserDefaults.standard.set(screenshotSeason != nil, forKey: SettingsKey.seasonalThemes)
         Seasonal.override = screenshotSeason
+        if screenshotScreen == "adventCalendar" {
+            // Vorschau: Nikolaustag, die ersten fünf Türchen sind schon offen.
+            AdventCalendar.dayOverride = 6
+            (1...5).forEach { AdventCalendar.markOpened($0) }
+        }
     }
 }
