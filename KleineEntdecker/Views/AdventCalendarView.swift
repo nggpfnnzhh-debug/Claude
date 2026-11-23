@@ -3,10 +3,13 @@ import SwiftUI
 /// Huhus Adventskalender: Das Kind sucht die Tür mit der heutigen Zahl und öffnet sie.
 struct AdventCalendarView: View {
     let today: Int
+    /// Vorschau aus dem Elternbereich: Türchen öffnen sich, werden aber nicht gespeichert –
+    /// so bleibt die Überraschung für das Kind erhalten.
+    var isPreview = false
     let onClose: () -> Void
 
     @Environment(\.layoutScale) private var scale
-    @State private var opened = AdventCalendar.openedDoors()
+    @State private var opened: Set<Int> = []
     @State private var shownDoor: AdventDoor?
     @State private var lockedTaps = 0
 
@@ -31,7 +34,7 @@ struct AdventCalendarView: View {
                     RoundIconButton(systemName: "house.fill", tint: green, action: onClose)
                         .accessibilityLabel("Zurück zum Start")
                     Spacer()
-                    Text("🎄 Adventskalender")
+                    Text(isPreview ? "Vorschau: \(today). Dezember" : "🎄 Adventskalender")
                         .font(.system(size: 22 * scale, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
                         .minimumScaleFactor(0.6)
@@ -69,7 +72,10 @@ struct AdventCalendarView: View {
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .onAppear(perform: speakIntro)
+        .onAppear {
+            if !isPreview { opened = AdventCalendar.openedDoors() }
+            speakIntro()
+        }
     }
 
     private func speakIntro() {
@@ -91,7 +97,7 @@ struct AdventCalendarView: View {
         }
         let door = AdventCalendar.doors[number - 1]
         if !opened.contains(number) {
-            AdventCalendar.markOpened(number)
+            if !isPreview { AdventCalendar.markOpened(number) }
             opened.insert(number)
             Haptics.success()
         }

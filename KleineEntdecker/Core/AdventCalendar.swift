@@ -85,6 +85,10 @@ enum AdventCalendar {
         UserDefaults.standard.set(opened.sorted(), forKey: storageKey(year: year))
     }
 
+    static func resetOpenedDoors(year: Int = Calendar.current.component(.year, from: Date())) {
+        UserDefaults.standard.removeObject(forKey: storageKey(year: year))
+    }
+
     /// Alle Sätze, die der Kalender sprechen kann (für Tests und Vertonung).
     static var allTexts: [String] {
         [intro, lockedDoor, alreadyOpenedToday]
