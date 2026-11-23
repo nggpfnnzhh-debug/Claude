@@ -17,7 +17,7 @@ enum AdventCalendar {
         .init(number: 1, emoji: "❄️", title: "Eine Schneeflocke!", idea: "Tanz wie eine Schneeflocke durchs Zimmer!"),
         .init(number: 2, emoji: "🦌", title: "Ein Rentier!", idea: "Hüpf dreimal wie ein Rentier!"),
         .init(number: 3, emoji: "🍪", title: "Ein Plätzchen!", idea: "Welche Plätzchen magst du am liebsten?"),
-        .init(number: 4, emoji: "🎄", title: "Ein Tannenbaum!", idea: "Streck dich so groß wie ein Tannenbaum!"),
+        .init(number: 4, emoji: "🌲", title: "Ein Tannenbaum!", idea: "Streck dich so groß wie ein Tannenbaum!"),
         .init(number: 5, emoji: "🥾", title: "Ein Stiefel!", idea: "Heute Abend stellen viele Kinder ihre Stiefel raus."),
         .init(number: 6, emoji: "🎅", title: "Heute ist Nikolaus!", idea: "Sing ein Lied für den Nikolaus!"),
         .init(number: 7, emoji: "⛄", title: "Ein Schneemann!", idea: "Mal mit dem Finger einen Schneemann in die Luft!"),
