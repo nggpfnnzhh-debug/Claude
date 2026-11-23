@@ -40,7 +40,7 @@ enum LaunchOptions {
                          "moreLess": 1, "syllables": 2, "rhymes": 1, "clock": 1, "buildNumbers": 1]
         UserDefaults.standard.set(demoStars, forKey: "starsByGame")
         // Etwas fortgeschrittenere Aufgaben wirken auf Screenshots anschaulicher.
-        UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1, "buildNumbers": 2], forKey: "levelsByGame")
+        UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1, "buildNumbers": 2, "positions": 2, "story": 2], forKey: "levelsByGame")
         UserDefaults.standard.set(0, forKey: SettingsKey.breakMinutes)
         UserDefaults.standard.set("Biene", forKey: SettingsKey.childName)
         UserDefaults.standard.set("Kleine", forKey: SettingsKey.childAdjective)
