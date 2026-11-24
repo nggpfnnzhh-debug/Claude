@@ -65,11 +65,28 @@ final class ExperimentTests: XCTestCase {
     private let tree = RereadVsQuiz.words.first { $0.swahili == "mti" }!
     private let car = RereadVsQuiz.words.first { $0.swahili == "gari" }!
 
-    func testAssignmentSplitsWordsEvenly() {
-        let assignment = RereadVsQuiz.randomAssignment()
-        XCTAssertEqual(assignment.count, RereadVsQuiz.words.count)
-        XCTAssertEqual(assignment.values.filter { $0 == .reread }.count, RereadVsQuiz.perMethod)
-        XCTAssertEqual(assignment.values.filter { $0 == .quiz }.count, RereadVsQuiz.perMethod)
+    func testAssignmentSplitsItemsEvenly() {
+        for kind in ExperimentKind.allCases {
+            let assignment = Experiments.randomAssignment(for: kind)
+            XCTAssertEqual(assignment.count, kind.items.count, "\(kind)")
+            for method in kind.methods {
+                XCTAssertEqual(assignment.values.filter { $0 == method }.count, kind.perMethod, "\(kind) \(method)")
+            }
+        }
+    }
+
+    func testItemIDsAreUnique() {
+        for kind in ExperimentKind.allCases {
+            XCTAssertEqual(Set(kind.items.map(\.id)).count, kind.items.count, "\(kind)")
+        }
+    }
+
+    func testFactsHaveFourDistinctOptions() {
+        for fact in ExplainVsRead.facts {
+            let options = [fact.answer] + fact.wrong
+            XCTAssertEqual(Set(options).count, 4, fact.id)
+        }
+        XCTAssertEqual(ExplainVsRead.facts.count % 2, 0)
     }
 
     func testAnswerMatching() {
@@ -87,34 +104,97 @@ final class ExperimentTests: XCTestCase {
         XCTAssertTrue(RereadVsQuiz.isCorrect("Fueller", for: pen))
     }
 
-    func testVerdict() {
-        XCTAssertEqual(RereadVsQuiz.verdict(reread: 3, quiz: 7).winner, .quiz)
-        XCTAssertEqual(RereadVsQuiz.verdict(reread: 7, quiz: 3).winner, .reread)
-        XCTAssertEqual(RereadVsQuiz.verdict(reread: 5, quiz: 6).winner, .same)
-        XCTAssertEqual(RereadVsQuiz.verdict(reread: 5, quiz: 5).winner, .same)
+    private func run(_ kind: ExperimentKind, baseline: Int, other: Int) -> ExperimentRun {
+        var assignment: [String: Method] = [:]
+        var results: [String: Bool] = [:]
+        for (index, item) in kind.items.enumerated() {
+            let first = index < kind.perMethod
+            assignment[item.id] = first ? kind.methods[0] : kind.methods[1]
+            let position = first ? index : index - kind.perMethod
+            results[item.id] = position < (first ? baseline : other)
+        }
+        return ExperimentRun(kind: kind, prediction: nil, assignment: assignment, learnedAt: .now, results: results)
     }
 
-    func testDelayedOnlyAfterLongPause() {
-        var run = ExperimentRun(prediction: .quiz, assignment: [:], learnedAt: .now)
-        run.testedAt = .now.addingTimeInterval(60)
-        XCTAssertFalse(run.delayed)
-        run.testedAt = .now.addingTimeInterval(RereadVsQuiz.recommendedDelay)
-        XCTAssertTrue(run.delayed)
+    func testVerdict() {
+        XCTAssertEqual(Experiments.verdict(for: run(.rereadQuiz, baseline: 3, other: 7)).winner, .quiz)
+        XCTAssertEqual(Experiments.verdict(for: run(.rereadQuiz, baseline: 7, other: 3)).winner, .reread)
+        XCTAssertNil(Experiments.verdict(for: run(.rereadQuiz, baseline: 5, other: 6)).winner)
+        XCTAssertNil(Experiments.verdict(for: run(.rereadQuiz, baseline: 5, other: 5)).winner)
+        XCTAssertEqual(Experiments.verdict(for: run(.explainRead, baseline: 2, other: 5)).winner, .explain)
     }
 
     func testCorrectCountsPerMethod() {
-        var run = ExperimentRun(prediction: .quiz, assignment: ["mti": .reread, "gari": .quiz, "jua": .quiz], learnedAt: .now)
-        run.results = ["mti": true, "gari": true, "jua": false]
-        XCTAssertEqual(run.correct(.reread), 1)
-        XCTAssertEqual(run.correct(.quiz), 1)
+        let result = run(.explainRead, baseline: 2, other: 4)
+        XCTAssertEqual(result.correct(.reread), 2)
+        XCTAssertEqual(result.correct(.explain), 4)
+        XCTAssertEqual(result.correct(.quiz), 0)
+    }
+
+    func testPredictionFeedback() {
+        XCTAssertEqual(Experiments.predictionFeedback(prediction: .quiz, winner: .quiz), "Das passt zum Ergebnis.")
+        XCTAssertEqual(Experiments.predictionFeedback(prediction: nil, winner: nil), "Das passt zum Ergebnis.")
+    }
+
+    func testDelayedOnlyAfterLongPause() {
+        var run = ExperimentRun(kind: .rereadQuiz, prediction: .quiz, assignment: [:], learnedAt: .now)
+        run.testedAt = .now.addingTimeInterval(60)
+        XCTAssertFalse(run.delayed)
+        run.testedAt = .now.addingTimeInterval(Experiments.recommendedDelay)
+        XCTAssertTrue(run.delayed)
     }
 
     func testRunSurvivesSaving() throws {
-        var run = ExperimentRun(prediction: .reread, assignment: RereadVsQuiz.randomAssignment(), learnedAt: .now)
-        run.results = ["mti": true]
+        var run = ExperimentRun(kind: .explainRead, prediction: .explain,
+                                assignment: Experiments.randomAssignment(for: .explainRead), learnedAt: .now)
+        run.results = ["oktopus": true]
         let decoded = try JSONDecoder().decode(ExperimentRun.self, from: JSONEncoder().encode(run))
+        XCTAssertEqual(decoded.kind, .explainRead)
         XCTAssertEqual(decoded.assignment, run.assignment)
         XCTAssertEqual(decoded.results, run.results)
-        XCTAssertEqual(decoded.prediction, .reread)
+        XCTAssertEqual(decoded.prediction, .explain)
+    }
+}
+
+@MainActor
+final class AppModelTests: XCTestCase {
+    private func freshDefaults() -> UserDefaults {
+        let name = "LernlaborTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return defaults
+    }
+
+    func testPendingRunsArePerKindAndPersisted() {
+        let defaults = freshDefaults()
+        let model = AppModel(defaults: defaults)
+        model.startPending(ExperimentRun(kind: .rereadQuiz, prediction: nil, assignment: [:], learnedAt: .now))
+        model.startPending(ExperimentRun(kind: .explainRead, prediction: nil, assignment: [:], learnedAt: .now))
+        model.startPending(ExperimentRun(kind: .rereadQuiz, prediction: .quiz, assignment: [:], learnedAt: .now))
+        XCTAssertEqual(model.pendingRuns.count, 2)
+        XCTAssertEqual(model.pending(.rereadQuiz)?.prediction, .quiz)
+
+        let reloaded = AppModel(defaults: defaults)
+        XCTAssertEqual(reloaded.pendingRuns.count, 2)
+    }
+
+    func testCompleteMovesRunToResults() {
+        let model = AppModel(defaults: freshDefaults())
+        var run = ExperimentRun(kind: .explainRead, prediction: nil, assignment: [:], learnedAt: .now)
+        model.startPending(run)
+        run.testedAt = .now
+        model.complete(run)
+        XCTAssertNil(model.pending(.explainRead))
+        XCTAssertEqual(model.runs(of: .explainRead).count, 1)
+        XCTAssertTrue(model.runs(of: .rereadQuiz).isEmpty)
+    }
+
+    func testPersonalityIsSavedAndReset() {
+        let defaults = freshDefaults()
+        let model = AppModel(defaults: defaults)
+        model.savePersonality(answers: Array(repeating: 4, count: 20))
+        XCTAssertNotNil(AppModel(defaults: defaults).personality)
+        model.resetAll()
+        XCTAssertNil(AppModel(defaults: defaults).personality)
     }
 }

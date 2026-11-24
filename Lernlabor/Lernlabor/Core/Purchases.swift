@@ -12,12 +12,26 @@ final class Purchases {
     private(set) var product: Product?
     private(set) var hasFullVersion = false
     private(set) var isWorking = false
+    /// TestFlight, Xcode oder Debug-Build: Dort darf die Vollversion zum Testen simuliert werden.
+    private(set) var isTestEnvironment = false
+    var simulateFullVersion = false {
+        didSet { UserDefaults.standard.set(simulateFullVersion, forKey: Self.simulateKey) }
+    }
+
+    /// Ist die Vollversion nutzbar (gekauft oder im Testmodus simuliert)?
+    var unlocked: Bool { hasFullVersion || (isTestEnvironment && simulateFullVersion) }
+
+    private static let simulateKey = "simulateFullVersion"
     /// Hinweis für die Person, z. B. nach dem Wiederherstellen
     var message: String?
 
     @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
     init() {
+        #if DEBUG
+        isTestEnvironment = true
+        #endif
+        simulateFullVersion = UserDefaults.standard.bool(forKey: Self.simulateKey)
         guard LaunchOptions.screenshotScreen == nil else { return }
         // Käufe, die außerhalb dieses Bildschirms passieren: Kaufanfrage der Familie,
         // eingelöste Codes, Rückerstattungen
@@ -30,8 +44,17 @@ final class Purchases {
             }
         }
         Task { [weak self] in
+            await self?.detectEnvironment()
             await self?.loadProduct()
             await self?.refresh()
+        }
+    }
+
+    /// Erkennt TestFlight (Sandbox) und Starts aus Xcode.
+    func detectEnvironment() async {
+        guard let result = try? await AppTransaction.shared, case .verified(let transaction) = result else { return }
+        if transaction.environment != .production {
+            isTestEnvironment = true
         }
     }
 

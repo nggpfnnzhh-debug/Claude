@@ -88,6 +88,10 @@ struct ProfileView: View {
 
                 fullVersionCard
 
+                if purchases.isTestEnvironment {
+                    testModeCard
+                }
+
                 VStack(alignment: .leading, spacing: 12) {
                     Eyebrow("Käufe")
                     Button("Code einlösen") { showRedeem = true }
@@ -104,7 +108,7 @@ struct ProfileView: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.muted)
 
-                if model.personality != nil || !model.runs.isEmpty || model.pendingRun != nil {
+                if model.personality != nil || !model.runs.isEmpty || !model.pendingRuns.isEmpty {
                     Button("Alle Daten löschen", role: .destructive) { confirmReset = true }
                         .font(.subheadline.weight(.medium))
                 }
@@ -125,13 +129,18 @@ struct ProfileView: View {
     private var measurements: some View {
         VStack(alignment: .leading, spacing: 10) {
             Eyebrow("Gemessen in Selbstversuchen")
-            if let last = model.runs.last {
-                let reread = last.correct(.reread)
-                let quiz = last.correct(.quiz)
-                Text("**Lesen oder Abfragen:** gelesen \(reread)/8, abgefragt \(quiz)/8 \(last.delayed ? "(nach Pause)" : "(Sofort-Test)").")
-                Text(RereadVsQuiz.verdict(reread: reread, quiz: quiz).title + averageText)
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.muted)
+            if !model.runs.isEmpty {
+                ForEach(ExperimentKind.allCases) { kind in
+                    let runs = model.runs(of: kind)
+                    if let last = runs.last {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("**\(kind.shortTitle):** \(scoreLine(last))")
+                            Text(Experiments.verdict(for: last).title + averageText(runs))
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.muted)
+                        }
+                    }
+                }
             } else {
                 Text("Noch keine Messung. Hier erscheint, was bei dir tatsächlich wirkt.")
                     .foregroundStyle(Theme.muted)
@@ -142,12 +151,32 @@ struct ProfileView: View {
         .card()
     }
 
-    private var averageText: String {
-        let runs = model.runs
-        guard runs.count > 1 else { return "" }
-        let reread = Double(runs.map { $0.correct(.reread) }.reduce(0, +)) / Double(runs.count)
-        let quiz = Double(runs.map { $0.correct(.quiz) }.reduce(0, +)) / Double(runs.count)
-        return " Durchschnitt aus \(runs.count) Durchgängen: gelesen \(reread.formatted(.number.precision(.fractionLength(1)))), abgefragt \(quiz.formatted(.number.precision(.fractionLength(1))))."
+    private func scoreLine(_ run: ExperimentRun) -> String {
+        let parts = run.kind.methods.map { "\($0.resultLabel.lowercased()) \(run.correct($0))/\(run.kind.perMethod)" }
+        return parts.joined(separator: ", ") + (run.delayed ? " (nach Pause)" : " (Sofort-Test)")
+    }
+
+    private func averageText(_ runs: [ExperimentRun]) -> String {
+        guard runs.count > 1, let kind = runs.first?.kind else { return "" }
+        let parts = kind.methods.map { method in
+            let average = Double(runs.map { $0.correct(method) }.reduce(0, +)) / Double(runs.count)
+            return "\(method.resultLabel.lowercased()) \(average.formatted(.number.precision(.fractionLength(1))))"
+        }
+        return " Durchschnitt aus \(runs.count) Durchgängen: " + parts.joined(separator: ", ") + "."
+    }
+
+    private var testModeCard: some View {
+        @Bindable var purchases = purchases
+        return VStack(alignment: .leading, spacing: 10) {
+            Eyebrow("Testmodus")
+            Toggle("Vollversion simulieren", isOn: $purchases.simulateFullVersion)
+                .font(.body.weight(.medium))
+                .tint(Theme.accent)
+            Text("Nur in Testversionen (TestFlight) sichtbar. So lässt sich alles ausprobieren, ohne zu kaufen.")
+                .font(.footnote)
+                .foregroundStyle(Theme.muted)
+        }
+        .card()
     }
 
     @ViewBuilder
@@ -156,9 +185,11 @@ struct ProfileView: View {
             Eyebrow("Vollversion")
             if purchases.hasFullVersion {
                 Text("Freigeschaltet. Danke!").font(.subheading)
-                Text("Die weiteren Selbstversuche kommen mit den nächsten Updates.")
+                Text("Weitere Selbstversuche kommen mit den nächsten Updates.")
                     .font(.subheadline)
                     .foregroundStyle(Theme.muted)
+            } else if purchases.unlocked {
+                Text("Im Testmodus freigeschaltet").font(.subheading)
             } else {
                 Text("Alle Selbstversuche und dein vollständiges Profil").font(.subheading)
                 Button("Mehr erfahren") { showPremium = true }
@@ -183,7 +214,7 @@ struct PremiumView: View {
                 }
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Weitere Selbstversuche, zum Beispiel verteilt gegen am Stück, Erklären gegen Lesen, Lerche oder Eule", systemImage: "testtube.2")
+                        Label("Selbstversuch „Erklären oder Lesen?“ und alle weiteren, die mit Updates dazukommen", systemImage: "testtube.2")
                         Label("Vollständiges Lernprofil aus Persönlichkeit und echten Messungen", systemImage: "person.text.rectangle")
                         Label("Die wichtigsten Lernmethoden mit Übungen", systemImage: "graduationcap")
                     }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(AppModel.self) private var model
-    @State private var showPendingTest = false
+    @State private var pendingTest: ExperimentKind?
 
     var body: some View {
         @Bindable var model = model
@@ -14,11 +14,11 @@ struct HomeView: View {
                         .foregroundStyle(Theme.muted)
                 }
 
-                if model.pendingRun != nil {
+                ForEach(model.pendingRuns.filter { Date.now >= $0.dueDate }) { pending in
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow("Wartet auf dich")
-                        Text("Dein Selbstversuch „Lesen oder Abfragen“ ist bereit für den Test.")
-                        Button("Jetzt testen") { showPendingTest = true }
+                        Text("Dein Selbstversuch „\(pending.kind.shortTitle)“ ist bereit für den Test.")
+                        Button("Jetzt testen") { pendingTest = pending.kind }
                             .buttonStyle(PrimaryButtonStyle())
                     }
                     .card()
@@ -38,7 +38,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Eyebrow("Schritt 2")
                     Button { model.selectedTab = .lab } label: {
-                        EntryRow(title: "Selbstversuch: Lesen oder Abfragen?",
+                        EntryRow(title: "Selbstversuche im Labor",
                                  subtitle: "Was bleibt bei dir besser hängen?",
                                  meta: "10 Min") {
                             Image(systemName: "testtube.2").font(.title).foregroundStyle(Theme.accent)
@@ -65,8 +65,8 @@ struct HomeView: View {
                 case .result: PersonalityResultView()
                 }
             }
-            .fullScreenCover(isPresented: $showPendingTest) {
-                ExperimentFlowView(start: .pendingTest, pending: model.pendingRun)
+            .fullScreenCover(item: $pendingTest) { kind in
+                ExperimentFlowView(kind: kind, pending: model.pending(kind))
             }
         }
     }

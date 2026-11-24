@@ -1,12 +1,7 @@
 import SwiftUI
 
-/// Selbstversuch „Lesen oder Abfragen?“ von der Vermutung bis zum Ergebnis
+/// Ein Selbstversuch von der Vermutung bis zum Ergebnis
 struct ExperimentFlowView: View {
-    enum Start: Identifiable {
-        case new, pendingTest
-        var id: Self { self }
-    }
-
     enum Phase: Hashable {
         case predict
         case study(Int)
@@ -18,27 +13,35 @@ struct ExperimentFlowView: View {
         case result
     }
 
+    let kind: ExperimentKind
+
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
 
     @State private var phase: Phase
     @State private var run: ExperimentRun
-    @State private var order: [WordPair] = RereadVsQuiz.words.shuffled()
+    @State private var order: [ExperimentItem]
     @State private var answer = ""
     @State private var checked: Bool?
+    @State private var options: [String] = []
     @State private var canContinue = false
     @State private var sum = (a: 0, b: 0)
     @FocusState private var fieldFocused: Bool
 
-    init(start: Start, pending: ExperimentRun? = nil) {
-        if start == .pendingTest, let pending {
+    /// Mit `pending` startet direkt der Test nach der Pause.
+    init(kind: ExperimentKind, pending: ExperimentRun? = nil) {
+        self.kind = kind
+        _order = State(initialValue: kind.items.shuffled())
+        if let pending {
             _phase = State(initialValue: .test(0))
             _run = State(initialValue: pending)
         } else {
-            let screenshot = LaunchOptions.screenshotScreen == "experiment"
-            _phase = State(initialValue: screenshot ? .study(2) : .predict)
-            _run = State(initialValue: ExperimentRun(prediction: .same,
-                                                     assignment: RereadVsQuiz.randomAssignment(),
+            let screen = LaunchOptions.screenshotScreen
+            let startPhase: Phase = (screen == "experiment" && kind == .rereadQuiz) || (screen == "explain" && kind == .explainRead)
+                ? .study(2) : .predict
+            _phase = State(initialValue: startPhase)
+            _run = State(initialValue: ExperimentRun(kind: kind, prediction: nil,
+                                                     assignment: Experiments.randomAssignment(for: kind),
                                                      learnedAt: .now))
         }
     }
@@ -46,6 +49,7 @@ struct ExperimentFlowView: View {
     var body: some View {
         NavigationStack {
             Page { content }
+                .navigationTitle(kind.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     if phase != .result && phase != .saved {
@@ -56,9 +60,10 @@ struct ExperimentFlowView: View {
                 }
                 .task(id: phase) {
                     canContinue = false
-                    try? await Task.sleep(for: .seconds(2.5))
+                    try? await Task.sleep(for: .seconds(kind.gateSeconds))
                     canContinue = true
                 }
+                .onAppear { prepareOptionsIfNeeded() }
         }
     }
 
@@ -69,8 +74,9 @@ struct ExperimentFlowView: View {
             predictView
         case .study(let index):
             progress(index, label: "Runde 1 · Einprägen")
-            Text("Präg dir jedes Wortpaar ein.").font(.subheadline).foregroundStyle(Theme.muted)
-            WordCard(pair: order[index], showsAnswer: true)
+            Text(kind == .rereadQuiz ? "Präg dir jedes Wortpaar ein." : "Lies den Fakt aufmerksam.")
+                .font(.subheadline).foregroundStyle(Theme.muted)
+            ItemCard(item: order[index], showsAnswer: true)
             Button("Weiter") { nextStudy(after: index) }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(!canContinue)
@@ -103,39 +109,57 @@ struct ExperimentFlowView: View {
             Eyebrow("Bevor es losgeht")
             Text("Was glaubst du: Was bleibt bei dir besser hängen?").font(.heading)
             Text("Deine Vermutung vergleichen wir am Ende mit dem Ergebnis.").foregroundStyle(Theme.muted)
-            ForEach([Prediction.reread, .quiz, .same], id: \.self) { prediction in
-                Button(prediction == .quiz ? "Mich selbst abfragen" : prediction.text) {
-                    run.prediction = prediction
+            ForEach(kind.methods, id: \.self) { method in
+                Button(method.choice) {
+                    run.prediction = method
                     phase = .study(0)
                 }
                 .buttonStyle(SecondaryButtonStyle())
             }
+            Button("Kein Unterschied") {
+                run.prediction = nil
+                phase = .study(0)
+            }
+            .buttonStyle(SecondaryButtonStyle())
         }
     }
 
     @ViewBuilder
     private func practiceView(_ index: Int) -> some View {
-        let pair = order[index]
+        let item = order[index]
         progress(index, label: "Runde 2 · Üben")
-        if run.assignment[pair.swahili] == .reread {
-            Text("**Lies** das Wortpaar noch einmal.").font(.subheadline).foregroundStyle(Theme.muted)
-            WordCard(pair: pair, showsAnswer: true)
+        switch run.assignment[item.id] ?? .reread {
+        case .reread:
+            Text(kind == .rereadQuiz ? "**Lies** das Wortpaar noch einmal." : "**Lies** den Fakt noch einmal aufmerksam.")
+                .font(.subheadline).foregroundStyle(Theme.muted)
+            ItemCard(item: item, showsAnswer: true)
             Button("Weiter") { nextPractice(after: index) }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(!canContinue)
-        } else if let checked {
-            WordCard(pair: pair, showsAnswer: true)
-            Text(checked ? "Richtig!" : "Noch nicht. Präg dir die Lösung ein.")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(checked ? Theme.good : Theme.bad)
-            Button("Weiter") { nextPractice(after: index) }
+        case .explain:
+            Text("**Erklär** das laut in eigenen Worten, als würdest du es jemandem beibringen. Sag auch, warum es so ist.")
+                .font(.subheadline).foregroundStyle(Theme.muted)
+            ItemCard(item: item, showsAnswer: true)
+            Button("Erklärt") { nextPractice(after: index) }
                 .buttonStyle(PrimaryButtonStyle())
-        } else {
-            Text("**Frag dich ab:** Was heißt das Wort?").font(.subheadline).foregroundStyle(Theme.muted)
-            WordCard(pair: pair, showsAnswer: false)
-            answerField(prompt: "Auf Deutsch") { checkPractice(pair) }
-            Button("Prüfen") { checkPractice(pair) }
-                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!canContinue)
+        case .quiz:
+            if case .word(let pair) = item {
+                if let checked {
+                    ItemCard(item: item, showsAnswer: true)
+                    Text(checked ? "Richtig!" : "Noch nicht. Präg dir die Lösung ein.")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(checked ? Theme.good : Theme.bad)
+                    Button("Weiter") { nextPractice(after: index) }
+                        .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Text("**Frag dich ab:** Was heißt das Wort?").font(.subheadline).foregroundStyle(Theme.muted)
+                    ItemCard(item: item, showsAnswer: false)
+                    answerField(prompt: "Auf Deutsch") { checked = RereadVsQuiz.isCorrect(answer, for: pair) }
+                    Button("Prüfen") { checked = RereadVsQuiz.isCorrect(answer, for: pair) }
+                        .buttonStyle(PrimaryButtonStyle())
+                }
+            }
         }
     }
 
@@ -148,7 +172,7 @@ struct ExperimentFlowView: View {
                 run.learnedAt = .now
                 model.startPending(run)
                 let due = run.dueDate
-                Task { await Reminder.scheduleTest(at: due) }
+                Task { await Reminder.scheduleTest(kind, at: due) }
                 phase = .saved
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -167,7 +191,7 @@ struct ExperimentFlowView: View {
         VStack(alignment: .leading, spacing: 16) {
             Eyebrow("Gespeichert")
             Text("Bis in 2 Tagen!").font(.heading)
-            Text("Der Test wartet im Labor auf dich. Bitte wiederhol die Wörter nicht zwischendurch, sonst verfälscht das den Versuch.")
+            Text("Der Test wartet im Labor auf dich. Bitte wiederhol den Stoff nicht zwischendurch, sonst verfälscht das den Versuch.")
             Button("Fertig") { dismiss() }
                 .buttonStyle(PrimaryButtonStyle())
         }
@@ -177,7 +201,7 @@ struct ExperimentFlowView: View {
     private func distractView(_ step: Int) -> some View {
         Eyebrow("Kurze Ablenkung · \(step + 1) von 5")
         Text("Rechne im Kopf").font(.heading)
-        Text("Damit die Wörter nicht mehr frisch im Kopf sind.").foregroundStyle(Theme.muted)
+        Text("Damit der Stoff nicht mehr frisch im Kopf ist.").foregroundStyle(Theme.muted)
         Text("\(sum.a) − \(sum.b)")
             .font(.system(size: 44, weight: .bold, design: .rounded))
             .monospacedDigit()
@@ -193,13 +217,34 @@ struct ExperimentFlowView: View {
 
     @ViewBuilder
     private func testView(_ index: Int) -> some View {
-        let pair = order[index]
+        let item = order[index]
         progress(index, label: "Test")
-        Text("Was heißt das Wort? Keine Ahnung? Einfach leer lassen.").font(.subheadline).foregroundStyle(Theme.muted)
-        WordCard(pair: pair, showsAnswer: false)
-        answerField(prompt: "Auf Deutsch") { submitTest(pair, index: index) }
-        Button("Weiter") { submitTest(pair, index: index) }
-            .buttonStyle(PrimaryButtonStyle())
+        switch item {
+        case .word(let pair):
+            Text("Was heißt das Wort? Keine Ahnung? Einfach leer lassen.").font(.subheadline).foregroundStyle(Theme.muted)
+            ItemCard(item: item, showsAnswer: false)
+            answerField(prompt: "Auf Deutsch") { record(item, correct: RereadVsQuiz.isCorrect(answer, for: pair), index: index) }
+            Button("Weiter") { record(item, correct: RereadVsQuiz.isCorrect(answer, for: pair), index: index) }
+                .buttonStyle(PrimaryButtonStyle())
+        case .fact(let fact):
+            Text(fact.question).font(.heading)
+            VStack(spacing: 8) {
+                ForEach(options, id: \.self) { option in
+                    Button { record(item, correct: option == fact.answer, index: index) } label: {
+                        Text(option)
+                            .font(.body.weight(.medium))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 16)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            Button("Weiß ich nicht") { record(item, correct: false, index: index) }
+                .font(.subheadline.weight(.medium))
+        }
     }
 
     private func progress(_ index: Int, label: String) -> some View {
@@ -235,10 +280,6 @@ struct ExperimentFlowView: View {
         }
     }
 
-    private func checkPractice(_ pair: WordPair) {
-        checked = RereadVsQuiz.isCorrect(answer, for: pair)
-    }
-
     private func nextPractice(after index: Int) {
         answer = ""
         checked = nil
@@ -256,13 +297,21 @@ struct ExperimentFlowView: View {
         answer = ""
         order.shuffle()
         phase = .test(0)
+        prepareOptionsIfNeeded()
     }
 
-    private func submitTest(_ pair: WordPair, index: Int) {
-        run.results[pair.swahili] = RereadVsQuiz.isCorrect(answer, for: pair)
+    /// Antwortmöglichkeiten für Fakten-Fragen in zufälliger Reihenfolge
+    private func prepareOptionsIfNeeded() {
+        guard case .test(let index) = phase, case .fact(let fact) = order[index] else { return }
+        options = ([fact.answer] + fact.wrong).shuffled()
+    }
+
+    private func record(_ item: ExperimentItem, correct: Bool, index: Int) {
+        run.results[item.id] = correct
         answer = ""
         if index + 1 < order.count {
             phase = .test(index + 1)
+            prepareOptionsIfNeeded()
         } else {
             run.testedAt = .now
             model.complete(run)
@@ -271,18 +320,30 @@ struct ExperimentFlowView: View {
     }
 }
 
-struct WordCard: View {
-    let pair: WordPair
+/// Wortpaar oder Fakt als Karte
+struct ItemCard: View {
+    let item: ExperimentItem
     let showsAnswer: Bool
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text(pair.swahili).font(.system(size: 40, weight: .bold, design: .rounded))
-            Text("heißt").font(.subheadline).foregroundStyle(Theme.muted)
-            Text(showsAnswer ? pair.german : "?").font(.title2.weight(.semibold))
+        Group {
+            switch item {
+            case .word(let pair):
+                VStack(spacing: 6) {
+                    Text(pair.swahili).font(.system(size: 40, weight: .bold, design: .rounded))
+                    Text("heißt").font(.subheadline).foregroundStyle(Theme.muted)
+                    Text(showsAnswer ? pair.german : "?").font(.title2.weight(.semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+            case .fact(let fact):
+                Text(fact.text)
+                    .font(.system(.title3, design: .rounded, weight: .medium))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 6)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
+        .padding(.vertical, 18)
         .card()
         .accessibilityElement(children: .combine)
     }
@@ -292,33 +353,33 @@ struct ExperimentResultContent: View {
     let run: ExperimentRun
 
     var body: some View {
-        let reread = run.correct(.reread)
-        let quiz = run.correct(.quiz)
-        let verdict = RereadVsQuiz.verdict(reread: reread, quiz: quiz)
+        let verdict = Experiments.verdict(for: run)
         VStack(alignment: .leading, spacing: 16) {
-            Eyebrow("Dein Ergebnis")
+            Eyebrow("Dein Ergebnis · \(run.kind.shortTitle)")
             Text(verdict.title).font(.heading)
             HStack(spacing: 12) {
-                scoreTile("Nochmal gelesen", reread)
-                scoreTile("Abgefragt", quiz)
+                ForEach(run.kind.methods, id: \.self) { method in
+                    scoreTile(method.resultLabel, run.correct(method))
+                }
             }
             Text(verdict.detail)
-            Text("Deine Vermutung war: **\(run.prediction.text)**. \(RereadVsQuiz.predictionFeedback(prediction: run.prediction, winner: verdict.winner))")
+            Text("Deine Vermutung war: **\(Experiments.predictionText(run.prediction))**. \(Experiments.predictionFeedback(prediction: run.prediction, winner: verdict.winner))")
                 .font(.subheadline)
                 .padding(.leading, 12)
                 .overlay(alignment: .leading) { Rectangle().fill(Theme.accent).frame(width: 3) }
             if !run.delayed {
                 VStack(alignment: .leading, spacing: 8) {
                     Eyebrow("Gut zu wissen")
-                    Text("Du hast sofort getestet. Direkt danach schneidet Nochmal-Lesen oft gut ab. Der Vorteil des Abfragens zeigt sich in Studien meist erst nach Tagen (Roediger & Karpicke, 2006). Mach den Versuch nochmal mit 2 Tagen Pause.")
+                    Text("Du hast sofort getestet. Direkt danach schneidet Nochmal-Lesen oft gut ab. Der Vorteil anderer Methoden zeigt sich in Studien meist erst nach Tagen (zum Beispiel Roediger & Karpicke, 2006). Mach den Versuch nochmal mit 2 Tagen Pause.")
                         .font(.subheadline)
                 }
                 .card()
             }
-            DisclosureGroup("Welche Wörter saßen?") {
+            DisclosureGroup("Was saß, was nicht?") {
                 VStack(alignment: .leading, spacing: 10) {
-                    wordList(.reread, title: "Nochmal gelesen")
-                    wordList(.quiz, title: "Abgefragt")
+                    ForEach(run.kind.methods, id: \.self) { method in
+                        itemList(method)
+                    }
                 }
                 .padding(.top, 8)
             }
@@ -331,7 +392,7 @@ struct ExperimentResultContent: View {
             Eyebrow(title)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text("\(value)").font(.system(size: 44, weight: .bold, design: .rounded)).monospacedDigit()
-                Text("/ \(RereadVsQuiz.perMethod)").foregroundStyle(Theme.muted)
+                Text("/ \(run.kind.perMethod)").foregroundStyle(Theme.muted)
             }
         }
         .frame(maxWidth: .infinity)
@@ -339,12 +400,12 @@ struct ExperimentResultContent: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func wordList(_ method: Method, title: String) -> some View {
+    private func itemList(_ method: Method) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.footnote).foregroundStyle(Theme.muted)
-            ForEach(RereadVsQuiz.words.filter { run.assignment[$0.swahili] == method }, id: \.self) { pair in
-                let ok = run.results[pair.swahili] ?? false
-                Label("\(pair.swahili) = \(pair.german)", systemImage: ok ? "checkmark.circle.fill" : "xmark.circle")
+            Text(method.resultLabel).font(.footnote).foregroundStyle(Theme.muted)
+            ForEach(run.kind.items.filter { run.assignment[$0.id] == method }) { item in
+                let ok = run.results[item.id] ?? false
+                Label(item.label, systemImage: ok ? "checkmark.circle.fill" : "xmark.circle")
                     .font(.subheadline)
                     .foregroundStyle(ok ? Theme.good : Theme.bad)
             }
@@ -353,10 +414,11 @@ struct ExperimentResultContent: View {
 }
 
 struct LabView: View {
-    @Environment(AppModel.self) private var model
-    @Environment(Purchases.self) private var purchases
-    @State private var flow: ExperimentFlowView.Start?
-    @State private var showPremium = false
+    struct FlowRequest: Identifiable {
+        let kind: ExperimentKind
+        let continuesPending: Bool
+        var id: String { kind.rawValue + (continuesPending ? "-test" : "-neu") }
+    }
 
     private struct Upcoming: Identifiable {
         let icon: String
@@ -365,9 +427,13 @@ struct LabView: View {
         var id: String { title }
     }
 
+    @Environment(AppModel.self) private var model
+    @Environment(Purchases.self) private var purchases
+    @State private var flow: FlowRequest?
+    @State private var showPremium = false
+
     private let upcoming = [
         Upcoming(icon: "timer", title: "Am Stück oder verteilt?", subtitle: "Einmal 15 oder dreimal 5 Minuten"),
-        Upcoming(icon: "bubble.left.and.bubble.right", title: "Erklären oder Lesen?", subtitle: "Bringt dir lautes Erklären etwas?"),
         Upcoming(icon: "ear", title: "Hören, Lesen oder Schreiben?", subtitle: "Gibt es bei dir einen Unterschied?"),
         Upcoming(icon: "sunrise", title: "Lerche oder Eule?", subtitle: "Morgens oder abends lernen"),
     ]
@@ -377,63 +443,82 @@ struct LabView: View {
             Page {
                 Text("Labor").font(.display)
 
-                if let pending = model.pendingRun {
+                ForEach(model.pendingRuns) { pending in
                     let due = Date.now >= pending.dueDate
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow("Läuft")
-                        Text("„Lesen oder Abfragen“: gelernt am \(pending.learnedAt.formatted(date: .abbreviated, time: .omitted)). " +
+                        Text("„\(pending.kind.shortTitle)“: gelernt am \(pending.learnedAt.formatted(date: .abbreviated, time: .omitted)). " +
                              (due ? "Der Test ist fällig." : "Empfohlener Test ab \(pending.dueDate.formatted(.dateTime.weekday(.wide)))."))
-                        Button(due ? "Jetzt testen" : "Trotzdem jetzt testen") { flow = .pendingTest }
-                            .buttonStyle(PrimaryButtonStyle())
-                        Button("Versuch verwerfen", role: .destructive) { model.discardPending() }
+                        Button(due ? "Jetzt testen" : "Trotzdem jetzt testen") {
+                            flow = FlowRequest(kind: pending.kind, continuesPending: true)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        Button("Versuch verwerfen", role: .destructive) { model.discardPending(pending.kind) }
                             .font(.subheadline.weight(.medium))
                     }
                     .card()
                 }
 
-                VStack(alignment: .leading, spacing: 14) {
-                    Eyebrow("Selbstversuch 1 · kostenlos")
-                    Text("Lesen oder Abfragen?").font(.heading)
-                    Text("Du lernst 16 Wörter auf Suaheli. Die Hälfte liest du ein zweites Mal, die andere Hälfte fragst du dich selbst ab. Später testen wir alle 16 und vergleichen.")
-                    VStack(alignment: .leading, spacing: 4) {
-                        Label("etwa 10 Minuten, dazu ein kurzer Test später", systemImage: "clock")
-                        Label("Suaheli, damit niemand Vorwissen hat", systemImage: "globe.europe.africa")
-                        Label("Welches Wort in welche Gruppe kommt, entscheidet der Zufall", systemImage: "dice")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.muted)
-                    if model.pendingRun == nil {
-                        Button("Versuch starten") { flow = .new }
-                            .buttonStyle(PrimaryButtonStyle())
-                    }
-                    if !model.runs.isEmpty {
-                        Text("Schon \(model.runs.count)× gemacht. Ergebnisse im Profil.")
-                            .font(.footnote)
-                            .foregroundStyle(Theme.muted)
-                    }
+                ForEach(ExperimentKind.allCases) { kind in
+                    experimentCard(kind)
                 }
-                .card()
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(purchases.hasFullVersion ? "Kommt mit den nächsten Updates" : "In der Vollversion")
+                    Eyebrow("Kommt mit den nächsten Updates")
                     ForEach(upcoming) { item in
-                        Button { if !purchases.hasFullVersion { showPremium = true } } label: {
-                            EntryRow(title: item.title, subtitle: item.subtitle,
-                                     meta: purchases.hasFullVersion ? "bald" : "🔒") {
-                                Image(systemName: item.icon).font(.title2).foregroundStyle(Theme.accent)
-                            }
+                        EntryRow(title: item.title, subtitle: item.subtitle, meta: "bald") {
+                            Image(systemName: item.icon).font(.title2).foregroundStyle(Theme.muted)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
-            .fullScreenCover(item: $flow) { start in
-                ExperimentFlowView(start: start, pending: model.pendingRun)
+            .fullScreenCover(item: $flow) { request in
+                ExperimentFlowView(kind: request.kind,
+                                   pending: request.continuesPending ? model.pending(request.kind) : nil)
             }
             .sheet(isPresented: $showPremium) { PremiumView() }
             .onAppear {
-                if LaunchOptions.screenshotScreen == "experiment" && flow == nil { flow = .new }
+                guard flow == nil else { return }
+                switch LaunchOptions.screenshotScreen {
+                case "experiment": flow = FlowRequest(kind: .rereadQuiz, continuesPending: false)
+                case "explain": flow = FlowRequest(kind: .explainRead, continuesPending: false)
+                default: break
+                }
             }
         }
+    }
+
+    private func experimentCard(_ kind: ExperimentKind) -> some View {
+        let available = kind.isFree || purchases.unlocked
+        let doneCount = model.runs(of: kind).count
+        return VStack(alignment: .leading, spacing: 14) {
+            Eyebrow("Selbstversuch \(kind.number) · " + (kind.isFree ? "kostenlos" : "Vollversion"))
+            Text(kind.title).font(.heading)
+            Text(kind.summary)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(kind.details, id: \.self) { detail in
+                    Label(detail.text, systemImage: detail.icon)
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(Theme.muted)
+            if model.pending(kind) == nil {
+                if available {
+                    Button("Versuch starten") { flow = FlowRequest(kind: kind, continuesPending: false) }
+                        .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Button { showPremium = true } label: {
+                        Label("Mit der Vollversion freischalten", systemImage: "lock")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+            }
+            if doneCount > 0 {
+                Text("Schon \(doneCount)× gemacht. Ergebnisse im Profil.")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.muted)
+            }
+        }
+        .card()
     }
 }

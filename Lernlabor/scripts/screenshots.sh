@@ -6,7 +6,7 @@ set -euo pipefail
 APP="$1"
 OUT="$2"
 BUNDLE_ID="de.podolskis.lernlabor"
-SCREENS=(home result experiment lab myths profile)
+SCREENS=(home result experiment explain lab myths profile)
 mkdir -p "$OUT"
 
 find_device() {

@@ -160,10 +160,12 @@ struct AnimalIcon: View {
 struct MeerkatDrawing: View {
     var body: some View {
         Canvas { context, size in
-            let s = min(size.width, size.height) / 100
-            let dx = (size.width - 100 * s) / 2
+            // Die Figur liegt im Bereich x 29–71, y 8–98 und wird auf die volle Höhe skaliert.
+            let s = min(size.width / 44, size.height / 92)
+            let dx = (size.width - 44 * s) / 2 - 28 * s
+            let dy = (size.height - 92 * s) / 2 - 7 * s
             func rect(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
-                CGRect(x: dx + x * s, y: y * s, width: w * s, height: h * s)
+                CGRect(x: dx + x * s, y: dy + y * s, width: w * s, height: h * s)
             }
             let fur = Color(UIColor(hex: 0xC9A06F))
             let furDark = Color(UIColor(hex: 0xA97F52))
