@@ -115,7 +115,12 @@ SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!",
 MISSING_NUMBER = ["Welche Zahl fehlt?", "Hier zählen wir rückwärts!", "Zähl noch einmal von vorne!",
                   "Tippe unten auf die fehlende Zahl!"]
 POSITION_ANIMALS = ["die Katze", "der Hund", "die Maus", "der Hase"]
-POSITION_PHRASES = ["auf dem Tisch", "unter dem Tisch", "neben dem Tisch", "vor dem Tisch", "hinter dem Tisch"]
+POSITION_PHRASES = ["auf dem Tisch", "unter dem Tisch", "neben dem Tisch", "vor dem Tisch", "hinter dem Tisch",
+                    "links neben dem Tisch", "rechts neben dem Tisch"]
+MORE_LESS_TEXTS = ["Das sind gleich viele!", "Das sind nicht gleich viele.",
+                   "Welche Zahl ist größer?", "Welche Zahl ist kleiner?",
+                   "Das ist die größere Zahl.", "Das ist die kleinere Zahl.",
+                   "Die größere Zahl kommt beim Zählen später.", "Die kleinere Zahl kommt beim Zählen früher."]
 STORY_TEXTS = ["Was passiert zuerst?", "Tippe die Bilder der Reihe nach an!", "Das kommt später!",
                "Es schneit.", "Wir bauen einen Schneemann.", "Der Schneemann ist geschmolzen.",
                "Ein Samen keimt.", "Die Pflanze wächst.", "Eine Sonnenblume blüht.",
@@ -182,7 +187,7 @@ def advent_sentences():
 
 
 def new_games_sentences():
-    s = list(MISSING_NUMBER) + list(STORY_TEXTS)
+    s = list(MISSING_NUMBER) + list(STORY_TEXTS) + list(MORE_LESS_TEXTS)
     s += [f"Wo ist {a}?" for a in POSITION_ANIMALS]
     s += [p[0].upper() + p[1:] + "!" for p in POSITION_PHRASES]
     s += [f"{a[0].upper() + a[1:]} ist {p}." for a in POSITION_ANIMALS for p in POSITION_PHRASES]

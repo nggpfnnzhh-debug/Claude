@@ -102,21 +102,48 @@ final class TaskFactoryTests: XCTestCase {
         }
     }
 
-    func testMoreLessCorrectGroupMatchesQuestion() {
+    func testMoreLessCorrectAnswerMatchesQuestion() {
         for level in 0...Game.moreLess.maxLevel {
             for _ in 0..<60 {
                 for task in TaskFactory.tasks(for: .moreLess, level: level) {
-                    let counts = task.choices.compactMap { choice -> Int? in
-                        if case let .group(_, count) = choice.content { return count }
+                    XCTAssertEqual(task.choices.filter(\.isCorrect).count, 1)
+                    guard let correct = task.choices.first(where: \.isCorrect) else { return XCTFail("Keine Lösung") }
+
+                    // Zahlen vergleichen (ab Stufe 2)
+                    let numbers = task.choices.compactMap { choice -> Int? in
+                        if case let .number(value) = choice.content { return value }
                         return nil
                     }
-                    XCTAssertEqual(counts.count, 2)
-                    guard case let .group(_, answer)? = task.choices.first(where: \.isCorrect)?.content else {
-                        return XCTFail("Keine richtige Gruppe")
+                    if !numbers.isEmpty {
+                        XCTAssertEqual(level, 2)
+                        guard case let .number(answer) = correct.content else { return XCTFail("Keine Zahl") }
+                        let bigger = task.instruction == TaskFactory.biggerNumberQuestion
+                        XCTAssertEqual(answer, bigger ? numbers.max() : numbers.min(), task.instruction)
+                        continue
                     }
-                    let asksMore = task.instruction.contains(" mehr ")
-                    XCTAssertEqual(answer, asksMore ? counts.max() : counts.min(), task.instruction)
-                    XCTAssertTrue(counts.allSatisfy { $0 >= 2 }, "„Hier sind es eins“ wäre falsches Deutsch")
+
+                    let groups = task.choices.compactMap { choice -> (count: Int, spread: Bool)? in
+                        if case let .group(_, count, spread, _) = choice.content { return (count, spread) }
+                        return nil
+                    }
+                    XCTAssertEqual(groups.count, 2)
+                    XCTAssertTrue(groups.allSatisfy { $0.count >= 2 }, "„Hier sind es eins“ wäre falsches Deutsch")
+                    let counts = groups.map(\.count)
+                    if level == 0 {
+                        XCTAssertTrue((1...2).contains(abs(counts[0] - counts[1])), "Stufe 0: knapper Unterschied, zählen statt schätzen")
+                        XCTAssertFalse(task.choices.contains { $0.content == .same })
+                    }
+                    if counts[0] == counts[1] {
+                        XCTAssertEqual(correct.content, .same)
+                    } else {
+                        guard case let .group(_, answer, _, _) = correct.content else { return XCTFail("Keine Gruppe") }
+                        let asksMore = task.instruction.contains(" mehr ")
+                        XCTAssertEqual(answer, asksMore ? counts.max() : counts.min(), task.instruction)
+                        // Täuschbild: Wenn eine Gruppe breit gezeigt wird, ist es immer die kleinere.
+                        for group in groups where group.spread {
+                            XCTAssertEqual(group.count, counts.min())
+                        }
+                    }
                 }
             }
         }

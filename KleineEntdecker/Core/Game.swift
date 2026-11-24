@@ -111,7 +111,7 @@ enum Game: String, CaseIterable, Identifiable {
         case .memory:
             return "Konzentration und visuelles Gedächtnis trainieren, Tiernamen festigen."
         case .moreLess:
-            return "Mengen vergleichen, ohne genau zählen zu müssen – ein wichtiger Schritt zum Zahlverständnis."
+            return "Mengen vergleichen – zuerst mit knappem Unterschied, sodass Ihr Kind zählen statt schätzen muss. Danach kommen „Täuschbilder“, bei denen die kleinere Menge breiter verteilt ist, und die Antwort „gleich viele“. Auf der höchsten Stufe werden Zahlen bis 20 ohne Bilder verglichen – eine wichtige Grundlage für Mathe in der Schule."
         case .syllables:
             return "Wörter in Silben zerlegen. Silbenklatschen ist eine bewährte Vorübung für das Lesen- und Schreibenlernen."
         case .rhymes:
@@ -119,9 +119,9 @@ enum Game: String, CaseIterable, Identifiable {
         case .clock:
             return "Die analoge Uhr kennenlernen: erst volle, dann halbe Stunden."
         case .missingNumber:
-            return "Zahlen in ihrer Reihenfolge kennen: Welche Zahl kommt vor, welche nach einer anderen? Das Verständnis der Zahlenreihe gilt als einer der wichtigsten Grundsteine für Mathe in der Schule. Erst bis 5, dann bis 10, zuletzt bis 20 – auch rückwärts."
+            return "Zahlen in ihrer Reihenfolge kennen: Welche Zahl kommt vor, welche nach einer anderen? Das Verständnis der Zahlenreihe gilt als einer der wichtigsten Grundsteine für Mathe in der Schule. Erst bis 10, dann bis 20, zuletzt auch rückwärts."
         case .positions:
-            return "Raum-Lage-Begriffe verstehen: auf, unter, neben, vor und hinter. Räumliches Denken und die passenden Wörter dazu helfen später in Mathe – und sind oft Thema bei der Einschulungsuntersuchung."
+            return "Raum-Lage-Begriffe verstehen: zuerst auf, unter und neben, dann vor und hinter, zuletzt links und rechts. Räumliches Denken und die passenden Wörter dazu helfen später in Mathe – und gerade links und rechts sind oft Thema bei der Einschulungsuntersuchung."
         case .story:
             return "Bildergeschichten in die richtige Reihenfolge bringen: Was passiert zuerst, was danach? Das übt zeitliche Abfolgen, Ursache und Wirkung – und das Erzählen."
         case .buildNumbers:

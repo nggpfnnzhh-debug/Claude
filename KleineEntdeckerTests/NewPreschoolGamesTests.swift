@@ -24,8 +24,10 @@ final class NewPreschoolGamesTests: XCTestCase {
             for task in TaskFactory.tasks(for: .positions, level: level) {
                 XCTAssertEqual(task.choices.filter(\.isCorrect).count, 1)
                 for choice in task.choices {
-                    guard case let .scene(_, position) = choice.content else { return XCTFail("Kein Bild") }
+                    guard case let .scene(_, position, tablecloth) = choice.content else { return XCTFail("Kein Bild") }
                     XCTAssertTrue(TaskFactory.positionLevels[level].contains(position))
+                    // Vor/hinter nur mit Tischdecke, sonst wäre „vor“ kaum von „unter“ zu unterscheiden.
+                    XCTAssertEqual(tablecloth, level == 1)
                 }
             }
         }

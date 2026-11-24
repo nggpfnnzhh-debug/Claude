@@ -37,18 +37,21 @@ enum ChoiceContent: Hashable {
     case shape(ShapeKind, Color)
     case emoji(String)
     /// Eine Gruppe gleicher Bilder (Mehr oder weniger?).
-    case group(String, count: Int)
+    /// `spread`: groß und weit verteilt (Täuschbild). `variant` unterscheidet zwei gleich große Gruppen.
+    case group(String, count: Int, spread: Bool = false, variant: Int = 0)
+    /// Antwort „gleich viele“ (Mehr oder weniger?).
+    case same
     /// Anzahl Klatscher (Silben klatschen).
     case claps(Int)
     /// Analoge Uhr (Uhr lesen).
     case clock(hour: Int, minute: Int)
     /// Tier an einer Stelle beim Tisch (Oben, unten, neben, hinter).
-    case scene(animal: String, position: SpatialPosition)
+    case scene(animal: String, position: SpatialPosition, tablecloth: Bool = false)
 }
 
 /// Raum-Lage-Begriffe, von leicht (auf/unter) bis schwer (vor/hinter).
 enum SpatialPosition: String, CaseIterable {
-    case on, under, beside, inFront, behind
+    case on, under, beside, inFront, behind, left, right
 
     /// „auf dem Tisch“ usw.
     var phrase: String {
@@ -58,8 +61,13 @@ enum SpatialPosition: String, CaseIterable {
         case .beside: return "neben dem Tisch"
         case .inFront: return "vor dem Tisch"
         case .behind: return "hinter dem Tisch"
+        case .left: return "links neben dem Tisch"
+        case .right: return "rechts neben dem Tisch"
         }
     }
+
+    /// Vor und hinter brauchen eine Tischdecke bis zum Boden – sonst wäre „vor“ kaum von „unter“ zu unterscheiden.
+    var needsTablecloth: Bool { self == .inFront || self == .behind }
 }
 
 struct Choice: Identifiable, Hashable {
