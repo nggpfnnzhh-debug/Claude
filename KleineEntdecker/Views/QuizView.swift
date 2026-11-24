@@ -476,14 +476,36 @@ struct ChoiceContentView: View {
             Text(emoji)
                 .font(.system(size: 80 * scale))
                 .minimumScaleFactor(0.3)
-        case let .group(emoji, count):
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: count <= 4 ? 2 : (count <= 6 ? 3 : 4))
-            LazyVGrid(columns: columns, spacing: 2) {
-                ForEach(0..<count, id: \.self) { _ in
-                    Text(emoji)
-                        .font(.system(size: (count <= 4 ? 40 : (count <= 6 ? 32 : 24)) * scale))
-                        .minimumScaleFactor(0.5)
+        case let .group(emoji, count, spread, _):
+            if spread {
+                // Täuschbild: wenige, große Bilder weit verteilt – wirkt nach „mehr“.
+                let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: count <= 4 ? 2 : 3)
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(0..<count, id: \.self) { _ in
+                        Text(emoji)
+                            .font(.system(size: 36 * scale))
+                            .minimumScaleFactor(0.5)
+                    }
                 }
+            } else {
+                let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: count <= 4 ? 2 : (count <= 6 ? 3 : 4))
+                LazyVGrid(columns: columns, spacing: 2) {
+                    ForEach(0..<count, id: \.self) { _ in
+                        Text(emoji)
+                            .font(.system(size: (count <= 4 ? 40 : (count <= 6 ? 32 : 24)) * scale))
+                            .minimumScaleFactor(0.5)
+                    }
+                }
+            }
+        case .same:
+            VStack(spacing: 4 * scale) {
+                Text("=")
+                    .font(.system(size: 64 * scale, weight: .heavy, design: .rounded))
+                    .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.3))
+                Text("gleich viele")
+                    .font(.system(size: 16 * scale, weight: .bold, design: .rounded))
+                    .foregroundColor(.secondary)
+                    .minimumScaleFactor(0.5)
             }
         case let .claps(count):
             let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: count == 1 ? 1 : 2)
@@ -496,8 +518,8 @@ struct ChoiceContentView: View {
             }
         case let .clock(hour, minute):
             ClockFace(hour: hour, minute: minute)
-        case let .scene(animal, position):
-            SceneView(animal: animal, position: position)
+        case let .scene(animal, position, tablecloth):
+            SceneView(animal: animal, position: position, tablecloth: tablecloth)
         }
     }
 }
@@ -587,12 +609,16 @@ struct NumberLineView: View {
     }
 }
 
-/// Ein Tisch und ein Tier – auf, unter, neben, vor oder hinter dem Tisch.
+/// Ein Tisch und ein Tier – auf, unter, neben, vor, hinter oder links/rechts neben dem Tisch.
+/// Für vor/hinter hängt eine Tischdecke bis zum Boden: Dahinter schaut nur der Kopf hervor,
+/// davor sieht man das ganze Tier vor der Decke.
 struct SceneView: View {
     let animal: String
     let position: SpatialPosition
+    var tablecloth = false
 
     private let wood = Color(red: 0.62, green: 0.40, blue: 0.22)
+    private let cloth = Color(red: 0.30, green: 0.55, blue: 0.85)
 
     var body: some View {
         GeometryReader { proxy in
@@ -610,32 +636,42 @@ struct SceneView: View {
 
                 // Hinter und unter dem Tisch: zuerst zeichnen, damit der Tisch davor liegt.
                 if position == .behind {
-                    animalText(size * 0.8).position(x: w / 2, y: topY - size * 0.18)
+                    animalText(size * 0.85).position(x: w / 2, y: topY - size * 0.05)
                 }
                 if position == .under {
                     animalText(size * 0.85).position(x: w / 2, y: floorY - size * 0.42)
                 }
 
-                // Tisch: Platte und zwei Beine
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(wood)
-                    .frame(width: w * 0.56, height: h * 0.08)
-                    .position(x: w / 2, y: topY)
-                ForEach([0.31, 0.69], id: \.self) { x in
-                    Rectangle()
+                if tablecloth {
+                    // Tischdecke von der Platte bis zum Boden
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(cloth)
+                        .frame(width: w * 0.56, height: floorY - topY + h * 0.04)
+                        .position(x: w / 2, y: (topY + floorY) / 2)
+                } else {
+                    // Tisch: Platte und zwei Beine
+                    RoundedRectangle(cornerRadius: 3)
                         .fill(wood)
-                        .frame(width: w * 0.04, height: floorY - topY)
-                        .position(x: w * x, y: (topY + floorY) / 2)
+                        .frame(width: w * 0.56, height: h * 0.08)
+                        .position(x: w / 2, y: topY)
+                    ForEach([0.31, 0.69], id: \.self) { x in
+                        Rectangle()
+                            .fill(wood)
+                            .frame(width: w * 0.04, height: floorY - topY)
+                            .position(x: w * x, y: (topY + floorY) / 2)
+                    }
                 }
 
                 switch position {
                 case .on:
                     animalText(size).position(x: w / 2, y: topY - h * 0.04 - size * 0.5)
-                case .beside:
+                case .beside, .right:
                     animalText(size).position(x: w * 0.87, y: floorY - size * 0.5)
+                case .left:
+                    animalText(size).position(x: w * 0.13, y: floorY - size * 0.5)
                 case .inFront:
-                    // Größer und tiefer im Bild: näher beim Betrachter.
-                    animalText(size * 1.35).position(x: w / 2, y: floorY - size * 0.45)
+                    // Ganz zu sehen, vor der Decke und etwas größer: näher beim Betrachter.
+                    animalText(size * 1.2).position(x: w / 2, y: floorY - size * 0.5)
                 case .under, .behind:
                     EmptyView()
                 }

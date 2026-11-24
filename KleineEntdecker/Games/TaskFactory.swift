@@ -320,39 +320,99 @@ enum TaskFactory {
 
     // MARK: - Mehr oder weniger? (Vorschule)
 
-    /// Je Stufe: Mengenbereich und Mindestabstand. Ab 2, damit „Hier sind es …“ immer stimmt.
-    static let moreLessRanges: [(range: ClosedRange<Int>, minimumDifference: Int)] = [
-        (2...5, 2), (2...8, 2), (2...10, 1),
-    ]
+    /// Stufe 0: Mengen bis 10 mit kleinem Unterschied – hier muss man zählen statt schätzen.
+    /// Stufe 1: Täuschbilder (die kleinere Menge ist breiter verteilt) und „gleich viele“.
+    /// Stufe 2: Zahlen ohne Bilder vergleichen (bis 20), dazu weiter Täuschbilder.
+    static let moreLessRange = 2...10
+    static let sameAmount = "Das sind gleich viele!"
+    static let notSameAmount = "Das sind nicht gleich viele."
+    static let biggerNumberQuestion = "Welche Zahl ist größer?"
+    static let smallerNumberQuestion = "Welche Zahl ist kleiner?"
+    static let biggerNumberAnswer = "Das ist die größere Zahl."
+    static let smallerNumberAnswer = "Das ist die kleinere Zahl."
+    static let biggerNumberHint = "Die größere Zahl kommt beim Zählen später."
+    static let smallerNumberHint = "Die kleinere Zahl kommt beim Zählen früher."
 
     static func moreLessTasks(level: Int) -> [QuizTask] {
-        let (range, minimumDifference) = moreLessRanges[level]
-        return varied(currentCountItems, count: tasksPerRound).map { item in
-            var a = 0, b = 0
-            repeat {
-                a = Int.random(in: range)
-                b = Int.random(in: range)
-            } while abs(a - b) < minimumDifference
-            // Stufe 0 fragt nur nach „mehr“ – das ist für Kinder leichter als „weniger“.
-            let askMore = level == 0 || Bool.random()
-            let answer = askMore ? max(a, b) : min(a, b)
-            let other = askMore ? min(a, b) : max(a, b)
-
-            let choices = [a, b].map { count in
-                Choice(
-                    content: .group(item.emoji, count: count),
-                    isCorrect: count == answer,
-                    spokenName: "\(count) \(item.plural)",
-                    wrongFeedback: "Zähl mal nach! Hier sind es \(Phrases.numberWords[other])."
-                )
+        varied(currentCountItems, count: tasksPerRound).enumerated().map { index, item in
+            switch level {
+            case 0: return groupComparison(item: item, tricky: false, allowSame: false)
+            case 1: return groupComparison(item: item, tricky: true, allowSame: index % 3 == 2)
+            // Abwechselnd Ziffern und Täuschbilder, damit die Mengen nicht vergessen werden.
+            default: return index.isMultiple(of: 2) ? numberComparison() : groupComparison(item: item, tricky: true, allowSame: false)
             }
-            return QuizTask(
-                prompt: .empty,
-                instruction: "Wo sind \(askMore ? "mehr" : "weniger") \(item.plural)?",
-                choices: choices,
-                correctFeedback: "Hier sind es \(Phrases.numberWords[answer]). \(askMore ? "Das sind mehr!" : "Das sind weniger!")"
+        }
+    }
+
+    private static func groupComparison(item: CountItem, tricky: Bool, allowSame: Bool) -> QuizTask {
+        var a = 0, b = 0
+        if allowSame {
+            a = Int.random(in: 4...8)
+            b = a
+        } else {
+            repeat {
+                a = Int.random(in: moreLessRange)
+                b = Int.random(in: moreLessRange)
+            } while a == b || abs(a - b) > 2
+        }
+        let askMore = Bool.random()
+        let target = askMore ? max(a, b) : min(a, b)
+        let same = a == b
+        // Täuschbild: Die kleinere Menge wird groß und weit verteilt gezeigt – sieht nach „mehr“ aus.
+        let smaller = min(a, b)
+        let groups = [a, b].enumerated().map { offset, count in
+            (count: count, spread: tricky && !same && count == smaller, id: offset)
+        }
+
+        var choices = groups.map { group in
+            Choice(
+                content: .group(item.emoji, count: group.count, spread: group.spread, variant: group.id),
+                isCorrect: !same && group.count == target,
+                spokenName: "\(group.count) \(item.plural)",
+                wrongFeedback: "Zähl mal nach! Hier sind es \(Phrases.numberWords[group.count])."
             )
         }
+        if tricky {
+            choices.append(Choice(
+                content: .same,
+                isCorrect: same,
+                spokenName: "Gleich viele",
+                wrongFeedback: "Zähl mal nach! \(notSameAmount)"
+            ))
+        }
+        let correctFeedback = same
+            ? "Hier sind es \(Phrases.numberWords[a]). \(sameAmount)"
+            : "Hier sind es \(Phrases.numberWords[target]). \(askMore ? "Das sind mehr!" : "Das sind weniger!")"
+        return QuizTask(
+            prompt: .empty,
+            instruction: "Wo sind \(askMore ? "mehr" : "weniger") \(item.plural)?",
+            choices: choices,
+            correctFeedback: correctFeedback
+        )
+    }
+
+    private static func numberComparison() -> QuizTask {
+        var a = 0, b = 0
+        repeat {
+            a = Int.random(in: 1...20)
+            b = Int.random(in: 1...20)
+        } while a == b
+        let askBigger = Bool.random()
+        let target = askBigger ? max(a, b) : min(a, b)
+        let choices = [a, b].map { value in
+            Choice(
+                content: .number(value),
+                isCorrect: value == target,
+                spokenName: "\(value)",
+                wrongFeedback: askBigger ? biggerNumberHint : smallerNumberHint
+            )
+        }
+        return QuizTask(
+            prompt: .empty,
+            instruction: askBigger ? biggerNumberQuestion : smallerNumberQuestion,
+            choices: choices,
+            correctFeedback: "\(Phrases.numberWords[target].capitalized)! \(askBigger ? biggerNumberAnswer : smallerNumberAnswer)"
+        )
     }
 
     // MARK: - Silben klatschen (Vorschule)
@@ -396,11 +456,12 @@ enum TaskFactory {
 
     static let syllableCountTexts = ["Eine Silbe!", "Zwei Silben!", "Drei Silben!", "Vier Silben!"]
     /// Je Stufe: höchste Silbenzahl der Wörter und der Antwortmöglichkeiten.
-    static let syllableLimits = [(words: 2, choices: 3), (words: 3, choices: 3), (words: 4, choices: 4)]
+    /// Stufe 0: Wörter mit bis zu drei Silben, Stufe 1: bis vier, Stufe 2: nur lange Wörter (3–4 Silben).
+    static let syllableLimits = [(words: 3, choices: 3), (words: 4, choices: 4), (words: 4, choices: 4)]
 
     static func syllableTasks(level: Int) -> [QuizTask] {
         let limits = syllableLimits[level]
-        let pool = syllableWords.filter { $0.syllables.count <= limits.words }
+        let pool = syllableWords.filter { $0.syllables.count <= limits.words && (level < 2 || $0.syllables.count >= 3) }
         return Array(pool.shuffled().prefix(tasksPerRound)).map { word in
             let count = word.syllables.count
             let choices = (1...limits.choices).map { claps in
@@ -523,13 +584,13 @@ enum TaskFactory {
 
 extension TaskFactory {
     /// Größte Zahl je Stufe; ab Stufe 2 auch rückwärts.
-    static let missingNumberLimits = [5, 10, 20]
+    static let missingNumberLimits = [10, 20, 20]
     static let countBackwards = "Hier zählen wir rückwärts!"
     static let countFromStart = "Zähl noch einmal von vorne!"
 
     static func missingNumberTasks(level: Int) -> [QuizTask] {
         let upper = missingNumberLimits[level]
-        let length = level == 0 ? 4 : 5
+        let length = 5
         return (0..<tasksPerRound).map { _ in
             let start = Int.random(in: 1...(upper - length + 1))
             var numbers = Array(start..<(start + length))
@@ -579,11 +640,11 @@ extension TaskFactory {
         .init(emoji: "🐰", name: "der Hase"),
     ]
 
-    /// Welche Begriffe je Stufe vorkommen.
+    /// Welche Begriffe je Stufe vorkommen: erst auf/unter/neben, dann vor/hinter, zuletzt links/rechts.
     static let positionLevels: [[SpatialPosition]] = [
-        [.on, .under],
         [.on, .under, .beside],
-        SpatialPosition.allCases,
+        [.inFront, .behind, .beside],
+        [.left, .right, .on],
     ]
 
     static func positionQuestion(_ animal: PositionAnimal) -> String {
@@ -605,9 +666,10 @@ extension TaskFactory {
         return zip(targets, animals).map { target, animal in
             let others = positions.filter { $0 != target }.shuffled().prefix(2)
             let options = ([target] + others).shuffled()
+            let tablecloth = positions.contains { $0.needsTablecloth }
             let choices = options.map { position in
                 Choice(
-                    content: .scene(animal: animal.emoji, position: position),
+                    content: .scene(animal: animal.emoji, position: position, tablecloth: tablecloth),
                     isCorrect: position == target,
                     spokenName: positionStatement(animal, position),
                     wrongFeedback: positionStatement(animal, position)
