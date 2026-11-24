@@ -1,0 +1,94 @@
+name: Lernlabor Build & Tests
+
+on:
+  push:
+    paths:
+      - "Lernlabor/**"
+      - ".github/workflows/lernlabor.yml"
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Mac-Image (Standard macos-26; Ausweichen z. B. auf macos-15)
+        required: false
+        default: macos-26
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    permissions:
+      contents: write
+    runs-on: ${{ inputs.runner || 'macos-26' }}
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: Lernlabor
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Neuestes Xcode auswählen
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "::error::Kein Xcode 26+ gefunden"; ls /Applications; exit 1; fi
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: XcodeGen installieren und Projekt erzeugen
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Tests im iPhone-Simulator ausführen
+        run: |
+          set -o pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for k,v in d.items() if "iOS" in k for x in v if x["name"].startswith("iPhone")))')
+          echo "Simulator: $UDID"
+          xcodebuild test \
+            -project Lernlabor.xcodeproj \
+            -scheme Lernlabor \
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Simulator-App bauen
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Lernlabor.xcodeproj \
+            -scheme Lernlabor \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build/sim \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO
+          cd build/sim/Build/Products/Debug-iphonesimulator
+          ditto -c -k --sequesterRsrc --keepParent Lernlabor.app "$GITHUB_WORKSPACE/Lernlabor-Simulator.zip"
+
+      - name: Simulator-App bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lernlabor-Simulator
+          path: Lernlabor-Simulator.zip
+
+      - name: Screenshots erzeugen (Vorschau)
+        run: scripts/screenshots.sh build/sim/Build/Products/Debug-iphonesimulator/Lernlabor.app screenshots
+
+      - name: Screenshots bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lernlabor-Screenshots
+          path: Lernlabor/screenshots
+
+      # Vorschau zum Ansehen ohne Download: verkleinerte Bilder im Branch "lernlabor-vorschau-<branch>"
+      - name: Vorschau in eigenen Branch legen
+        run: |
+          mkdir -p "$RUNNER_TEMP/preview"
+          for f in screenshots/*.png; do
+            sips -Z 900 "$f" --out "$RUNNER_TEMP/preview/$(basename "$f")" >/dev/null
+          done
+          cd "$RUNNER_TEMP/preview"
+          git init -q -b "lernlabor-vorschau-${GITHUB_REF_NAME}"
+          git add .
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Lernlabor-Vorschau für ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "lernlabor-vorschau-${GITHUB_REF_NAME}"
