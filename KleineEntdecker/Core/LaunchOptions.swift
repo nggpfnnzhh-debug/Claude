@@ -19,7 +19,12 @@ enum LaunchOptions {
         }
         let value = arguments[index + 1]
         if let festival = Seasonal.Festival(rawValue: value) {
-            return Seasonal(season: .autumn, festival: festival, isFestivalDay: true)
+            return Seasonal(
+                season: festival == .halloween ? .autumn : .winter,
+                festival: festival,
+                isFestivalDay: true,
+                adventCandles: festival == .advent || festival == .nikolaus ? 2 : 0
+            )
         }
         return Seasonal.Season(rawValue: value).map { Seasonal(season: $0) }
     }
@@ -32,10 +37,10 @@ enum LaunchOptions {
     static func prepareScreenshotModeIfNeeded() {
         guard screenshotScreen != nil else { return }
         let demoStars = ["counting": 4, "colors": 3, "shapes": 2, "letters": 3, "patterns": 1, "memory": 2,
-                         "moreLess": 1, "syllables": 2, "rhymes": 1, "clock": 1]
+                         "moreLess": 1, "syllables": 2, "rhymes": 1, "clock": 1, "buildNumbers": 1]
         UserDefaults.standard.set(demoStars, forKey: "starsByGame")
         // Etwas fortgeschrittenere Aufgaben wirken auf Screenshots anschaulicher.
-        UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1], forKey: "levelsByGame")
+        UserDefaults.standard.set(["counting": 1, "clock": 1, "syllables": 1, "buildNumbers": 2, "positions": 2, "story": 2], forKey: "levelsByGame")
         UserDefaults.standard.set(0, forKey: SettingsKey.breakMinutes)
         UserDefaults.standard.set("Biene", forKey: SettingsKey.childName)
         UserDefaults.standard.set("Kleine", forKey: SettingsKey.childAdjective)
@@ -43,5 +48,10 @@ enum LaunchOptions {
         // Store-Screenshots sollen das ganze Jahr passen.
         UserDefaults.standard.set(screenshotSeason != nil, forKey: SettingsKey.seasonalThemes)
         Seasonal.override = screenshotSeason
+        if screenshotScreen == "adventCalendar" {
+            // Vorschau: Nikolaustag, die ersten fünf Türchen sind schon offen.
+            AdventCalendar.dayOverride = 6
+            (1...5).forEach { AdventCalendar.markOpened($0) }
+        }
     }
 }

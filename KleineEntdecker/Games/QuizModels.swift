@@ -42,6 +42,24 @@ enum ChoiceContent: Hashable {
     case claps(Int)
     /// Analoge Uhr (Uhr lesen).
     case clock(hour: Int, minute: Int)
+    /// Tier an einer Stelle beim Tisch (Oben, unten, neben, hinter).
+    case scene(animal: String, position: SpatialPosition)
+}
+
+/// Raum-Lage-Begriffe, von leicht (auf/unter) bis schwer (vor/hinter).
+enum SpatialPosition: String, CaseIterable {
+    case on, under, beside, inFront, behind
+
+    /// „auf dem Tisch“ usw.
+    var phrase: String {
+        switch self {
+        case .on: return "auf dem Tisch"
+        case .under: return "unter dem Tisch"
+        case .beside: return "neben dem Tisch"
+        case .inFront: return "vor dem Tisch"
+        case .behind: return "hinter dem Tisch"
+        }
+    }
 }
 
 struct Choice: Identifiable, Hashable {
@@ -61,6 +79,8 @@ enum Prompt: Hashable {
     case sequence([String])
     /// Ein Bild, das beim Antippen in Silben vorgelesen wird.
     case word(emoji: String, syllables: String)
+    /// Zahlenreihe mit Lücke (`nil`).
+    case numberLine([Int?])
     case empty
 }
 

@@ -41,6 +41,29 @@ final class SeasonalTests: XCTestCase {
         XCTAssertNil(Seasonal.at(date(11, 1), calendar: berlin).festival)
     }
 
+    func testAdventCandles() {
+        // 2026: 1. Advent am 29.11., 4. Advent am 20.12.
+        XCTAssertEqual(Seasonal.adventCandles(at: date(11, 28), calendar: berlin), 0)
+        XCTAssertEqual(Seasonal.adventCandles(at: date(11, 29), calendar: berlin), 1)
+        XCTAssertEqual(Seasonal.adventCandles(at: date(12, 6), calendar: berlin), 2)
+        XCTAssertEqual(Seasonal.adventCandles(at: date(12, 19), calendar: berlin), 3)
+        XCTAssertEqual(Seasonal.adventCandles(at: date(12, 20), calendar: berlin), 4)
+        XCTAssertEqual(Seasonal.adventCandles(at: date(12, 24), calendar: berlin), 0)
+
+        let advent = Seasonal.at(date(12, 2), calendar: berlin)
+        XCTAssertEqual(advent.festival, .advent)
+        XCTAssertEqual(advent.announcement, "Es ist Adventszeit! Am Adventskranz brennt schon eine Kerze.")
+    }
+
+    func testWinterFestivals() {
+        XCTAssertEqual(Seasonal.at(date(12, 5), calendar: berlin).announcement, "Morgen ist Nikolaus!")
+        XCTAssertEqual(Seasonal.at(date(12, 6), calendar: berlin).announcement, "Heute ist Nikolaus!")
+        XCTAssertEqual(Seasonal.at(date(12, 24), calendar: berlin).festival, .christmas)
+        XCTAssertEqual(Seasonal.at(date(12, 31), calendar: berlin).announcement, "Heute ist Silvester!")
+        XCTAssertEqual(Seasonal.at(date(1, 1), calendar: berlin).announcement, "Frohes neues Jahr!")
+        XCTAssertNil(Seasonal.at(date(1, 2), calendar: berlin).festival)
+    }
+
     func testHalloweenMotifsAppearInCounting() {
         Seasonal.override = Seasonal(season: .autumn, festival: .halloween, isFestivalDay: true)
         let emojis = (0..<20).flatMap { _ in TaskFactory.tasks(for: .counting, level: 0) }.compactMap { task -> String? in

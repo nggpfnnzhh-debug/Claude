@@ -6,7 +6,7 @@ set -euo pipefail
 APP="$1"
 OUT="$2"
 BUNDLE_ID="de.podolskis.kleineentdecker"
-SCREENS=(home counting syllables clock letters)
+SCREENS=(home counting syllables clock letters buildNumbers)
 mkdir -p "$OUT"
 
 find_device() {
@@ -60,7 +60,7 @@ shoot iPhone 'iPhone.*Pro Max'
 shoot iPad 'iPad Pro 13-inch'
 # Nur für die Vorschau: normales 6,1"-iPhone (Größe wie iPhone 13–17), nicht für den App Store.
 if [ "${PREVIEW_SMALL_IPHONE:-}" = "1" ]; then
-  SCREENS+=(home@halloween counting@halloween memory@halloween)
+  SCREENS+=(home@advent adventCalendar missingNumber positions story)
   shoot iPhoneKlein '^iPhone 1[3-9]$'
 fi
 

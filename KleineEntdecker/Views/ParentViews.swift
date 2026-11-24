@@ -106,6 +106,9 @@ struct ParentSettingsView: View {
     @AppStorage(SettingsKey.childAdjective) private var childAdjective = "Kleine"
     @AppStorage(SettingsKey.childEmoji) private var childEmoji = ChildProfile.defaultEmoji
     @State private var confirmReset = false
+    @State private var previewDay = 1
+    @State private var showCalendarPreview = false
+    @State private var confirmCalendarReset = false
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
@@ -168,6 +171,26 @@ struct ParentSettingsView: View {
                     Text("Einstellungen")
                 } footer: {
                     Text("Die Pausen-Erinnerung unterbricht das Spiel freundlich. Weiterspielen ist nur über die Elternschranke möglich. Kurze Einheiten von 10–15 Minuten sind in diesem Alter ideal.\n\n„Feste & Jahreszeiten“ schmückt die App passend zum Datum, z. B. mit fallenden Blättern im Herbst oder Kürbissen zu Halloween, und bringt passende Motive in die Spiele.")
+                }
+
+                Section {
+                    Stepper("Tag: \(previewDay). Dezember", value: $previewDay, in: 1...26)
+                    Button("Vorschau öffnen") { showCalendarPreview = true }
+                    Button("Geöffnete Türchen zurücksetzen", role: .destructive) { confirmCalendarReset = true }
+                } header: {
+                    Text("Adventskalender")
+                } footer: {
+                    Text("Vom 1. bis 26. Dezember ist der Kalender auf dem Startbildschirm zu sehen. In der Vorschau können Sie jeden Tag ausprobieren – geöffnete Türchen werden dabei nicht gespeichert, die Überraschung für Ihr Kind bleibt also erhalten.")
+                }
+                .fullScreenCover(isPresented: $showCalendarPreview) {
+                    AdventCalendarView(today: previewDay, isPreview: true) {
+                        Speaker.shared.stop()
+                        showCalendarPreview = false
+                    }
+                    .modifier(AdaptiveLayoutScale())
+                }
+                .confirmationDialog("Alle geöffneten Türchen wieder schließen?", isPresented: $confirmCalendarReset, titleVisibility: .visible) {
+                    Button("Türchen schließen", role: .destructive) { AdventCalendar.resetOpenedDoors() }
                 }
 
                 Section("Was lernt mein Kind?") {

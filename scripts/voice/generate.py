@@ -99,9 +99,94 @@ NICKNAMES = [("Biene", "Kleine"), ("Bär", "Kleiner"), ("Fuchs", "Kleiner"), ("M
              ("Hase", "Kleiner"), ("Löwe", "Kleiner"), ("Schildkröte", "Kleine")]
 # „Huhus Jahr“ (Seasonal.swift): Herbst und Halloween
 SEASONAL_COUNT_PLURALS = ["Kürbisse", "Fledermäuse", "Gespenster", "Bonbons",
-                          "Blätter", "Kastanien", "Pilze", "Igel"]
-SEASONAL_MEMORY = ["Kürbis", "Fledermaus", "Gespenst", "Bonbon", "Igel", "Eichhörnchen", "Pilz", "Kastanie"]
-SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!"]
+                          "Blätter", "Kastanien", "Pilze", "Igel",
+                          "Geschenke", "Kerzen", "Kekse", "Tannenbäume",
+                          "Schneemänner", "Schneeflocken", "Handschuhe", "Schlitten"]
+SEASONAL_MEMORY = ["Kürbis", "Fledermaus", "Gespenst", "Bonbon", "Igel", "Eichhörnchen", "Pilz", "Kastanie",
+                   "Tannenbaum", "Geschenk", "Kerze", "Keks", "Schneemann", "Handschuh", "Schlitten", "Pinguin"]
+SEASONAL_ANNOUNCEMENTS = ["Bald ist Halloween!", "Heute ist Halloween!",
+                          "Es ist Adventszeit!", "Am Adventskranz brennt schon eine Kerze.",
+                          "Am Adventskranz brennen schon zwei Kerzen.", "Am Adventskranz brennen schon drei Kerzen.",
+                          "Am Adventskranz brennen schon vier Kerzen.",
+                          "Morgen ist Nikolaus!", "Heute ist Nikolaus!", "Frohe Weihnachten!",
+                          "Heute ist Silvester!", "Frohes neues Jahr!"]
+
+# Welche Zahl fehlt?, Oben/unten/neben, Bildergeschichten (TaskFactory.swift, Stories.swift)
+MISSING_NUMBER = ["Welche Zahl fehlt?", "Hier zählen wir rückwärts!", "Zähl noch einmal von vorne!",
+                  "Tippe unten auf die fehlende Zahl!"]
+POSITION_ANIMALS = ["die Katze", "der Hund", "die Maus", "der Hase"]
+POSITION_PHRASES = ["auf dem Tisch", "unter dem Tisch", "neben dem Tisch", "vor dem Tisch", "hinter dem Tisch"]
+STORY_TEXTS = ["Was passiert zuerst?", "Tippe die Bilder der Reihe nach an!", "Das kommt später!",
+               "Es schneit.", "Wir bauen einen Schneemann.", "Der Schneemann ist geschmolzen.",
+               "Ein Samen keimt.", "Die Pflanze wächst.", "Eine Sonnenblume blüht.",
+               "Wolken ziehen auf.", "Es regnet.", "Ein Regenbogen!",
+               "Wir holen die Zutaten.", "Wir rühren den Teig.", "Der Kuchen ist fertig!",
+               "Ein Ei.", "Das Küken schlüpft.", "Ein kleines Küken.", "Ein großes Huhn.",
+               "Die Sonne geht auf.", "Mittags scheint die Sonne.", "Am Abend geht die Sonne unter.",
+               "In der Nacht scheint der Mond.",
+               "Ein Baby.", "Ein Kind.", "Ein Erwachsener.", "Ein alter Mensch.",
+               "Der Apfelbaum blüht.", "Ein kleiner grüner Apfel wächst.", "Der Apfel ist reif.", "Ein Apfelkuchen!"]
+
+
+# Huhus Adventskalender (AdventCalendar.swift)
+ADVENT_DOORS = [
+    ("Eine Schneeflocke!", "Tanz wie eine Schneeflocke durchs Zimmer!"),
+    ("Ein Rentier!", "Hüpf dreimal wie ein Rentier!"),
+    ("Ein Plätzchen!", "Welche Plätzchen magst du am liebsten?"),
+    ("Ein Tannenbaum!", "Streck dich so groß wie ein Tannenbaum!"),
+    ("Ein Stiefel!", "Heute Abend stellen viele Kinder ihre Stiefel raus."),
+    ("Heute ist Nikolaus!", "Sing ein Lied für den Nikolaus!"),
+    ("Ein Schneemann!", "Mal mit dem Finger einen Schneemann in die Luft!"),
+    ("Eine Glocke!", "Kling, kling – mach ein Glöckchen-Geräusch!"),
+    ("Handschuhe!", "Wie viele Finger hat ein Handschuh?"),
+    ("Ein Pinguin!", "Watschel wie ein Pinguin!"),
+    ("Ein Stern!", "Mach dich groß wie ein Stern: Arme und Beine weit auseinander!"),
+    ("Ein Schlitten!", "Setz dich hin und fahr Schlitten – wuuusch!"),
+    ("Eine Kerze!", "Kerzen zündet man nur mit Erwachsenen an."),
+    ("Ein Geschenk!", "Was könntest du jemandem schenken? Ein Bild oder eine Umarmung!"),
+    ("Ein Apfel!", "Im Winter gibt es Bratäpfel mit Zimt."),
+    ("Huhu!", "Wem möchtest du heute Danke sagen?"),
+    ("Ein Schal!", "Zieh dich warm an, wenn du rausgehst!"),
+    ("Ein Eichhörnchen!", "Das Eichhörnchen schläft im Winter viel in seinem Nest."),
+    ("Musik!", "Sing dein liebstes Winterlied!"),
+    ("Der Mond!", "Schau heute Abend mit deiner Familie zum Himmel!"),
+    ("Die Sonne!", "Heute ist der kürzeste Tag des Jahres! Danach werden die Tage wieder länger."),
+    ("Schokolade!", "Teilen macht Freude!"),
+    ("Ein Teddy!", "Kuschel heute mit deinem Lieblingskuscheltier!"),
+    ("Heute ist Heiligabend!", "Huhu wünscht dir frohe Weihnachten!"),
+]
+
+
+def split_sentences(text: str):
+    """Zerlegt wie Speaker.sentences(in:) an . ! ? – so sind die Aufnahmen geschnitten."""
+    result, current = [], ""
+    for ch in text:
+        current += ch
+        if ch in ".!?":
+            if current.strip():
+                result.append(current.strip())
+            current = ""
+    if current.strip():
+        result.append(current.strip())
+    return result
+
+
+def advent_sentences():
+    s = ["Huhus Adventskalender!", "Diese Tür ist noch zu.",
+         "Dein Türchen für heute ist schon offen. Morgen geht das nächste auf!"]
+    for title, idea in ADVENT_DOORS:
+        s += [title, idea]
+    s += [f"Finde die Tür mit der Zahl {number_word(n)}!" for n in range(1, 25)]
+    s += ["Noch einmal schlafen!"] + [f"Noch {number_word(n)}mal schlafen!" for n in range(2, 24)]
+    return s
+
+
+def new_games_sentences():
+    s = list(MISSING_NUMBER) + list(STORY_TEXTS)
+    s += [f"Wo ist {a}?" for a in POSITION_ANIMALS]
+    s += [p[0].upper() + p[1:] + "!" for p in POSITION_PHRASES]
+    s += [f"{a[0].upper() + a[1:]} ist {p}." for a in POSITION_ANIMALS for p in POSITION_PHRASES]
+    return s
 MEMORY_ANIMALS = ["Hund", "Katze", "Maus", "Hase", "Fuchs", "Bär", "Panda", "Frosch",
                   "Affe", "Schwein", "Kuh", "Löwe"]
 FIXED = [
@@ -127,6 +212,30 @@ FIXED = [
     # Silben
     "Hör nochmal genau hin.",
 ]
+
+
+# Zahlen bauen (NumberBuilder.swift)
+TENS_WORDS = ["", "zehn", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"]
+BUILD_NUMBERS = list(range(10, 21)) + list(range(30, 100, 10)) + [n for n in range(21, 100) if n % 10]
+
+
+def number_word(n: int) -> str:
+    if n <= 20:
+        return NUMBER_WORDS[n]
+    tens, ones = divmod(n, 10)
+    if ones == 0:
+        return TENS_WORDS[tens]
+    return ("ein" if ones == 1 else NUMBER_WORDS[ones]) + "und" + TENS_WORDS[tens]
+
+
+def number_builder_sentences():
+    s = ["Zähl die Zehnerstangen!", "Zähl die einzelnen Punkte!", "Zuerst kommen die Zehner!",
+         "Tippe unten auf die richtigen Ziffern!"]
+    for n in BUILD_NUMBERS:
+        s += [f"Bau die Zahl {number_word(n)}!", f"{number_word(n).capitalize()}!"]
+    s += ["Ein Zehner!"] + [f"{NUMBER_WORDS[t].capitalize()} Zehner!" for t in range(2, 10)]
+    s += ["Keine Einer!", "Ein Einer!"] + [f"{NUMBER_WORDS[o].capitalize()} Einer!" for o in range(2, 10)]
+    return s
 
 
 def time_text(hour: int, minute: int) -> str:
@@ -172,6 +281,9 @@ def all_sentences():
         spoken = f"{adjective.lower()} {name}"
         s += [f"Huhu, {spoken}!", f"Super gemacht, {spoken}!"]
     s += MEMORY_ANIMALS + SEASONAL_MEMORY + SEASONAL_ANNOUNCEMENTS
+    s += number_builder_sentences()
+    s += new_games_sentences()
+    s += [x for t in advent_sentences() for x in split_sentences(t)]
     return list(dict.fromkeys(s))  # Reihenfolge erhalten, Dubletten entfernen
 
 

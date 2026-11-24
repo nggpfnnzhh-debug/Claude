@@ -8,14 +8,16 @@ struct Seasonal: Equatable {
     }
 
     enum Festival: String, CaseIterable {
-        case halloween
+        case halloween, advent, nikolaus, christmas, newYear
     }
 
     var season: Season
     /// Ein Fest, das gerade bevorsteht oder heute ist.
     var festival: Festival?
-    /// `true` am Festtag selbst, `false` in den Tagen davor.
+    /// `true` am Festtag selbst, `false` in den Tagen davor (Silvester: `false`, Neujahr: `true`).
     var isFestivalDay = false
+    /// Brennende Kerzen am Adventskranz (0 außerhalb der Adventszeit).
+    var adventCandles = 0
 
     // MARK: - Datum
 
@@ -33,11 +35,38 @@ struct Seasonal: Equatable {
         }
 
         var result = Seasonal(season: season)
-        if month == 10, day >= 24 {
+        result.adventCandles = adventCandles(at: date, calendar: calendar)
+        switch (month, day) {
+        case (10, 24...31):
             result.festival = .halloween
             result.isFestivalDay = day == 31
+        case (12, 5...6):
+            result.festival = .nikolaus
+            result.isFestivalDay = day == 6
+        case (12, 24...26):
+            result.festival = .christmas
+            result.isFestivalDay = true
+        case (12, 31), (1, 1):
+            result.festival = .newYear
+            result.isFestivalDay = month == 1
+        default:
+            if result.adventCandles > 0 { result.festival = .advent }
         }
         return result
+    }
+
+    /// Der 4. Advent ist der letzte Sonntag vor dem 25. Dezember; der 1. Advent drei Wochen davor.
+    /// Gibt die Zahl der brennenden Kerzen zurück (1–4), außerhalb der Adventszeit 0.
+    static func adventCandles(at date: Date, calendar: Calendar = .current) -> Int {
+        let year = calendar.component(.year, from: date)
+        guard let christmasEve = calendar.date(from: DateComponents(year: year, month: 12, day: 24)) else { return 0 }
+        let weekday = calendar.component(.weekday, from: christmasEve) // 1 = Sonntag
+        guard let fourthAdvent = calendar.date(byAdding: .day, value: -(weekday - 1), to: christmasEve),
+              let firstAdvent = calendar.date(byAdding: .day, value: -21, to: fourthAdvent) else { return 0 }
+        let today = calendar.startOfDay(for: date)
+        guard today >= firstAdvent, today < christmasEve else { return 0 }
+        let days = calendar.dateComponents([.day], from: firstAdvent, to: today).day ?? 0
+        return min(4, days / 7 + 1)
     }
 
     /// Für Screenshots und Tests: feste Jahreszeit statt Datum.
@@ -55,6 +84,14 @@ struct Seasonal: Equatable {
         var variants = Season.allCases.map { Seasonal(season: $0) }
         variants.append(Seasonal(season: .autumn, festival: .halloween, isFestivalDay: false))
         variants.append(Seasonal(season: .autumn, festival: .halloween, isFestivalDay: true))
+        for candles in 1...4 {
+            variants.append(Seasonal(season: .winter, festival: .advent, adventCandles: candles))
+        }
+        variants.append(Seasonal(season: .winter, festival: .nikolaus, isFestivalDay: false, adventCandles: 1))
+        variants.append(Seasonal(season: .winter, festival: .nikolaus, isFestivalDay: true, adventCandles: 1))
+        variants.append(Seasonal(season: .winter, festival: .christmas, isFestivalDay: true))
+        variants.append(Seasonal(season: .winter, festival: .newYear, isFestivalDay: false))
+        variants.append(Seasonal(season: .winter, festival: .newYear, isFestivalDay: true))
         return variants
     }
 
@@ -64,9 +101,30 @@ struct Seasonal: Equatable {
     var announcement: String? {
         switch festival {
         case .halloween: return isFestivalDay ? "Heute ist Halloween!" : "Bald ist Halloween!"
+        case .advent: return "Es ist Adventszeit! \(Self.candlesText(adventCandles))"
+        case .nikolaus: return isFestivalDay ? "Heute ist Nikolaus!" : "Morgen ist Nikolaus!"
+        case .christmas: return "Frohe Weihnachten!"
+        case .newYear: return isFestivalDay ? "Frohes neues Jahr!" : "Heute ist Silvester!"
         case nil: return nil
         }
     }
+
+    static func candlesText(_ candles: Int) -> String {
+        candles == 1
+            ? "Am Adventskranz brennt schon eine Kerze."
+            : "Am Adventskranz brennen schon \(Phrases.numberWords[candles]) Kerzen."
+    }
+
+    private static let christmasCountItems: [TaskFactory.CountItem] = [
+        .init(emoji: "🎁", plural: "Geschenke"),
+        .init(emoji: "🕯️", plural: "Kerzen"),
+        .init(emoji: "🍪", plural: "Kekse"),
+        .init(emoji: "🎄", plural: "Tannenbäume"),
+    ]
+
+    private static let christmasMemory: [(emoji: String, name: String)] = [
+        ("🎄", "Tannenbaum"), ("🎁", "Geschenk"), ("🕯️", "Kerze"), ("🍪", "Keks"),
+    ]
 
     /// Zusätzliche Dinge zum Zählen.
     var countItems: [TaskFactory.CountItem] {
@@ -78,7 +136,9 @@ struct Seasonal: Equatable {
                 .init(emoji: "👻", plural: "Gespenster"),
                 .init(emoji: "🍬", plural: "Bonbons"),
             ]
-        case nil:
+        case .advent, .nikolaus, .christmas:
+            return Self.christmasCountItems
+        case .newYear, nil:
             break
         }
         switch season {
@@ -89,7 +149,14 @@ struct Seasonal: Equatable {
                 .init(emoji: "🍄", plural: "Pilze"),
                 .init(emoji: "🦔", plural: "Igel"),
             ]
-        case .spring, .summer, .winter:
+        case .winter:
+            return [
+                .init(emoji: "⛄", plural: "Schneemänner"),
+                .init(emoji: "❄️", plural: "Schneeflocken"),
+                .init(emoji: "🧤", plural: "Handschuhe"),
+                .init(emoji: "🛷", plural: "Schlitten"),
+            ]
+        case .spring, .summer:
             return []
         }
     }
@@ -99,20 +166,31 @@ struct Seasonal: Equatable {
         switch festival {
         case .halloween:
             return [("🎃", "Kürbis"), ("🦇", "Fledermaus"), ("👻", "Gespenst"), ("🍬", "Bonbon")]
-        case nil:
+        case .advent, .nikolaus, .christmas:
+            return Self.christmasMemory
+        case .newYear, nil:
             break
         }
         switch season {
         case .autumn:
             return [("🦔", "Igel"), ("🐿️", "Eichhörnchen"), ("🍄", "Pilz"), ("🌰", "Kastanie")]
-        case .spring, .summer, .winter:
+        case .winter:
+            return [("⛄", "Schneemann"), ("🧤", "Handschuh"), ("🛷", "Schlitten"), ("🐧", "Pinguin")]
+        case .spring, .summer:
             return []
         }
     }
 
     /// Was auf dem Startbildschirm sanft herabschwebt.
     var decorations: [String] {
-        if festival == .halloween { return ["🦇", "🍂", "🎃"] }
+        switch festival {
+        case .halloween: return ["🦇", "🍂", "🎃"]
+        case .advent: return ["❄️", "⭐️"]
+        case .nikolaus: return ["❄️", "🍪", "⭐️"]
+        case .christmas: return ["❄️", "⭐️", "🎄"]
+        case .newYear: return ["✨", "🎆"]
+        case nil: break
+        }
         switch season {
         case .spring: return ["🌸", "🌼"]
         case .summer: return ["🦋", "🌼"]
@@ -125,7 +203,10 @@ struct Seasonal: Equatable {
     var owlAccessory: String? {
         switch festival {
         case .halloween: return "🎃"
-        case nil: return season == .winter ? "🧣" : nil
+        case .nikolaus: return "🥾"
+        case .christmas: return "🎁"
+        case .newYear: return "🎉"
+        case .advent, nil: return season == .winter || festival == .advent ? "🧣" : nil
         }
     }
 }
