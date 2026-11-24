@@ -103,7 +103,7 @@ struct PersonalityResultView: View {
                 Text("Bei dir stechen \(top[0].animal.name) und \(top[1].animal.name) heraus")
                     .font(.heading)
             }
-            Text("Die Zahl vergleicht dich mit anderen Menschen: 80 heißt, bei dir ist diese Seite stärker als bei etwa 80 von 100 Menschen. 50 ist genau Durchschnitt. Wenig ist nicht schlecht, sondern nur anders.")
+            Text("Die Zahl vergleicht dich mit anderen Menschen: 80 heißt, bei dir ist diese Seite stärker als bei etwa 80 von 100 Menschen. 50 ist genau Durchschnitt. Ein niedriger Wert ist keine Schwäche.")
                 .foregroundStyle(Theme.muted)
 
             VStack(alignment: .leading, spacing: 20) {

@@ -10,7 +10,7 @@ struct HomeView: View {
             Page {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Lernlabor").font(.display)
-                    Text("Finde heraus, wie du wirklich am besten lernst. Nicht mit Schubladen, sondern mit kleinen Versuchen an dir selbst.")
+                    Text("Finde mit kleinen Versuchen an dir selbst heraus, wie du am besten lernst.")
                         .foregroundStyle(Theme.muted)
                 }
 

@@ -1,31 +1,29 @@
-# Lernlabor
+# Lernlabor 🧪
 
-Lern-App für Erwachsene (iPhone & iPad, Deutsch, ab iOS 17): Finde mit kleinen Selbstversuchen heraus,
-wie du wirklich am besten lernst.
+Lern-App für Erwachsene (iPhone & iPad, Deutsch, ab iOS 17).
 
-## Inhalt (Version 0.2)
+Mit kleinen Selbstversuchen findet man heraus, welche Lernmethode bei einem selbst wirklich wirkt. Ein kurzer
+Persönlichkeitstest zeigt dazu fünf Tiere mit passenden Lerntipps.
 
-- **Persönlichkeit:** kurzer Big-Five-Fragebogen (Mini-IPIP, 20 Aussagen), Ergebnis als fünf Tiere mit
-  Prozentrang gegenüber Vergleichswerten und Lerntipps:
-  🦫 Biber (Gewissenhaftigkeit), Erdmännchen (Geselligkeit), 🐙 Krake (Offenheit),
-  🐘 Elefant (Verträglichkeit), 🐢 Schildkröte (Gelassenheit)
-- **Selbstversuch 1 „Lesen oder Abfragen?“ (kostenlos):** 16 Suaheli-Wörter, zufällig je zur Hälfte nochmal
-  gelesen oder abgefragt, Test nach 2 Tagen (mit Erinnerung) oder als Schnell-Demo
-- **Selbstversuch 2 „Erklären oder Lesen?“ (Vollversion):** 12 Fakten, je zur Hälfte nochmal gelesen oder laut
-  erklärt, Test mit Auswahlfragen
-- **Mythen-Check:** 8 Lern-Mythen mit Auflösung
-- **Lernprofil:** Persönlichkeit und Messergebnisse
-- **Vollversion:** einmaliger Kauf (`de.podolskis.lernlabor.vollversion`), Wiederherstellen, Code einlösen;
-  in Testversionen (TestFlight, Xcode) zusätzlich der Schalter „Vollversion simulieren“
-- **Datenschutz:** alles bleibt auf dem Gerät, kein Konto, kein Tracking
+## Inhalte
 
-## Vor einer Veröffentlichung offen
+| Bereich | Was passiert? |
+|---|---|
+| 🦫 **Persönlichkeit** | 20 Aussagen (Big Five, Mini-IPIP), Ergebnis als Biber, Erdmännchen, Krake, Elefant und Schildkröte |
+| 🔤 **Lesen oder Abfragen?** | 16 Suaheli-Wörter, je zur Hälfte nochmal gelesen oder abgefragt, Test nach 2 Tagen |
+| 🗣️ **Erklären oder Lesen?** *(Vollversion)* | 12 Fakten, je zur Hälfte nochmal gelesen oder laut erklärt, Test mit Auswahlfragen |
+| 💡 **Mythen-Check** | 8 verbreitete Lern-Mythen mit Auflösung |
+| 📊 **Lernprofil** | Persönlichkeit und Ergebnisse der Selbstversuche |
 
-- Deutsche Vergleichswerte für den Fragebogen (bisher vorläufige US-Werte, `PersonalityTest.norms`)
-- Geprüfte deutsche Übersetzung der 20 Aussagen
-- Weitere Selbstversuche für die Vollversion
-- Eigene Illustrationen der Tiere (das Erdmännchen ist bisher eine einfache Zeichnung)
-- Händlerangaben im App Store (Adresse/Telefon) klären
+## Vollversion
+
+- Einmaliger Kauf, kein Abo (Produkt-ID `de.podolskis.lernlabor.vollversion`)
+- Käufe wiederherstellen und Codes einlösen im Profil
+- In Testversionen (TestFlight, Xcode) gibt es den Schalter **„Vollversion simulieren“**
+
+## Datenschutz
+
+Keine Werbung, kein Konto, kein Tracking. Alle Ergebnisse bleiben auf dem Gerät.
 
 ## Entwicklung
 
@@ -39,6 +37,5 @@ open Lernlabor.xcodeproj
 
 Testkäufe ohne echtes Geld: Beim Start aus Xcode wird `Lernlabor/Resources/Lernlabor.storekit` verwendet.
 
-GitHub Actions (`.github/workflows/lernlabor.yml`) baut die App, führt die Tests aus und legt
-Vorschau-Screenshots in den Branch `lernlabor-vorschau-<branch>`. Hochladen zu TestFlight:
-`.github/workflows/lernlabor-testflight.yml`, Anleitung in [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md).
+GitHub Actions baut die App und führt die Tests aus (`lernlabor.yml`); Upload zu TestFlight:
+`lernlabor-testflight.yml`. Veröffentlichung: siehe [docs/APP_STORE.md](docs/APP_STORE.md).
