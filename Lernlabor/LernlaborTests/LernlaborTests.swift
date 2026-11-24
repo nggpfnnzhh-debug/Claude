@@ -105,7 +105,7 @@ final class ExperimentTests: XCTestCase {
     }
 
     private func run(_ kind: ExperimentKind, baseline: Int, other: Int) -> ExperimentRun {
-        var assignment: [String: Method] = [:]
+        var assignment: [String: StudyMethod] = [:]
         var results: [String: Bool] = [:]
         for (index, item) in kind.items.enumerated() {
             let first = index < kind.perMethod

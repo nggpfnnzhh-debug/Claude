@@ -109,7 +109,7 @@ final class AppModel {
             means: [.conscientiousness: 3.0, .extraversion: 3.8, .openness: 4.3, .agreeableness: 4.2, .calmness: 3.1],
             date: .now)
         runs = ExperimentKind.allCases.map { kind in
-            var assignment: [String: Method] = [:]
+            var assignment: [String: StudyMethod] = [:]
             var results: [String: Bool] = [:]
             for (index, item) in kind.items.enumerated() {
                 let first = index < kind.perMethod

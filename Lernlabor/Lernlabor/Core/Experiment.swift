@@ -56,7 +56,7 @@ enum ExperimentKind: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Erste Methode ist immer die Vergleichsgruppe „Nochmal lesen“.
-    var methods: [Method] {
+    var methods: [StudyMethod] {
         switch self {
         case .rereadQuiz: return [.reread, .quiz]
         case .explainRead: return [.reread, .explain]
@@ -83,7 +83,7 @@ enum ExperimentKind: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum Method: String, Codable {
+enum StudyMethod: String, Codable {
     case reread
     case quiz
     case explain
@@ -152,9 +152,9 @@ struct ExperimentRun: Codable, Identifiable {
     var id = UUID()
     var kind: ExperimentKind
     /// Vermutung vor dem Versuch, nil = „kein Unterschied“
-    var prediction: Method?
+    var prediction: StudyMethod?
     /// Element-ID → Übungsmethode
-    var assignment: [String: Method]
+    var assignment: [String: StudyMethod]
     var learnedAt: Date
     var testedAt: Date?
     /// Element-ID → im Test gewusst?
@@ -168,7 +168,7 @@ struct ExperimentRun: Codable, Identifiable {
         return testedAt.timeIntervalSince(learnedAt) >= Experiments.delayThreshold
     }
 
-    func correct(_ method: Method) -> Int {
+    func correct(_ method: StudyMethod) -> Int {
         results.filter { assignment[$0.key] == method && $0.value }.count
     }
 }
@@ -179,8 +179,8 @@ enum Experiments {
     static let delayThreshold: TimeInterval = 20 * 3600
 
     /// Teilt die Elemente zufällig je zur Hälfte auf die beiden Methoden auf.
-    static func randomAssignment(for kind: ExperimentKind) -> [String: Method] {
-        var result: [String: Method] = [:]
+    static func randomAssignment(for kind: ExperimentKind) -> [String: StudyMethod] {
+        var result: [String: StudyMethod] = [:]
         for (index, item) in kind.items.shuffled().enumerated() {
             result[item.id] = index < kind.perMethod ? kind.methods[0] : kind.methods[1]
         }
@@ -191,7 +191,7 @@ enum Experiments {
         let title: String
         let detail: String
         /// nil = kein klarer Unterschied
-        let winner: Method?
+        let winner: StudyMethod?
     }
 
     /// Bewertet den Unterschied ehrlich: Erst ab 3 Treffern gilt er als deutlich.
@@ -217,11 +217,11 @@ enum Experiments {
                        winner: nil)
     }
 
-    static func predictionText(_ prediction: Method?) -> String {
+    static func predictionText(_ prediction: StudyMethod?) -> String {
         prediction?.name ?? "Kein Unterschied"
     }
 
-    static func predictionFeedback(prediction: Method?, winner: Method?) -> String {
+    static func predictionFeedback(prediction: StudyMethod?, winner: StudyMethod?) -> String {
         if prediction == winner { return "Das passt zum Ergebnis." }
         if winner == nil { return "Noch ist der Unterschied zu klein, um das zu bestätigen." }
         return "Das Ergebnis sieht anders aus. Unser Gefühl für gute Lernmethoden täuscht oft."

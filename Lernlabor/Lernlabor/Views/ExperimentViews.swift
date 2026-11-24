@@ -400,7 +400,7 @@ struct ExperimentResultContent: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func itemList(_ method: Method) -> some View {
+    private func itemList(_ method: StudyMethod) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(method.resultLabel).font(.footnote).foregroundStyle(Theme.muted)
             ForEach(run.kind.items.filter { run.assignment[$0.id] == method }) { item in
