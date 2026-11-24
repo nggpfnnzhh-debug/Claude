@@ -182,16 +182,6 @@ struct ParentSettingsView: View {
                 } footer: {
                     Text("Vom 1. bis 26. Dezember ist der Kalender auf dem Startbildschirm zu sehen. In der Vorschau können Sie jeden Tag ausprobieren – geöffnete Türchen werden dabei nicht gespeichert, die Überraschung für Ihr Kind bleibt also erhalten.")
                 }
-                .fullScreenCover(isPresented: $showCalendarPreview) {
-                    AdventCalendarView(today: previewDay, isPreview: true) {
-                        Speaker.shared.stop()
-                        showCalendarPreview = false
-                    }
-                    .modifier(AdaptiveLayoutScale())
-                }
-                .confirmationDialog("Alle geöffneten Türchen wieder schließen?", isPresented: $confirmCalendarReset, titleVisibility: .visible) {
-                    Button("Türchen schließen", role: .destructive) { AdventCalendar.resetOpenedDoors() }
-                }
 
                 Section("Was lernt mein Kind?") {
                     ForEach(Game.allCases) { game in
@@ -246,6 +236,17 @@ struct ParentSettingsView: View {
             } message: {
                 Text("Sterne, Schwierigkeitsstufen und Übungsergebnisse werden gelöscht.")
             }
+            .confirmationDialog("Alle geöffneten Türchen wieder schließen?", isPresented: $confirmCalendarReset, titleVisibility: .visible) {
+                Button("Türchen schließen", role: .destructive) { AdventCalendar.resetOpenedDoors() }
+            }
+        }
+        // Außerhalb des Formulars: In einer Formularzeile verschwindet ein Vollbild sofort wieder.
+        .fullScreenCover(isPresented: $showCalendarPreview) {
+            AdventCalendarView(today: previewDay, isPreview: true) {
+                Speaker.shared.stop()
+                showCalendarPreview = false
+            }
+            .modifier(AdaptiveLayoutScale())
         }
     }
 }
