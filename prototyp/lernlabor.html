@@ -242,7 +242,7 @@ const store = {
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const level = (v) => v < 40 ? "lo" : v > 60 ? "hi" : "mid";
+const level = (v) => v < 35 ? "lo" : v > 65 ? "hi" : "mid";
 const levelText = { lo: "eher wenig", mid: "mittel", hi: "eher viel" };
 
 function norm(s) {
@@ -262,7 +262,13 @@ function correct(answer, word) {
   return [word[1]].concat(word[2] || []).some(t => { const n = norm(t); return a === n || (n.length >= 4 && lev(a, n) <= 1); });
 }
 
-function scores(answers) {
+// Vorläufige Vergleichswerte (Mittelwert, Streuung je Eigenschaft) nach der Mini-IPIP-Originalstudie
+// (US-Studierende, Donnellan u. a. 2006). Für die echte App durch deutsche Normwerte ersetzen.
+// N ist hier schon als Gelassenheit (6 − Neurotizismus) angegeben.
+const NORMS = { E: [2.96, 0.88], A: [3.84, 0.70], C: [3.37, 0.80], N: [3.43, 0.78], O: [3.64, 0.73] };
+
+// Durchschnitt der Antworten je Eigenschaft (1 bis 5), umgepolte Aussagen eingerechnet
+function means(answers) {
   const sum = {}, cnt = {};
   ITEMS.forEach((it, i) => {
     const [t, key] = it; const v = answers[i]; if (v == null) return;
@@ -270,9 +276,28 @@ function scores(answers) {
     sum[t] = (sum[t] || 0) + val; cnt[t] = (cnt[t] || 0) + 1;
   });
   const out = {};
-  for (const t in sum) out[t] = Math.round((sum[t] / cnt[t] - 1) / 4 * 100);
-  if (out.N != null) out.N = 100 - out.N; // als Gelassenheit anzeigen
+  for (const t in sum) out[t] = sum[t] / cnt[t];
+  if (out.N != null) out.N = 6 - out.N; // als Gelassenheit
   return out;
+}
+
+// Standardnormalverteilung (Näherung nach Abramowitz & Stegun)
+function phi(z) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+  return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+}
+
+// Prozentrang: Bei wie vielen von 100 Menschen ist die Eigenschaft schwächer ausgeprägt?
+function percentiles(m) {
+  const out = {};
+  for (const t in NORMS) out[t] = Math.min(99, Math.max(1, Math.round(phi((m[t] - NORMS[t][0]) / NORMS[t][1]) * 100)));
+  return out;
+}
+function profileScores(p) {
+  if (!p) return EXAMPLE;
+  if (p.means) return percentiles(p.means);
+  return p.scores; // ältere Speicherstände
 }
 
 // ---------- Zustand ----------
@@ -358,22 +383,21 @@ function animalBars(sc, withTips) {
 function topTwo(sc) { return ORDER.slice().sort((a, b) => sc[b] - sc[a]).slice(0, 2); }
 
 V.result = () => {
-  const p = store.get("profile", null) || { scores: scores(test ? test.answers : []) };
-  const sc = p.scores, [t1, t2] = topTwo(sc);
-  const hyp = sc.E > 60
+  const sc = profileScores(store.get("profile", null)), [t1, t2] = topTwo(sc);
+  const hyp = sc.E > 65
     ? "Du bist ein starker Otter. Vielleicht hilft dir Erklären mehr als stilles Lesen. Das prüft später der Selbstversuch „Erklären oder Lesen“."
-    : sc.C < 40
+    : sc.C < 35
       ? "Der Biber ist bei dir eher klein. Vermutlich helfen dir kurze, feste Lerneinheiten mehr als lange. Das prüft später der Selbstversuch „Am Stück oder verteilt“."
       : "Egal welche Tiere vorne liegen: Ob Abfragen bei dir besser wirkt als Lesen, zeigt nur ein Versuch.";
   return `
   <button class="back" data-go="home" data-tab="start">← Start</button>
   <div class="stack-sm"><span class="eyebrow">Dein Ergebnis</span>
-  <h2>Bei dir sind ${ANIMALS[t1].em} ${ANIMALS[t1].name} und ${ANIMALS[t2].em} ${ANIMALS[t2].name} am stärksten</h2></div>
-  <p class="muted">Jedes Tier ist eine eigene Skala von 0 bis 100. Wenig ist nicht schlecht, sondern nur anders. Tipp auf „Was heißt das fürs Lernen?“.</p>
+  <h2>Bei dir stechen ${ANIMALS[t1].em} ${ANIMALS[t1].name} und ${ANIMALS[t2].em} ${ANIMALS[t2].name} heraus</h2></div>
+  <p class="muted">Die Zahl vergleicht dich mit anderen Menschen: 80 heißt, bei dir ist diese Seite stärker als bei etwa 80 von 100 Menschen. 50 ist genau Durchschnitt. Wenig ist nicht schlecht, sondern nur anders.</p>
   <div class="card stack">${animalBars(sc, true)}</div>
   <div class="card stack-sm"><span class="eyebrow">Vermutung zum Testen</span><p>${hyp}</p></div>
   <button class="btn" data-go="lab" data-tab="labor">Zum Selbstversuch</button>
-  <p class="small muted">Kurzer Fragebogen mit 20 Aussagen, Prototyp-Übersetzung. Persönlichkeit sagt viel darüber, wie du dranbleibst, aber nicht, welche Lernmethode wirkt. Das zeigen die Selbstversuche.</p>`;
+  <p class="small muted">Kurzer Fragebogen mit 20 Aussagen, Prototyp-Übersetzung, vorläufige Vergleichswerte aus einer US-Studie. Persönlichkeit sagt viel darüber, wie du dranbleibst, aber nicht, welche Lernmethode wirkt. Das zeigen die Selbstversuche.</p>`;
 };
 
 // ---------- Selbstversuch ----------
@@ -543,7 +567,7 @@ V.myths = () => `
 const EXAMPLE = { C: 38, E: 72, O: 81, A: 64, N: 45 };
 V.profile = () => {
   const p = store.get("profile", null), runs = store.get("runs", []);
-  const sc = p ? p.scores : EXAMPLE;
+  const sc = profileScores(p);
   const last = runs[runs.length - 1];
   return `
   <span class="proto">Prototyp</span>
@@ -611,7 +635,7 @@ document.addEventListener("click", (e) => {
   else if (a === "answer") {
     test.answers[test.i] = +b.dataset.v;
     if (test.i < ITEMS.length - 1) { test.i++; setTimeout(render, 120); b.classList.add("on"); }
-    else { store.set("profile", { scores: scores(test.answers), at: Date.now() }); go("result"); }
+    else { store.set("profile", { means: means(test.answers), at: Date.now() }); go("result"); }
   }
   else if (a === "predict") { newLab(b.dataset.v); go("labStudy"); }
   else if (a === "studyNext") {
