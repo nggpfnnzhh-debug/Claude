@@ -1,7 +1,7 @@
 # Baut das Lernlabor, signiert es automatisch (Cloud-Signing) und lädt es zu TestFlight hoch.
 # Nutzt dieselben Repository-Secrets wie Huhu Eule:
 #   APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8
-# Vorher muss die App in App Store Connect angelegt sein (siehe Lernlabor/docs/TESTFLIGHT.md).
+# Vorher muss die App in App Store Connect angelegt sein (siehe Lernlabor/docs/APP_STORE.md).
 name: Lernlabor – Upload zu TestFlight
 
 on:
