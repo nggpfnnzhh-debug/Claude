@@ -349,9 +349,23 @@ struct ChoiceRow: View {
         return true
     }
 
+    /// „Gleich viele“-Karte, falls vorhanden – sie kommt auf dem iPhone unter die beiden Mengen.
+    private var sameChoice: Choice? {
+        guard scale <= 1 else { return nil }
+        return choices.first { $0.content == .same }
+    }
+
     var body: some View {
         Group {
-            if usesColumn {
+            if let same = sameChoice {
+                VStack(spacing: 14) {
+                    HStack(spacing: 16) {
+                        cards(choices.filter { $0.id != same.id })
+                    }
+                    cards([same])
+                        .frame(maxWidth: 120)
+                }
+            } else if usesColumn {
                 VStack(spacing: 12) {
                     cards
                 }
@@ -371,7 +385,11 @@ struct ChoiceRow: View {
     }
 
     private var cards: some View {
-        ForEach(choices) { choice in
+        cards(choices)
+    }
+
+    private func cards(_ list: [Choice]) -> some View {
+        ForEach(list) { choice in
             Button {
                 onSelect(choice)
             } label: {
@@ -477,26 +495,7 @@ struct ChoiceContentView: View {
                 .font(.system(size: 80 * scale))
                 .minimumScaleFactor(0.3)
         case let .group(emoji, count, spread, _):
-            if spread {
-                // Täuschbild: wenige, große Bilder weit verteilt – wirkt nach „mehr“.
-                let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: count <= 4 ? 2 : 3)
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(0..<count, id: \.self) { _ in
-                        Text(emoji)
-                            .font(.system(size: 36 * scale))
-                            .minimumScaleFactor(0.5)
-                    }
-                }
-            } else {
-                let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: count <= 4 ? 2 : (count <= 6 ? 3 : 4))
-                LazyVGrid(columns: columns, spacing: 2) {
-                    ForEach(0..<count, id: \.self) { _ in
-                        Text(emoji)
-                            .font(.system(size: (count <= 4 ? 40 : (count <= 6 ? 32 : 24)) * scale))
-                            .minimumScaleFactor(0.5)
-                    }
-                }
-            }
+            GroupView(emoji: emoji, count: count, spread: spread)
         case .same:
             VStack(spacing: 4 * scale) {
                 Text("=")
@@ -618,7 +617,7 @@ struct SceneView: View {
     var tablecloth = false
 
     private let wood = Color(red: 0.62, green: 0.40, blue: 0.22)
-    private let cloth = Color(red: 0.30, green: 0.55, blue: 0.85)
+    private let cloth = Color(red: 0.85, green: 0.30, blue: 0.30)
 
     var body: some View {
         GeometryReader { proxy in
@@ -636,31 +635,38 @@ struct SceneView: View {
 
                 // Hinter und unter dem Tisch: zuerst zeichnen, damit der Tisch davor liegt.
                 if position == .behind {
-                    animalText(size * 0.85).position(x: w / 2, y: topY - size * 0.05)
+                    animalText(size * 0.85).position(x: w / 2, y: topY - size * 0.3)
                 }
                 if position == .under {
                     animalText(size * 0.85).position(x: w / 2, y: floorY - size * 0.42)
                 }
 
-                if tablecloth {
-                    // Tischdecke von der Platte bis zum Boden
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(cloth)
-                        .frame(width: w * 0.56, height: floorY - topY + h * 0.04)
-                        .position(x: w / 2, y: (topY + floorY) / 2)
-                } else {
-                    // Tisch: Platte und zwei Beine
-                    RoundedRectangle(cornerRadius: 3)
+                // Tisch: zwei Beine und Platte
+                ForEach([0.31, 0.69], id: \.self) { x in
+                    Rectangle()
                         .fill(wood)
-                        .frame(width: w * 0.56, height: h * 0.08)
-                        .position(x: w / 2, y: topY)
-                    ForEach([0.31, 0.69], id: \.self) { x in
-                        Rectangle()
-                            .fill(wood)
-                            .frame(width: w * 0.04, height: floorY - topY)
-                            .position(x: w * x, y: (topY + floorY) / 2)
-                    }
+                        .frame(width: w * 0.04, height: floorY - topY)
+                        .position(x: w * x, y: (topY + floorY) / 2)
                 }
+                if tablecloth {
+                    // Tischdecke hängt fast bis zum Boden – die Tischbeine schauen unten noch heraus.
+                    let clothBottom = floorY - h * 0.08
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(cloth)
+                        .overlay(
+                            Rectangle()
+                                .fill(Color.white.opacity(0.35))
+                                .frame(height: h * 0.025)
+                                .offset(y: -h * 0.04),
+                            alignment: .bottom
+                        )
+                        .frame(width: w * 0.62, height: clothBottom - topY + h * 0.04)
+                        .position(x: w / 2, y: (topY - h * 0.04 + clothBottom) / 2)
+                }
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(wood)
+                    .frame(width: w * (tablecloth ? 0.64 : 0.56), height: h * 0.08)
+                    .position(x: w / 2, y: topY)
 
                 switch position {
                 case .on:
@@ -682,5 +688,39 @@ struct SceneView: View {
 
     private func animalText(_ size: CGFloat) -> some View {
         Text(animal).font(.system(size: size))
+    }
+}
+
+/// Eine Menge gleicher Bilder. `spread` zeigt wenige Bilder groß und weit verteilt (Täuschbild),
+/// sonst liegen sie eng beieinander. Die Größe richtet sich nach dem Platz auf der Karte.
+struct GroupView: View {
+    let emoji: String
+    let count: Int
+    var spread = false
+
+    var body: some View {
+        GeometryReader { proxy in
+            let columns = spread ? (count <= 4 ? 2 : 3) : (count <= 4 ? 2 : (count <= 9 ? 3 : 4))
+            let rows = Int((Double(count) / Double(columns)).rounded(.up))
+            let gap: CGFloat = spread ? proxy.size.width * 0.08 : 1
+            let cell = min(
+                (proxy.size.width - gap * CGFloat(columns - 1)) / CGFloat(columns),
+                (proxy.size.height - gap * CGFloat(rows - 1)) / CGFloat(rows)
+            )
+            // Eng: kleinere Bilder. Weit: größere Bilder mit viel Abstand.
+            let size = cell * (spread ? 0.82 : 0.62)
+            VStack(spacing: gap) {
+                ForEach(0..<rows, id: \.self) { row in
+                    HStack(spacing: gap) {
+                        ForEach(0..<min(columns, count - row * columns), id: \.self) { _ in
+                            Text(emoji)
+                                .font(.system(size: size))
+                                .frame(width: cell, height: cell)
+                        }
+                    }
+                }
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
     }
 }
